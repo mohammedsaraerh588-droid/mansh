@@ -1,226 +1,152 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { LayoutDashboard, LogOut, Menu, X, BookOpen, Home, Sun, Moon } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
+import { Home, BookOpen, LayoutDashboard, LogOut, Menu, X, Sun, Moon } from 'lucide-react'
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled]       = useState(false)
-  const [isMobileMenuOpen, setMobileMenu] = useState(false)
-  const [user, setUser]                   = useState<any>(null)
-  const [profile, setProfile]             = useState<any>(null)
-  const pathname = usePathname()
-  const supabase = createSupabaseBrowserClient()
+  const [scrolled,  setScrolled]  = useState(false)
+  const [open,      setOpen]      = useState(false)
+  const [user,      setUser]      = useState<any>(null)
+  const [profile,   setProfile]   = useState<any>(null)
+  const pathname  = usePathname()
+  const supabase  = createSupabaseBrowserClient()
   const { theme, toggle } = useTheme()
-  const isDark = theme === 'dark'
+  const dark = theme === 'dark'
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        setUser(session.user)
-        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-        setProfile(data)
-      }
-    }
-    fetchUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user || null)
-      if (session?.user)
-        supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => setProfile(data))
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      setUser(session.user)
+      supabase.from('profiles').select('*').eq('id', session.user.id).single()
+        .then(({ data }) => setProfile(data))
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
+      setUser(s?.user ?? null)
+      if (s?.user) supabase.from('profiles').select('*').eq('id', s.user.id).single().then(({ data }) => setProfile(data))
       else setProfile(null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    const fn = () => setIsScrolled(window.scrollY > 30)
-    window.addEventListener('scroll', fn)
+    const fn = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', fn); fn()
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  }
+  const isHero   = pathname === '/'
+  const solid    = scrolled || !isHero
+  const dashLink = !profile ? '/dashboard/student' : profile.role === 'admin' ? '/dashboard/admin' : profile.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'
+  const links    = [{ label:'الرئيسية', href:'/', Icon:Home }, { label:'الدورات', href:'/courses', Icon:BookOpen }]
 
-  const getDashboardLink = () => {
-    if (!profile) return '/dashboard/student'
-    if (profile.role === 'admin')   return '/dashboard/admin'
-    if (profile.role === 'teacher') return '/dashboard/teacher'
-    return '/dashboard/student'
-  }
-
-  const isHero    = pathname === '/'
-  const scrolled  = isScrolled || !isHero
-
-  const navLinks = [
-    { name: 'الرئيسية', href: '/', icon: Home },
-    { name: 'الدورات',  href: '/courses', icon: BookOpen },
-  ]
-
-  /* text color helpers */
-  const linkColor = (active: boolean) =>
-    scrolled
-      ? active ? 'var(--gold-dark)' : 'var(--text-secondary)'
-      : active ? '#fff' : 'rgba(255,255,255,0.65)'
+  const txt  = solid ? 'var(--txt2)' : 'rgba(255,255,255,.65)'
+  const txtH = solid ? 'var(--txt1)' : '#fff'
 
   return (
-    <nav
-      className="fixed top-0 w-full z-50 transition-all duration-500"
-      style={{
-        background:   scrolled ? 'var(--navbar-bg)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(18px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--navbar-border)' : 'none',
-        boxShadow:    scrolled ? 'var(--shadow-sm)' : 'none',
-        padding:      scrolled ? '12px 0' : '20px 0',
-      }}
-    >
-      <div className="container mx-auto px-4 flex items-center justify-between">
+    <nav style={{
+      position:'fixed', top:0, width:'100%', zIndex:50,
+      background: solid ? 'var(--nav-bg)' : 'transparent',
+      borderBottom: solid ? '1px solid var(--nav-border)' : 'none',
+      backdropFilter: solid ? 'blur(20px)' : 'none',
+      boxShadow: solid ? 'var(--shadow1)' : 'none',
+      transition: 'all .35s',
+      padding: solid ? '12px 0' : '20px 0',
+    }}>
+      <div style={{maxWidth:1280,margin:'0 auto',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
 
-        {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-base transition-transform duration-300 group-hover:scale-110"
-            style={{ background: 'var(--gradient-gold)', color: '#1a1a2e' }}
-          >م</div>
-          <span className="text-lg font-black tracking-tight transition-colors duration-300"
-            style={{ color: scrolled ? 'var(--text-primary)' : '#fff' }}>
-            منصة <span className="gradient-text">تعلّم</span>
+        {/* Logo */}
+        <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none'}}>
+          <div style={{width:36,height:36,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:18,background:'linear-gradient(135deg,#b8912a,#d4a843)',color:'#fff',flexShrink:0}}>م</div>
+          <span style={{fontSize:17,fontWeight:900,color: solid ? 'var(--txt1)' : '#fff',transition:'color .3s'}}>
+            منصة <span style={{background:'linear-gradient(135deg,#b8912a,#f0c96a)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>تعلّم</span>
           </span>
         </Link>
 
-        {/* ── Desktop links ── */}
-        <div className="hidden md:flex items-center gap-1">
-          {navLinks.map(link => (
-            <Link key={link.name} href={link.href}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200"
-              style={{
-                color: linkColor(pathname === link.href),
-                background: pathname === link.href && scrolled ? 'var(--gold-bg)' : 'transparent',
-                borderBottom: pathname === link.href ? '2px solid var(--gold)' : '2px solid transparent',
-              }}>
-              {link.name}
+        {/* Desktop */}
+        <div style={{display:'flex',alignItems:'center',gap:4}} className="hidden md:flex">
+          {links.map(({ label, href, Icon }) => (
+            <Link key={href} href={href} style={{
+              display:'flex',alignItems:'center',gap:7,padding:'8px 14px',borderRadius:9,
+              textDecoration:'none',fontSize:14,fontWeight:600,transition:'all .2s',
+              color: pathname===href ? 'var(--gold)' : txt,
+              background: pathname===href && solid ? 'var(--gold-bg)' : 'transparent',
+              borderBottom: pathname===href ? '2px solid var(--gold)' : '2px solid transparent',
+            }}>
+              <Icon size={15}/>{label}
             </Link>
           ))}
         </div>
 
-        {/* ── Desktop actions ── */}
-        <div className="hidden md:flex items-center gap-3">
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggle}
-            className="theme-toggle"
-            title={isDark ? 'الوضع الفاتح' : 'الوضع المظلم'}
-            style={{ justifyContent: isDark ? 'flex-end' : 'flex-start' }}
-          >
-            <span className="theme-toggle-knob">
-              {isDark ? <Moon className="w-3 h-3 text-white" /> : <Sun className="w-3 h-3 text-amber-800" />}
-            </span>
+        {/* Actions */}
+        <div style={{display:'flex',alignItems:'center',gap:10}} className="hidden md:flex">
+          {/* Theme toggle */}
+          <button onClick={toggle} className="toggle-wrap" style={{justifyContent:dark?'flex-end':'flex-start'}} title={dark?'وضع فاتح':'وضع مظلم'}>
+            <span className="toggle-knob">{dark ? <Moon size={11} color="#fff"/> : <Sun size={11} color="#92400e"/>}</span>
           </button>
-
           {user ? (
             <>
-              <Link href={getDashboardLink()}>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                  style={{ color: scrolled ? 'var(--text-secondary)' : 'rgba(255,255,255,0.65)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='var(--gold-dark)'; (e.currentTarget as HTMLElement).style.background='var(--gold-bg)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color= scrolled ? 'var(--text-secondary)':'rgba(255,255,255,0.65)'; (e.currentTarget as HTMLElement).style.background='transparent' }}>
-                  <LayoutDashboard className="w-4 h-4" />
-                  لوحة التحكم
-                </button>
+              <Link href={dashLink} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,textDecoration:'none',fontSize:13.5,fontWeight:700,color:txt,transition:'all .2s'}}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color='var(--gold)';(e.currentTarget as HTMLElement).style.background='var(--gold-bg)'}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color=txt;(e.currentTarget as HTMLElement).style.background='transparent'}}>
+                <LayoutDashboard size={15}/>لوحة التحكم
               </Link>
               <Link href="/profile">
-                <div className="w-9 h-9 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer"
-                  style={{ borderColor: 'var(--gold)' }}>
-                  {profile?.avatar_url
-                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-sm font-black"
-                        style={{ background: 'var(--gradient-gold)', color: '#1a1a2e' }}>
-                        {profile?.full_name?.[0] || 'أ'}
-                      </div>
-                  }
+                <div style={{width:36,height:36,borderRadius:'50%',overflow:'hidden',border:'2px solid var(--gold)',cursor:'pointer',flexShrink:0}}>
+                  {profile?.avatar_url ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/> :
+                    <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:14,background:'linear-gradient(135deg,#b8912a,#d4a843)',color:'#fff'}}>
+                      {profile?.full_name?.[0] ?? 'أ'}
+                    </div>}
                 </div>
               </Link>
             </>
           ) : (
             <>
-              <Link href="/auth/login">
-                <button className="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                  style={{ color: scrolled ? 'var(--text-secondary)' : 'rgba(255,255,255,0.7)' }}>
-                  تسجيل الدخول
-                </button>
+              <Link href="/auth/login" style={{padding:'8px 16px',borderRadius:9,textDecoration:'none',fontSize:14,fontWeight:700,color:txt,transition:'color .2s'}}
+                onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color='var(--gold)'}
+                onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color=txt}>
+                تسجيل الدخول
               </Link>
-              <Link href="/auth/register">
-                <button className="btn-gold px-5 py-2.5 text-sm rounded-lg">ابدأ مجاناً</button>
-              </Link>
+              <Link href="/auth/register" className="btn btn-gold btn-md" style={{textDecoration:'none'}}>ابدأ مجاناً</Link>
             </>
           )}
         </div>
 
-        {/* ── Mobile: toggle + menu ── */}
-        <div className="md:hidden flex items-center gap-2">
-          <button onClick={toggle} className="theme-toggle"
-            style={{ justifyContent: isDark ? 'flex-end' : 'flex-start' }}>
-            <span className="theme-toggle-knob">
-              {isDark ? <Moon className="w-3 h-3 text-white" /> : <Sun className="w-3 h-3 text-amber-800" />}
-            </span>
+        {/* Mobile */}
+        <div style={{display:'flex',alignItems:'center',gap:8}} className="md:hidden">
+          <button onClick={toggle} className="toggle-wrap" style={{justifyContent:dark?'flex-end':'flex-start'}}>
+            <span className="toggle-knob">{dark ? <Moon size={10} color="#fff"/> : <Sun size={10} color="#92400e"/>}</span>
           </button>
-          <button className="p-2 rounded-lg transition-colors"
-            style={{ color: scrolled ? 'var(--text-primary)' : '#fff' }}
-            onClick={() => setMobileMenu(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <button onClick={()=>setOpen(!open)} style={{background:'none',border:'none',cursor:'pointer',color: solid?'var(--txt1)':'#fff',padding:4}}>
+            {open ? <X size={22}/> : <Menu size={22}/>}
           </button>
         </div>
       </div>
 
-      {/* ── Mobile menu ── */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden p-4 flex flex-col gap-1 shadow-lg"
-          style={{ background: 'var(--navbar-bg)', borderTop: '1px solid var(--navbar-border)' }}>
-          {navLinks.map(link => (
-            <Link key={link.name} href={link.href}
-              className="flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-colors"
-              style={{
-                color: pathname === link.href ? 'var(--gold-dark)' : 'var(--text-secondary)',
-                background: pathname === link.href ? 'var(--gold-bg)' : 'transparent',
-              }}
-              onClick={() => setMobileMenu(false)}>
-              <link.icon className="w-4 h-4" />
-              {link.name}
+      {/* Mobile menu */}
+      {open && (
+        <div style={{background:'var(--nav-bg)',borderTop:'1px solid var(--nav-border)',padding:'12px 16px',display:'flex',flexDirection:'column',gap:4}} className="md:hidden">
+          {links.map(({ label, href, Icon }) => (
+            <Link key={href} href={href} className={`nav-link ${pathname===href?'active':''}`} onClick={()=>setOpen(false)}>
+              <Icon size={16}/>{label}
             </Link>
           ))}
-          <div className="h-px my-2" style={{ background: 'var(--border)' }} />
+          <div style={{height:1,background:'var(--border)',margin:'6px 0'}}/>
           {user ? (
             <>
-              <Link href={getDashboardLink()} onClick={() => setMobileMenu(false)}>
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg text-sm font-bold"
-                  style={{ color: 'var(--text-secondary)' }}>
-                  <LayoutDashboard className="w-4 h-4" /> لوحة التحكم
-                </button>
-              </Link>
-              <button onClick={handleSignOut}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-sm font-bold"
-                style={{ color: '#f87171' }}>
-                <LogOut className="w-4 h-4" /> تسجيل الخروج
+              <Link href={dashLink} className="nav-link" onClick={()=>setOpen(false)}><LayoutDashboard size={16}/>لوحة التحكم</Link>
+              <button className="nav-link danger" style={{background:'none',border:'none',cursor:'pointer',width:'100%',textAlign:'right',fontFamily:'inherit'}}
+                onClick={async()=>{await supabase.auth.signOut();window.location.href='/'}}>
+                <LogOut size={16}/>تسجيل الخروج
               </button>
             </>
           ) : (
-            <div className="flex flex-col gap-2 pt-1">
-              <Link href="/auth/login" onClick={() => setMobileMenu(false)}>
-                <button className="w-full p-3 rounded-lg text-sm font-bold border"
-                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>
-                  تسجيل الدخول
-                </button>
-              </Link>
-              <Link href="/auth/register" onClick={() => setMobileMenu(false)}>
-                <button className="btn-gold w-full p-3 text-sm rounded-lg">ابدأ مجاناً</button>
-              </Link>
-            </div>
+            <>
+              <Link href="/auth/login" className="nav-link" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
+              <Link href="/auth/register" className="btn btn-gold btn-md" style={{textDecoration:'none',justifyContent:'center'}} onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
+            </>
           )}
         </div>
       )}

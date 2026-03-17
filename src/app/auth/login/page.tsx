@@ -7,89 +7,83 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, ArrowLeft, Users, BookOpen, Star } from 'lucide-react'
 
 const schema = z.object({
-  email:    z.string().email('البريد الإلكتروني غير صالح'),
-  password: z.string().min(6, 'كلمة المرور 6 أحرف على الأقل'),
+  email:    z.string().email('البريد غير صالح'),
+  password: z.string().min(6,'6 أحرف على الأقل'),
 })
 type Form = z.infer<typeof schema>
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null)
+  const [err, setErr] = useState<string|null>(null)
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState:{ errors, isSubmitting } } = useForm<Form>({ resolver:zodResolver(schema) })
 
-  const onSubmit = async (data: Form) => {
-    setError(null)
-    const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
-    if (err) { setError('البريد الإلكتروني أو كلمة المرور غير صحيحة'); return }
+  const onSubmit = async (d: Form) => {
+    setErr(null)
+    const { error } = await supabase.auth.signInWithPassword({ email:d.email, password:d.password })
+    if (error) { setErr('البريد الإلكتروني أو كلمة المرور غير صحيحة'); return }
     router.push('/dashboard/student'); router.refresh()
   }
 
   return (
-    <div className="min-h-screen flex" style={{background:'var(--surface-2)'}}>
-      {/* Left panel — decorative */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center hero-bg">
-        <div className="text-center relative z-10 p-12">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl mx-auto mb-6" style={{background:'var(--gradient-gold)',color:'var(--primary)'}}>م</div>
-          <h2 className="text-4xl font-black text-white mb-4">مرحباً بعودتك</h2>
-          <div className="gold-separator mb-6" />
-          <p className="text-white/60 text-lg max-w-xs mx-auto leading-relaxed">سجّل دخولك لمتابعة رحلتك التعليمية واستكشاف أحدث الدورات.</p>
-          <div className="mt-12 grid grid-cols-2 gap-4 max-w-xs mx-auto">
-            {[['10,000+','طالب مسجّل'],['500+','دورة متاحة']].map(([v,l],i)=>(
-              <div key={i} className="text-center p-4 rounded-xl" style={{background:'rgba(255,255,255,0.07)'}}>
-                <div className="text-2xl font-black" style={{color:'var(--gold)'}}>{v}</div>
-                <div className="text-xs text-white/50 mt-1">{l}</div>
+    <div style={{minHeight:'100vh',display:'flex',background:'var(--bg)'}}>
+      {/* Left decorative */}
+      <div className="hero-wrap" style={{flex:1,display:'none',alignItems:'center',justifyContent:'center',padding:48}} className="hidden lg:flex hero-wrap">
+        <div style={{textAlign:'center',position:'relative',zIndex:1}}>
+          <div style={{width:64,height:64,borderRadius:18,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,fontWeight:900,color:'#fff',margin:'0 auto 24px'}}>م</div>
+          <h2 style={{fontSize:38,fontWeight:900,color:'#fff',marginBottom:12}}>مرحباً بعودتك</h2>
+          <div className="gold-bar"/>
+          <p style={{color:'rgba(255,255,255,.55)',fontSize:15,maxWidth:280,margin:'18px auto',lineHeight:1.8}}>سجّل دخولك لمتابعة رحلتك التعليمية واستكشاف أحدث الدورات.</p>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,maxWidth:260,margin:'32px auto 0'}}>
+            {[['10K+','طالب مسجّل',Users],['500+','دورة متاحة',BookOpen],['4.9★','تقييم',Star],['+100','معلم',Users]].map(([v,l,Icon]:any,i)=>(
+              <div key={i} style={{padding:'14px 12px',background:'rgba(255,255,255,.07)',borderRadius:12,textAlign:'center'}}>
+                <div style={{fontSize:20,fontWeight:900,color:'var(--gold)'}}>{v}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.4)',marginTop:2}}>{l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-20">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center font-black" style={{background:'var(--gradient-gold)',color:'var(--primary)'}}>م</div>
-              <span className="text-lg font-black" style={{color:'var(--text-primary)'}}>منصة <span className="gradient-text">تعلّم</span></span>
+      {/* Form */}
+      <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
+        <div style={{width:'100%',maxWidth:420}}>
+          <div className="lg:hidden" style={{textAlign:'center',marginBottom:32}}>
+            <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,color:'#fff'}}>م</div>
+              <span style={{fontWeight:900,fontSize:17,color:'var(--txt1)'}}>منصة <span className="g-text">تعلّم</span></span>
             </Link>
           </div>
 
-          <div className="glass-card p-8 slide-up">
-            <h1 className="text-2xl font-black mb-1" style={{color:'var(--text-primary)'}}>تسجيل الدخول</h1>
-            <p className="text-sm mb-8" style={{color:'var(--text-secondary)'}}>أدخل بياناتك للمتابعة</p>
+          <div className="card" style={{padding:32}}>
+            <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>تسجيل الدخول</h1>
+            <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:28}}>أدخل بياناتك للمتابعة</p>
 
-            {error && (
-              <div className="mb-5 p-3 rounded-lg flex items-center gap-2 text-sm" style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca'}}>
-                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+            {err && (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'11px 14px',borderRadius:10,background:'#fef2f2',border:'1px solid #fecaca',marginBottom:20}}>
+                <AlertCircle size={15} style={{color:'var(--red)',flexShrink:0}}/><p style={{fontSize:13,color:'var(--red)'}}>{err}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} style={{display:'flex',flexDirection:'column',gap:16}}>
               <Input label="البريد الإلكتروني" type="email" placeholder="name@example.com"
-                leftIcon={<Mail className="w-4 h-4" />} {...register('email')}
-                error={errors.email?.message} dir="ltr" className="text-left" />
+                leftIcon={<Mail size={16}/>} {...register('email')} error={errors.email?.message} dir="ltr"/>
               <Input label="كلمة المرور" type="password" placeholder="••••••••"
-                leftIcon={<Lock className="w-4 h-4" />} {...register('password')}
-                error={errors.password?.message} dir="ltr" className="text-left" />
-
-              <div className="flex justify-end">
-                <Link href="/auth/forgot-password" className="text-xs font-bold" style={{color:'var(--gold-dark)'}}>نسيت كلمة المرور؟</Link>
+                leftIcon={<Lock size={16}/>} {...register('password')} error={errors.password?.message} dir="ltr"/>
+              <div style={{textAlign:'left'}}>
+                <Link href="/auth/forgot-password" style={{fontSize:12,fontWeight:700,color:'var(--gold)',textDecoration:'none'}}>نسيت كلمة المرور؟</Link>
               </div>
-
-              <button type="submit" disabled={isSubmitting}
-                className="btn-gold w-full py-3.5 rounded-lg font-black flex items-center justify-center gap-2">
-                {isSubmitting && <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
+              <button type="submit" disabled={isSubmitting} className="btn btn-gold btn-lg" style={{width:'100%',marginTop:4}}>
                 {isSubmitting ? 'جاري التحقق...' : 'تسجيل الدخول'}
               </button>
             </form>
 
-            <p className="text-center text-sm mt-6" style={{color:'var(--text-secondary)'}}>
+            <p style={{textAlign:'center',fontSize:13,marginTop:20,color:'var(--txt2)'}}>
               ليس لديك حساب؟{' '}
-              <Link href="/auth/register" className="font-black" style={{color:'var(--gold-dark)'}}>أنشئ حساباً</Link>
+              <Link href="/auth/register" style={{fontWeight:800,color:'var(--gold)',textDecoration:'none'}}>أنشئ حساباً</Link>
             </p>
           </div>
         </div>

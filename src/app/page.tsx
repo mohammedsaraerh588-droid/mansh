@@ -1,176 +1,141 @@
+'use client'
 import Link from 'next/link'
-import { BookOpen, Star, Users, BrainCircuit, Rocket, ShieldCheck, PlayCircle, Zap, Trophy, Globe, ArrowLeft, CheckCircle, GraduationCap } from 'lucide-react'
+import { BookOpen, Star, Users, Trophy, Rocket, ShieldCheck, PlayCircle, Zap, Globe, GraduationCap, CheckCircle, ArrowLeft } from 'lucide-react'
 
 export default function Home() {
+  const stats = [
+    { v:'+10,000', l:'طالب مسجّل',  Icon:Users  },
+    { v:'+500',    l:'دورة متاحة',   Icon:BookOpen },
+    { v:'4.9★',    l:'تقييم المنصة', Icon:Star   },
+    { v:'+100',    l:'معلم خبير',    Icon:Trophy },
+  ]
+  const features = [
+    { Icon:PlayCircle,  t:'فيديو بجودة عالية',   d:'دروس مصوّرة بدقة فائقة مع إمكانية المشاهدة في أي وقت ومن أي جهاز.' },
+    { Icon:ShieldCheck, t:'شهادات موثّقة',        d:'شهادات رقمية معتمدة تضيفها لملفك المهني على LinkedIn.' },
+    { Icon:Zap,         t:'اختبارات تفاعلية',     d:'قيّم مستواك باختبارات متدرجة مع تغذية راجعة فورية ومفصّلة.' },
+    { Icon:Globe,       t:'وصول مدى الحياة',      d:'تملّك الدورة للأبد — راجع المحتوى متى شئت بدون أي قيود.' },
+    { Icon:Trophy,      t:'معلمون متخصصون',       d:'كل دورة بإشراف خبير في مجاله بسنوات من التجربة العملية.' },
+    { Icon:BookOpen,    t:'محتوى محدَّث دائماً',   d:'نحرص على مواكبة كل جديد في كل تخصص لتبقى دائماً في الطليعة.' },
+  ]
+  const steps = [
+    { n:'01', t:'أنشئ حسابك',   d:'سجّل مجاناً في أقل من دقيقة واختر مجالك.' },
+    { n:'02', t:'اختر دورتك',   d:'تصفّح مئات الدورات وابدأ التعلّم فوراً.' },
+    { n:'03', t:'احصل على شهادتك', d:'أنهِ الدورة واحصل على شهادة معتمدة.' },
+  ]
   return (
-    <div className="flex flex-col min-h-screen">
+    <div style={{minHeight:'100vh'}}>
 
-      {/* ===== HERO ===== */}
-      <section className="hero-bg min-h-screen flex items-center pt-20">
-        <div className="container mx-auto px-4 relative z-10 py-24">
-          <div className="max-w-3xl mx-auto text-center">
-
-            {/* Eyebrow */}
-            <p className="text-xs font-black tracking-widest uppercase mb-8 slide-up" style={{color:'var(--gold)', letterSpacing:'0.2em', animationDelay:'0s'}}>
-              ✦ منصة التعليم العربي الراقية ✦
-            </p>
-
-            <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight slide-up" style={{animationDelay:'0.1s', letterSpacing:'-0.02em'}}>
-              طوّر مهاراتك
-              <br />
-              <span className="gradient-text">بمستوى احترافي</span>
-            </h1>
-
-            {/* Gold separator */}
-            <div className="gold-separator my-8 slide-up" style={{animationDelay:'0.2s'}} />
-
-            <p className="text-lg text-white/65 mb-12 max-w-xl mx-auto leading-relaxed slide-up" style={{animationDelay:'0.25s'}}>
-              دورات تدريبية متخصصة يُقدّمها خبراء معتمدون، مع شهادات رقمية تُثبت كفاءتك أمام سوق العمل.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 slide-up" style={{animationDelay:'0.3s'}}>
-              <Link href="/courses">
-                <button className="btn-gold flex items-center gap-2.5 px-9 py-3.5 text-base rounded-lg">
-                  <Rocket className="w-5 h-5" />
-                  استكشف الدورات
-                </button>
-              </Link>
-              <Link href="/auth/register">
-                <button className="flex items-center gap-2.5 px-9 py-3.5 text-base rounded-lg font-bold text-white/80 border border-white/20 hover:border-white/50 hover:text-white transition-all duration-300">
-                  إنشاء حساب مجاني
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px mt-24 max-w-3xl mx-auto border border-white/10 rounded-2xl overflow-hidden slide-up" style={{animationDelay:'0.45s'}}>
-            {[
-              { label: 'طالب مسجّل', value: '+10,000', icon: Users },
-              { label: 'دورة متاحة', value: '+500', icon: BookOpen },
-              { label: 'تقييم المنصة', value: '4.9 / 5', icon: Star },
-              { label: 'معلم خبير', value: '+100', icon: Trophy },
-            ].map((s,i) => (
-              <div key={i} className="flex flex-col items-center justify-center py-8 px-4 text-center" style={{background:'rgba(255,255,255,0.04)'}}>
-                <s.icon className="w-5 h-5 mb-3" style={{color:'var(--gold)'}} />
-                <div className="text-2xl font-black text-white mb-1">{s.value}</div>
-                <div className="text-xs text-white/45 font-medium">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FEATURES ===== */}
-      <section className="py-28 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="section-header">
-            <p className="section-label">لماذا تختارنا</p>
-            <h2 className="section-title">تجربة تعليمية لا مثيل لها</h2>
-            <div className="gold-separator mt-6" />
-            <p className="section-subtitle">كل تفصيلة في المنصة صُمِّمت بعناية لتمنحك أفضل رحلة تعلّم ممكنة.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              { title: 'فيديو بجودة عالية', desc: 'دروس مصوّرة بدقة فائقة، مع إمكانية المشاهدة في أي وقت ومن أي جهاز.', icon: PlayCircle },
-              { title: 'شهادات موثّقة', desc: 'شهادات إتمام رقمية قابلة للتحقق، تُضيفها مباشرة لملفك المهني.', icon: ShieldCheck },
-              { title: 'اختبارات تفاعلية', desc: 'قيّم مستواك الحقيقي باختبارات متدرجة مع تغذية راجعة فورية ومفصّلة.', icon: BrainCircuit },
-              { title: 'وصول مدى الحياة', desc: 'تملّك الدورة للأبد — راجع المحتوى متى شئت بدون أي قيود زمنية.', icon: Globe },
-              { title: 'معلمون متخصصون', desc: 'كل دورة بإشراف خبير في مجاله، مع سنوات من التجربة العملية.', icon: Trophy },
-              { title: 'محتوى محدَّث دائماً', desc: 'نحرص على مواكبة كل جديد في كل تخصص لتبقى دائماً في الطليعة.', icon: Zap },
-            ].map((f,i) => (
-              <div key={i} className="glass-card-hover p-8 group border-b-2 border-transparent hover:border-b-gold" style={{'--gold-border':'var(--gold)'} as any}>
-                <div className="feature-icon">
-                  <f.icon className="w-6 h-6" style={{color:'var(--gold)'}} />
-                </div>
-                <h3 className="text-lg font-black mb-3 text-primary">{f.title}</h3>
-                <p className="text-sm leading-relaxed" style={{color:'var(--text-secondary)'}}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== HOW IT WORKS ===== */}
-      <section className="py-28" style={{background:'var(--surface-2)'}}>
-        <div className="container mx-auto px-4">
-          <div className="section-header">
-            <p className="section-label">خطوات بسيطة</p>
-            <h2 className="section-title">ابدأ في ثلاث خطوات</h2>
-            <div className="gold-separator mt-6" />
-          </div>
-          <div className="grid md:grid-cols-3 gap-12 max-w-4xl mx-auto">
-            {[
-              { n:'01', title:'أنشئ حسابك', desc:'سجّل مجاناً في أقل من دقيقة واختر مجالك الذي تريد الاحتراف فيه.' },
-              { n:'02', title:'اختر دورتك', desc:'تصفّح مئات الدورات في مختلف التخصصات وابدأ التعلّم فوراً.' },
-              { n:'03', title:'احصل على شهادتك', desc:'أنهِ الدورة واحصل على شهادة رقمية معتمدة تُضيفها لسيرتك الذاتية.' },
-            ].map((s,i) => (
-              <div key={i} className="text-center group">
-                <div className="step-number mb-2 group-hover:opacity-60 transition-opacity">{s.n}</div>
-                <div className="divider-gold mx-auto mb-5" />
-                <h3 className="text-xl font-black mb-3" style={{color:'var(--primary)'}}>{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{color:'var(--text-secondary)'}}>{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== CTA ===== */}
-      <section className="hero-bg py-28">
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <div className="max-w-2xl mx-auto">
-            <p className="text-xs font-black tracking-widest uppercase mb-6" style={{color:'var(--gold)', letterSpacing:'0.2em'}}>
-              ✦ انضم إلى المجتمع ✦
-            </p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-              رحلتك نحو الاحتراف<br/>تبدأ اليوم
-            </h2>
-            <div className="gold-separator my-8" />
-            <p className="text-white/60 text-base mb-10 leading-relaxed">
-              أكثر من 10,000 طالب عربي يتعلمون معنا كل يوم — كن واحداً منهم.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/auth/register">
-                <button className="btn-gold flex items-center gap-2.5 px-9 py-3.5 text-base rounded-lg">
-                  <GraduationCap className="w-5 h-5" />
-                  ابدأ مجاناً الآن
-                </button>
-              </Link>
-              <Link href="/courses">
-                <button className="flex items-center gap-2.5 px-9 py-3.5 text-base rounded-lg font-bold text-white/70 border border-white/20 hover:border-white/50 hover:text-white transition-all duration-300">
-                  تصفّح الدورات
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-              </Link>
-            </div>
-            <div className="flex items-center justify-center flex-wrap gap-6 mt-12">
-              {['تسجيل مجاني بالكامل','شهادات معتمدة','دعم على مدار الساعة'].map((t,i)=>(
-                <div key={i} className="flex items-center gap-2" style={{color:'rgba(255,255,255,0.45)'}}>
-                  <CheckCircle className="w-4 h-4" style={{color:'var(--gold)'}} />
-                  <span className="text-sm font-medium">{t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FOOTER ===== */}
-      <footer className="py-10 border-t" style={{background:'var(--primary)', borderColor:'rgba(255,255,255,0.06)'}}>
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-base" style={{background:'var(--gradient-gold)', color:'var(--primary)'}}>م</div>
-            <span className="text-lg font-black text-white">منصة <span className="gradient-text">تعلّم</span></span>
-          </div>
-          <p className="text-xs font-medium" style={{color:'rgba(255,255,255,0.3)'}}>
-            © {new Date().getFullYear()} منصة تعلّم — جميع الحقوق محفوظة
+      {/* HERO */}
+      <section className="hero-wrap" style={{minHeight:'100vh',display:'flex',alignItems:'center',paddingTop:80}}>
+        <div className="hero-glow" style={{width:400,height:400,background:'rgba(184,145,42,.15)',top:'-10%',right:'-5%'}}/>
+        <div className="hero-glow" style={{width:300,height:300,background:'rgba(99,102,241,.1)',bottom:'10%',left:'5%'}}/>
+        <div style={{maxWidth:1280,margin:'0 auto',padding:'80px 24px',textAlign:'center',position:'relative',zIndex:1,width:'100%'}}>
+          <p className="sec-eyebrow fade-up" style={{animationDelay:'0s'}}>✦ منصة التعليم العربي الراقية ✦</p>
+          <h1 className="fade-up" style={{fontSize:'clamp(38px,6vw,72px)',fontWeight:900,color:'#fff',lineHeight:1.1,marginBottom:20,animationDelay:'.1s'}}>
+            طوّر مهاراتك<br/><span className="g-text">بمستوى احترافي</span>
+          </h1>
+          <div className="gold-bar fade-up" style={{animationDelay:'.2s'}}/>
+          <p className="fade-up" style={{fontSize:17,color:'rgba(255,255,255,.6)',maxWidth:520,margin:'18px auto 36px',lineHeight:1.8,animationDelay:'.25s'}}>
+            دورات تدريبية متخصصة يُقدّمها خبراء معتمدون — مع شهادات رقمية تُثبت كفاءتك أمام سوق العمل.
           </p>
-        </div>
-      </footer>
+          <div className="fade-up" style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',animationDelay:'.3s'}}>
+            <Link href="/courses" className="btn btn-gold btn-xl" style={{textDecoration:'none'}}>
+              <Rocket size={18}/>استكشف الدورات
+            </Link>
+            <Link href="/auth/register" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,padding:'16px 36px',borderRadius:12,fontWeight:700,fontSize:15,color:'rgba(255,255,255,.75)',border:'2px solid rgba(255,255,255,.2)',transition:'all .2s'}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.5)';(e.currentTarget as HTMLElement).style.color='#fff'}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.2)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,.75)'}}>
+              إنشاء حساب مجاني<ArrowLeft size={16}/>
+            </Link>
+          </div>
 
+          {/* Stats grid */}
+          <div className="fade-up" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:1,maxWidth:720,margin:'64px auto 0',border:'1px solid rgba(255,255,255,.1)',borderRadius:16,overflow:'hidden',animationDelay:'.45s'}}>
+            {stats.map(({v,l,Icon},i)=>(
+              <div key={i} style={{padding:'24px 16px',textAlign:'center',background:'rgba(255,255,255,.04)'}}>
+                <Icon size={18} style={{color:'var(--gold)',margin:'0 auto 8px'}}/>
+                <div style={{fontSize:22,fontWeight:900,color:'#fff'}}>{v}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.4)',marginTop:3}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{padding:'96px 24px',background:'var(--bg)'}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
+          <div style={{textAlign:'center',marginBottom:60}}>
+            <p className="sec-eyebrow">لماذا تختارنا</p>
+            <h2 className="sec-title">كل ما تحتاجه في مكان واحد</h2>
+            <div className="gold-bar"/>
+            <p className="sec-sub">صمّمنا كل تفصيلة لتضمن لك أفضل تجربة تعليمية باللغة العربية.</p>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:22}}>
+            {features.map(({Icon,t,d},i)=>(
+              <div key={i} className="card card-hover" style={{padding:28}}>
+                <div style={{width:52,height:52,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18,background:'linear-gradient(135deg,#1c1c2e,#2a2a42)',boxShadow:'var(--shadow2)'}}>
+                  <Icon size={22} style={{color:'var(--gold)'}}/>
+                </div>
+                <h3 style={{fontWeight:800,fontSize:16,marginBottom:8,color:'var(--txt1)'}}>{t}</h3>
+                <p style={{fontSize:13.5,color:'var(--txt2)',lineHeight:1.75}}>{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STEPS */}
+      <section style={{padding:'96px 24px',background:'var(--bg2)'}}>
+        <div style={{maxWidth:900,margin:'0 auto'}}>
+          <div style={{textAlign:'center',marginBottom:60}}>
+            <p className="sec-eyebrow">كيف تبدأ</p>
+            <h2 className="sec-title">ثلاث خطوات للاحتراف</h2>
+            <div className="gold-bar"/>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:36}}>
+            {steps.map(({n,t,d},i)=>(
+              <div key={i} style={{textAlign:'center'}}>
+                <div style={{fontSize:64,fontWeight:900,lineHeight:1,background:'linear-gradient(135deg,#b8912a,#f0c96a)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',opacity:.3,marginBottom:6}}>{n}</div>
+                <div style={{width:48,height:2,background:'linear-gradient(90deg,#b8912a,#f0c96a)',borderRadius:2,margin:'0 auto 16px'}}/>
+                <h3 style={{fontWeight:800,fontSize:17,marginBottom:8,color:'var(--txt1)'}}>{t}</h3>
+                <p style={{fontSize:13.5,color:'var(--txt2)'}}>{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="hero-wrap" style={{padding:'96px 24px',position:'relative'}}>
+        <div className="hero-glow" style={{width:320,height:320,background:'rgba(184,145,42,.12)',top:'20%',right:'15%'}}/>
+        <div style={{maxWidth:680,margin:'0 auto',textAlign:'center',position:'relative',zIndex:1}}>
+          <p className="sec-eyebrow" style={{color:'var(--gold)'}}>✦ انضم إلى المجتمع ✦</p>
+          <h2 style={{fontSize:'clamp(30px,4.5vw,52px)',fontWeight:900,color:'#fff',lineHeight:1.15,marginBottom:14}}>رحلتك نحو الاحتراف<br/>تبدأ اليوم</h2>
+          <div className="gold-bar"/>
+          <p style={{color:'rgba(255,255,255,.55)',fontSize:16,margin:'18px auto 36px',lineHeight:1.8}}>أكثر من 10,000 طالب عربي يتعلمون معنا كل يوم — كن واحداً منهم.</p>
+          <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
+            <Link href="/auth/register" className="btn btn-gold btn-xl" style={{textDecoration:'none'}}><GraduationCap size={18}/>ابدأ مجاناً الآن</Link>
+            <Link href="/courses" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,padding:'16px 32px',borderRadius:12,fontWeight:700,color:'rgba(255,255,255,.7)',border:'2px solid rgba(255,255,255,.2)',fontSize:15}}>تصفّح الدورات<ArrowLeft size={16}/></Link>
+          </div>
+          <div style={{display:'flex',gap:24,justifyContent:'center',marginTop:28,flexWrap:'wrap'}}>
+            {['تسجيل مجاني','شهادات معتمدة','دعم 24/7'].map((t,i)=>(
+              <span key={i} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'rgba(255,255,255,.4)'}}>
+                <CheckCircle size={13} style={{color:'var(--gold)'}}/>{t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{background:'#0a0a14',padding:'36px 24px',textAlign:'center',borderTop:'1px solid rgba(255,255,255,.06)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:10}}>
+          <div style={{width:34,height:34,borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,background:'linear-gradient(135deg,#b8912a,#d4a843)',color:'#fff',fontSize:16}}>م</div>
+          <span style={{fontWeight:900,fontSize:16,color:'#fff'}}>منصة <span className="g-text">تعلّم</span></span>
+        </div>
+        <p style={{fontSize:12,color:'rgba(255,255,255,.3)'}}>© {new Date().getFullYear()} منصة تعلّم — جميع الحقوق محفوظة</p>
+      </footer>
     </div>
   )
 }

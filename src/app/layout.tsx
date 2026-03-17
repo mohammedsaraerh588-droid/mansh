@@ -13,10 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl">
       <body>
         <ThemeProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1 pt-20">{children}</main>
-          </div>
+          <Navbar />
+          <main style={{ minHeight: '100vh', paddingTop: 70 }}>
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

@@ -1,67 +1,61 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Course, Category } from '@/types'
 import CourseCard from '@/components/courses/CourseCard'
 import { Search, Loader2, BookOpen, SlidersHorizontal } from 'lucide-react'
+import type { Course, Category } from '@/types'
 
 export default function CoursesPage() {
-  const [courses, setCourses]       = useState<Course[]>([])
+  const [courses,    setCourses]    = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [search, setSearch]         = useState('')
-  const [category, setCategory]     = useState('all')
+  const [loading,    setLoading]    = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [cat,        setCat]        = useState('all')
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    (async () => {
       const { data: cats } = await supabase.from('categories').select('*').order('name_ar')
       if (cats) setCategories(cats)
-      const { data: crs } = await supabase
-        .from('courses').select('*, category:categories(id,name,name_ar)')
+      const { data: crs } = await supabase.from('courses')
+        .select('*, category:categories(id,name,name_ar)')
         .eq('status','published').order('created_at',{ascending:false})
-      if (crs) setCourses(crs as any[])
+      if (crs) setCourses(crs as any)
       setLoading(false)
-    }
-    fetchCourses()
+    })()
   }, [])
 
-  const filtered = courses.filter(c => {
-    const matchSearch = c.title.includes(search) || c.title_ar?.includes(search) || false
-    const matchCat    = category === 'all' || c.category_id === category
-    return matchSearch && matchCat
-  })
+  const filtered = courses.filter(c =>
+    (c.title.includes(search) || c.title_ar?.includes(search) || !search) &&
+    (cat==='all' || c.category_id===cat)
+  )
 
   return (
-    <div className="min-h-screen py-10" style={{background:'var(--surface)'}}>
-      <div className="container mx-auto px-4">
+    <div style={{minHeight:'100vh',background:'var(--bg)',padding:'32px 0'}}>
+      <div style={{maxWidth:1280,margin:'0 auto',padding:'0 20px'}}>
 
         {/* Header */}
-        <div className="glass-card p-10 mb-10 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5" style={{background:'var(--gradient-hero)'}} />
-          <div className="relative z-10">
-            <p className="text-xs font-black tracking-widest uppercase mb-3" style={{color:'var(--gold)',letterSpacing:'0.15em'}}>مكتبة الدورات</p>
-            <h1 className="text-4xl font-black mb-3" style={{color:'var(--text-primary)'}}>استكشف الدورات المتاحة</h1>
-            <div className="gold-separator mb-5" />
-            <p className="mb-8 max-w-xl mx-auto" style={{color:'var(--text-secondary)'}}>مئات الدورات في مختلف المجالات لتطوير مهاراتك مع أفضل المعلمين.</p>
-
-            <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{color:'var(--text-muted)'}} />
-                <input
-                  placeholder="ابحث عن دورة..."
-                  value={search} onChange={e => setSearch(e.target.value)}
-                  className="input-field pr-10 w-full"
-                />
+        <div className="card" style={{padding:'44px 32px',marginBottom:28,textAlign:'center',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(150deg,#0e0e1a,#1e1e38)',opacity:.04}}/>
+          <div style={{position:'relative',zIndex:1}}>
+            <p className="sec-eyebrow">مكتبة الدورات</p>
+            <h1 className="sec-title" style={{marginBottom:6}}>استكشف الدورات المتاحة</h1>
+            <div className="gold-bar"/>
+            <p style={{color:'var(--txt2)',marginBottom:28,marginTop:12,fontSize:15}}>مئات الدورات في مختلف المجالات مع أفضل المعلمين العرب.</p>
+            <div style={{maxWidth:640,margin:'0 auto',display:'flex',gap:12,flexWrap:'wrap'}}>
+              <div style={{flex:1,minWidth:220,position:'relative'}}>
+                <span style={{position:'absolute',right:13,top:'50%',transform:'translateY(-50%)',color:'var(--txt3)',display:'flex'}}>
+                  <Search size={16}/>
+                </span>
+                <input className="inp" style={{paddingRight:40}} placeholder="ابحث عن دورة..." value={search} onChange={e=>setSearch(e.target.value)}/>
               </div>
-              <div className="sm:w-56 relative">
-                <SlidersHorizontal className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-10" style={{color:'var(--text-muted)'}} />
-                <select
-                  value={category} onChange={e => setCategory(e.target.value)}
-                  className="input-field appearance-none pr-10 w-full cursor-pointer"
-                >
+              <div style={{width:200,position:'relative'}}>
+                <span style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--txt3)',display:'flex',pointerEvents:'none'}}>
+                  <SlidersHorizontal size={14}/>
+                </span>
+                <select className="inp" style={{paddingRight:36,cursor:'pointer',appearance:'none'}} value={cat} onChange={e=>setCat(e.target.value)}>
                   <option value="all">جميع التصنيفات</option>
-                  {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name_ar}</option>)}
+                  {categories.map(c=><option key={c.id} value={c.id}>{c.name_ar}</option>)}
                 </select>
               </div>
             </div>
@@ -70,25 +64,23 @@ export default function CoursesPage() {
 
         {/* Results */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-10 h-10 animate-spin" style={{color:'var(--gold)'}} />
+          <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
+            <Loader2 size={36} className="spin" style={{color:'var(--gold)'}}/>
           </div>
         ) : filtered.length > 0 ? (
           <>
-            <p className="text-sm font-bold mb-6" style={{color:'var(--text-secondary)'}}>
-              {filtered.length} دورة متاحة
-            </p>
+            <p style={{fontSize:13,fontWeight:600,color:'var(--txt3)',marginBottom:18}}>{filtered.length} دورة متاحة</p>
             <div className="courses-grid">
-              {filtered.map(c => <CourseCard key={c.id} course={c} />)}
+              {filtered.map(c=><CourseCard key={c.id} course={c}/>)}
             </div>
           </>
         ) : (
-          <div className="glass-card p-16 text-center">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:'var(--surface-3)'}}>
-              <BookOpen className="w-8 h-8" style={{color:'var(--text-muted)'}} />
+          <div className="card" style={{padding:64,textAlign:'center'}}>
+            <div style={{width:60,height:60,borderRadius:16,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+              <BookOpen size={26} style={{color:'var(--txt3)'}}/>
             </div>
-            <h3 className="text-xl font-black mb-2" style={{color:'var(--text-primary)'}}>لا توجد نتائج</h3>
-            <p style={{color:'var(--text-secondary)'}}>لم نجد دورات مطابقة. جرب كلمات مفتاحية أخرى.</p>
+            <h3 style={{fontSize:18,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>لا توجد نتائج</h3>
+            <p style={{color:'var(--txt2)',fontSize:14}}>جرب كلمات مفتاحية أخرى أو تصنيفاً مختلفاً.</p>
           </div>
         )}
       </div>

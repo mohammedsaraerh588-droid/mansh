@@ -5,83 +5,74 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Mail, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail]     = useState('')
+  const [email,   setEmail]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent]       = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [sent,    setSent]    = useState(false)
+  const [err,     setErr]     = useState<string|null>(null)
   const supabase = createSupabaseBrowserClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true); setError(null)
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+    e.preventDefault(); setLoading(true); setErr(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })
     setLoading(false)
-    if (err) { setError('تعذّر إرسال رابط الاسترداد. تأكد من البريد الإلكتروني.'); return }
+    if (error) { setErr('تعذّر الإرسال. تأكد من البريد الإلكتروني.'); return }
     setSent(true)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-20" style={{background:'var(--surface-2)'}}>
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg" style={{background:'var(--gradient-gold)',color:'var(--primary)'}}>م</div>
-            <span className="text-xl font-black" style={{color:'var(--text-primary)'}}>منصة <span className="gradient-text">تعلّم</span></span>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',padding:'40px 24px'}}>
+      <div style={{width:'100%',maxWidth:400}}>
+        <div style={{textAlign:'center',marginBottom:28}}>
+          <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
+            <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,color:'#fff',fontSize:16}}>م</div>
+            <span style={{fontWeight:900,fontSize:17,color:'var(--txt1)'}}>منصة <span className="g-text">تعلّم</span></span>
           </Link>
         </div>
 
-        <div className="glass-card p-8 scale-in">
+        <div className="card" style={{padding:32}}>
           {sent ? (
-            <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{background:'#d1fae5'}}>
-                <CheckCircle className="w-8 h-8" style={{color:'#059669'}} />
+            <div style={{textAlign:'center',padding:'8px 0'}}>
+              <div style={{width:60,height:60,borderRadius:'50%',background:'#f0fdf4',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+                <CheckCircle size={28} style={{color:'#16a34a'}}/>
               </div>
-              <h2 className="text-2xl font-black mb-2" style={{color:'var(--text-primary)'}}>تم الإرسال!</h2>
-              <p className="text-sm mb-6" style={{color:'var(--text-secondary)'}}>
-                أرسلنا رابط إعادة تعيين كلمة المرور إلى <strong>{email}</strong>. تحقق من بريدك الوارد.
+              <h2 style={{fontSize:21,fontWeight:900,marginBottom:8,color:'var(--txt1)'}}>تم الإرسال!</h2>
+              <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24,lineHeight:1.7}}>
+                أرسلنا رابط الاسترداد إلى <strong style={{color:'var(--txt1)'}}>{email}</strong>
               </p>
-              <Link href="/auth/login">
-                <button className="btn-gold w-full py-3 rounded-lg text-sm">العودة لتسجيل الدخول</button>
+              <Link href="/auth/login" className="btn btn-gold btn-md" style={{textDecoration:'none',width:'100%',display:'flex',justifyContent:'center'}}>
+                العودة لتسجيل الدخول
               </Link>
             </div>
           ) : (
             <>
-              <div className="mb-8">
-                <h1 className="text-2xl font-black mb-2" style={{color:'var(--text-primary)'}}>نسيت كلمة المرور؟</h1>
-                <p className="text-sm" style={{color:'var(--text-secondary)'}}>أدخل بريدك الإلكتروني وسنرسل لك رابط الاسترداد.</p>
-              </div>
+              <h1 style={{fontSize:22,fontWeight:900,marginBottom:6,color:'var(--txt1)'}}>نسيت كلمة المرور؟</h1>
+              <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24}}>أدخل بريدك وسنرسل لك رابط الاسترداد.</p>
 
-              {error && (
-                <div className="mb-5 p-3 rounded-lg flex items-center gap-2 text-sm" style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca'}}>
-                  <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              {err && (
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'#fef2f2',border:'1px solid #fecaca',marginBottom:18}}>
+                  <AlertCircle size={14} style={{color:'var(--red)'}}/><span style={{fontSize:13,color:'var(--red)'}}>{err}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:16}}>
                 <div>
-                  <label className="block text-sm font-bold mb-2" style={{color:'var(--text-secondary)'}}>البريد الإلكتروني</label>
-                  <div className="relative">
-                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{color:'var(--text-muted)'}} />
-                    <input
-                      type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="input-field pr-10 text-left" dir="ltr"
-                    />
+                  <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--txt2)'}}>البريد الإلكتروني</label>
+                  <div className="inp-wrap">
+                    <span className="inp-icon left"><Mail size={15}/></span>
+                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)}
+                      placeholder="name@example.com" className="inp inp-icon-l" dir="ltr"/>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="btn-gold w-full py-3 rounded-lg text-sm flex items-center justify-center gap-2">
-                  {loading ? <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : null}
+                <button type="submit" disabled={loading} className="btn btn-gold btn-lg" style={{width:'100%'}}>
                   {loading ? 'جاري الإرسال...' : 'إرسال رابط الاسترداد'}
                 </button>
               </form>
 
-              <div className="text-center mt-6">
-                <Link href="/auth/login" className="inline-flex items-center gap-1.5 text-sm font-bold" style={{color:'var(--gold-dark)'}}>
-                  <ArrowRight className="w-4 h-4" />
-                  العودة لتسجيل الدخول
+              <div style={{textAlign:'center',marginTop:18}}>
+                <Link href="/auth/login" style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:13,fontWeight:700,color:'var(--gold)',textDecoration:'none'}}>
+                  <ArrowRight size={14}/>العودة لتسجيل الدخول
                 </Link>
               </div>
             </>

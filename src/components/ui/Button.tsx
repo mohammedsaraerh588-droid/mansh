@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
-  size?: 'sm' | 'md' | 'lg' | 'icon'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'gold' | 'dark' | 'outline'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon'
   isLoading?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
@@ -12,44 +12,36 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, leftIcon, rightIcon, children, disabled, ...props }, ref) => {
-    
-    const variants = {
-      primary: 'btn-primary',
-      secondary: 'btn-secondary',
-      ghost: 'btn-ghost',
-      danger: 'bg-red-500/10 text-red-500 hover:bg-red-500/20 font-semibold rounded-xl inline-flex items-center justify-center gap-2 transition-all duration-200 px-6 py-3',
+    const vMap: Record<string, string> = {
+      primary:   'btn btn-gold',
+      gold:      'btn btn-gold',
+      secondary: 'btn btn-outline',
+      outline:   'btn btn-outline',
+      ghost:     'btn btn-ghost',
+      dark:      'btn btn-dark',
+      danger:    'btn btn-danger',
     }
-
-    const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-6 py-3',
-      lg: 'px-8 py-4 text-lg',
+    const sMap: Record<string, string> = {
+      sm:   'btn-sm',
+      md:   'btn-md',
+      lg:   'btn-lg',
+      xl:   'btn-xl',
       icon: 'p-2',
     }
-    
-    // For primary/secondary which already have padding defined in globals.css, we might want to override them if size is not md
-    const sizeOverride = size === 'md' ? '' : sizes[size]
-
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={cn(
-          variants[variant],
-          sizeOverride,
-          className
-        )}
+        className={cn(vMap[variant] || 'btn btn-gold', sMap[size], className)}
         {...props}
       >
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin -ml-1 mr-2" />}
-        {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+        {isLoading && <Loader2 className="w-4 h-4 spin" />}
+        {!isLoading && leftIcon}
         {children}
-        {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
+        {!isLoading && rightIcon}
       </button>
     )
   }
 )
-
 Button.displayName = 'Button'
-
 export { Button }

@@ -3,100 +3,89 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/utils'
-import { Users, Video, DollarSign, Award, ArrowUpRight, Loader2 } from 'lucide-react'
+import { Users, Video, DollarSign, Award, Loader2, ArrowUpRight } from 'lucide-react'
 
 export default function AdminDashboard() {
   const [profile, setProfile] = useState<any>(null)
-  const [stats, setStats] = useState({ users:0, courses:0, revenue:0, certs:0 })
-  const [recentUsers, setUsers] = useState<any[]>([])
+  const [stats,   setStats]   = useState({ users:0, courses:0, revenue:0, certs:0 })
+  const [users,   setUsers]   = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createSupabaseBrowserClient()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+  useEffect(()=>{
+    (async()=>{
+      const { data:{ session } } = await supabase.auth.getSession()
       if (!session) return
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      const { data:p } = await supabase.from('profiles').select('*').eq('id',session.user.id).single()
       setProfile(p)
-      if (p?.role !== 'admin') { window.location.href = '/dashboard/student'; return }
-      const { count: uc } = await supabase.from('profiles').select('*', { count:'exact', head:true })
-      const { count: cc } = await supabase.from('courses').select('*', { count:'exact', head:true })
-      const { count: cert } = await supabase.from('certificates').select('*', { count:'exact', head:true })
-      const { data: cs } = await supabase.from('courses').select('total_students, price')
-      let rev = 0; cs?.forEach(c => rev += (c.total_students||0)*(c.price||0))
+      if (p?.role!=='admin') { window.location.href='/dashboard/student'; return }
+      const [{ count:uc },{ count:cc },{ count:cert }] = await Promise.all([
+        supabase.from('profiles').select('*',{count:'exact',head:true}),
+        supabase.from('courses').select('*',{count:'exact',head:true}),
+        supabase.from('certificates').select('*',{count:'exact',head:true}),
+      ])
+      const { data:cs } = await supabase.from('courses').select('total_students,price')
+      let rev=0; cs?.forEach(c=>rev+=(c.total_students||0)*(c.price||0))
       setStats({ users:uc||0, courses:cc||0, revenue:rev, certs:cert||0 })
-      const { data: us } = await supabase.from('profiles').select('id,full_name,email,role,created_at').order('created_at',{ascending:false}).limit(6)
+      const { data:us } = await supabase.from('profiles').select('id,full_name,email,role,created_at').order('created_at',{ascending:false}).limit(7)
       setUsers(us||[])
       setLoading(false)
-    }
-    fetchData()
-  }, [])
+    })()
+  },[])
 
-  if (loading) return (
-    <div className="min-h-[40vh] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin" style={{color:'var(--gold)'}} />
-    </div>
-  )
+  if (loading) return <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><Loader2 size={30} className="spin" style={{color:'var(--gold)'}}/></div>
 
   const cards = [
-    { label:'المستخدمون',   value: stats.users,               icon: Users,     bg:'#faf6ec', color:'var(--gold-dark)' },
-    { label:'الدورات',      value: stats.courses,             icon: Video,     bg:'#eff6ff', color:'#2563eb' },
-    { label:'الإيرادات',   value: formatPrice(stats.revenue), icon: DollarSign,bg:'#f0fdf4', color:'#059669' },
-    { label:'الشهادات',    value: stats.certs,                icon: Award,     bg:'#faf5ff', color:'#7c3aed' },
+    { label:'المستخدمون', value:stats.users,                Icon:Users,     bg:'#faf6ec', ic:'var(--gold)' },
+    { label:'الدورات',    value:stats.courses,              Icon:Video,     bg:'#eff6ff', ic:'#2563eb'     },
+    { label:'الإيرادات',  value:formatPrice(stats.revenue), Icon:DollarSign,bg:'#f0fdf4', ic:'#16a34a'     },
+    { label:'الشهادات',   value:stats.certs,                Icon:Award,     bg:'#faf5ff', ic:'#7c3aed'     },
   ]
-
   const roleLabel = (r:string) => r==='admin'?'مدير':r==='teacher'?'معلم':'طالب'
-  const roleBg    = (r:string) => r==='admin'?{bg:'#fef2f2',color:'#dc2626'}:r==='teacher'?{bg:'#eff6ff',color:'#2563eb'}:{bg:'var(--surface-3)',color:'var(--text-secondary)'}
+  const roleBadge = (r:string) => r==='admin'?'badge-red':r==='teacher'?'badge-navy':'badge-gray'
 
   return (
-    <div className="space-y-8">
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
       <div>
-        <p className="text-xs font-black tracking-widest uppercase mb-1" style={{color:'var(--gold)',letterSpacing:'0.15em'}}>لوحة الإدارة</p>
-        <h1 className="text-3xl font-black" style={{color:'var(--text-primary)'}}>نظرة عامة على المنصة</h1>
-        <p className="text-sm mt-1" style={{color:'var(--text-secondary)'}}>مرحباً {profile?.full_name}، إليك إحصائياتك الشاملة.</p>
+        <p style={{fontSize:11,fontWeight:800,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--gold)',marginBottom:5}}>لوحة الإدارة</p>
+        <h1 style={{fontSize:26,fontWeight:900,color:'var(--txt1)',marginBottom:4}}>نظرة عامة على المنصة</h1>
+        <p style={{fontSize:14,color:'var(--txt2)'}}>مرحباً {profile?.full_name}، إليك إحصائياتك.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((s,i) => (
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))',gap:14}}>
+        {cards.map(({label,value,Icon,bg,ic},i)=>(
           <div key={i} className="stat-card">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{background:s.bg}}>
-                <s.icon className="w-5 h-5" style={{color:s.color}} />
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+              <div style={{width:38,height:38,borderRadius:10,background:bg,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Icon size={18} style={{color:ic}}/>
               </div>
-              <span className="text-xs font-bold" style={{color:'var(--text-secondary)'}}>{s.label}</span>
+              <span style={{fontSize:12,fontWeight:700,color:'var(--txt2)'}}>{label}</span>
             </div>
-            <div className="text-3xl font-black" style={{color:'var(--text-primary)'}}>{s.value}</div>
+            <div style={{fontSize:28,fontWeight:900,color:'var(--txt1)'}}>{value}</div>
           </div>
         ))}
       </div>
 
-      {/* Recent Users */}
-      <div className="glass-card overflow-hidden">
-        <div className="p-5 border-b flex items-center justify-between" style={{borderColor:'var(--border)'}}>
-          <h2 className="text-lg font-black flex items-center gap-2" style={{color:'var(--text-primary)'}}>
-            <Users className="w-5 h-5" style={{color:'var(--gold)'}} /> أحدث المستخدمين
-          </h2>
-          <Link href="/dashboard/admin/users" className="text-sm font-bold" style={{color:'var(--gold-dark)'}}>إدارة المستخدمين</Link>
+      <div className="card" style={{overflow:'hidden'}}>
+        <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <h2 style={{fontSize:16,fontWeight:900,color:'var(--txt1)',display:'flex',alignItems:'center',gap:8}}><Users size={16} style={{color:'var(--gold)'}}/>أحدث المستخدمين</h2>
+          <Link href="/dashboard/admin/users" style={{fontSize:13,fontWeight:700,color:'var(--gold)',textDecoration:'none'}}>إدارة الكل</Link>
         </div>
-        <div className="p-4 space-y-2">
-          {recentUsers.map(u => {
-            const rb = roleBg(u.role)
-            return (
-              <div key={u.id} className="flex items-center justify-between p-3 rounded-xl transition-all" style={{border:'1px solid var(--border)'}}
-                onMouseEnter={e=>(e.currentTarget.style.background='var(--surface-2)')}
-                onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                <div>
-                  <div className="font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}>
-                    {u.full_name || 'بدون اسم'}
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={{background:rb.bg, color:rb.color}}>{roleLabel(u.role)}</span>
-                  </div>
-                  <div className="text-sm" style={{color:'var(--text-secondary)'}}>{u.email}</div>
+        <div style={{padding:'8px 12px',display:'flex',flexDirection:'column',gap:4}}>
+          {users.map(u=>(
+            <div key={u.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 10px',borderRadius:10,transition:'background .15s',cursor:'default'}}
+              onMouseEnter={e=>(e.currentTarget.style.background='var(--bg2)')}
+              onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+              <div>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                  <span style={{fontWeight:700,fontSize:14,color:'var(--txt1)'}}>{u.full_name||'بدون اسم'}</span>
+                  <span className={`badge ${roleBadge(u.role)}`} style={{fontSize:10}}>{roleLabel(u.role)}</span>
                 </div>
-                <ArrowUpRight className="w-4 h-4" style={{color:'var(--text-muted)'}} />
+                <span style={{fontSize:12.5,color:'var(--txt3)'}}>{u.email}</span>
               </div>
-            )
-          })}
+              <ArrowUpRight size={15} style={{color:'var(--txt3)'}}/>
+            </div>
+          ))}
         </div>
       </div>
     </div>
