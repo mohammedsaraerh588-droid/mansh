@@ -15,6 +15,7 @@ import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react'
 const courseSchema = z.object({
   title: z.string().min(5, 'العنوان يجب أن يكون 5 أحرف على الأقل'),
   titleAr: z.string().optional(),
+  description: z.string().min(20, 'الوصف يجب أن يكون 20 حرف على الأقل'),
   categoryId: z.string().min(1, 'يرجى اختيار تصنيف'),
   level: z.enum(['beginner', 'intermediate', 'advanced', 'all']),
   price: z.coerce.number().min(0, 'السعر لا يمكن أن يكون سالباً'),
@@ -67,6 +68,8 @@ export default function NewCoursePage() {
         category_id: data.categoryId,
         level: data.level,
         price: data.price,
+        description: data.description,
+        short_description: data.description.substring(0, 200),
         status: 'published',
       })
       .select()
@@ -117,6 +120,18 @@ export default function NewCoursePage() {
             {...register('title')}
             error={errors.title?.message}
           />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              الوصف <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              placeholder="اكتب وصفاً شاملاً عن الدورة والمهارات التي سيتعلمها الطالب..."
+              {...register('description')}
+              className="input-field w-full h-24 resize-none bg-surface-2/50"
+            />
+            {errors.description && <p className="mt-1.5 text-sm text-red-500/90">{errors.description.message}</p>}
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
