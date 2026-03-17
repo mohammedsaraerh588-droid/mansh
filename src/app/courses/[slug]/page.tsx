@@ -11,32 +11,25 @@ export const revalidate = 60
 export default async function CourseDetailsPage({ params }: { params: { slug: string } }) {
   const supabase = createSupabaseServerClient()
 
-  let { data: course } = await supabase
+  // First, try to fetch the course with the exact slug
+  let { data: course, error: courseError } = await supabase
     .from('courses')
     .select(`
       *,
       teacher:profiles(full_name, avatar_url, headline),
-      category:categories(name_ar),
-      modules(
-        id, title, description, position, lessons_count,
-        lessons(id, title, type, video_duration, is_preview, position)
-      )
+      category:categories(name_ar)
     `)
     .eq('slug', params.slug)
     .single()
 
   // If course not found, try searching by a normalized slug pattern
-  if (!course) {
+  if (!course && courseError) {
     const { data: alternativeCourse } = await supabase
       .from('courses')
       .select(`
         *,
         teacher:profiles(full_name, avatar_url, headline),
-        category:categories(name_ar),
-        modules(
-          id, title, description, position, lessons_count,
-          lessons(id, title, type, video_duration, is_preview, position)
-        )
+        category:categories(name_ar)
       `)
       .ilike('slug', `${params.slug}%`)
       .single()
@@ -50,11 +43,26 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
     notFound()
   }
 
-  // Sort modules and lessons
-  course.modules?.sort((a: any, b: any) => a.position - b.position)
-  course.modules?.forEach((m: any) => {
-    m.lessons?.sort((a: any, b: any) => a.position - b.position)
-  })
+  // Fetch modules separately to avoid complex joins
+  const { data: modules } = await supabase
+    .from('modules')
+    .select(`*`)
+    .eq('course_id', course.id)
+    .order('position', { ascending: true })
+
+  // Fetch lessons for each module
+  if (modules && modules.length > 0) {
+    for (const module of modules) {
+      const { data: lessons } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('module_id', module.id)
+        .order('position', { ascending: true })
+      module.lessons = lessons || []
+    }
+  }
+
+  course.modules = modules || []
 
   // Check enrollment status
   let isEnrolled = false
