@@ -60,7 +60,11 @@ body {
     box-shadow: var(--shadow-sm);
   }
   .glass-card-hover {
-    @apply glass-card transition-all duration-400;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
   }
   .glass-card-hover:hover {
     border-color: var(--gold);
@@ -179,7 +183,7 @@ body {
     background: var(--surface-3);
   }
   .progress-fill {
-    @apply absolute top-0 right-0 h-full rounded-full transition-all duration-700;
+    @apply absolute top-0 right-0 h-full rounded-full transition-all duration-500;
     background: var(--gradient-gold);
   }
 
