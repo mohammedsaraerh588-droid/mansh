@@ -88,6 +88,9 @@ export default function CurriculumManager() {
       setModules([...modules, { ...data, lessons: [] }])
       setNewModuleTitle('')
       setIsAddingModule(false)
+    } else if (error) {
+      console.error('Add Module Error:', error)
+      alert(`فشل إضافة الفصل: ${error.message}`)
     }
   }
 
@@ -126,6 +129,9 @@ export default function CurriculumManager() {
       
       setAddingLessonTo(null)
       setNewLessonTitle('')
+    } else if (error) {
+      console.error('Add Lesson Error:', error)
+      alert(`فشل إضافة الدرس: ${error.message}`)
     }
   }
 

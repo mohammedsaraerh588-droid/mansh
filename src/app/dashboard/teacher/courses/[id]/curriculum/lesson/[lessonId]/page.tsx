@@ -18,6 +18,7 @@ export default function LessonEditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -60,6 +61,7 @@ export default function LessonEditorPage() {
     if (e) e.preventDefault()
     setSaving(true)
     setSuccessMsg('')
+    setErrorMsg('')
 
     const updates = {
       title: lesson.title,
@@ -80,17 +82,39 @@ export default function LessonEditorPage() {
     if (!error) {
       setSuccessMsg('تم حفظ التغييرات بنجاح!')
       setTimeout(() => setSuccessMsg(''), 3000)
+    } else {
+      console.error('Save Error:', error)
+      setErrorMsg(`فشل الحفظ: ${error.message}`)
     }
   }
 
-  const handleVideoUploadSuccess = (url: string, publicId: string) => {
-    setLesson((prev: any) => ({
-      ...prev,
+  const handleVideoUploadSuccess = async (url: string, publicId: string) => {
+    setSaving(true)
+    setErrorMsg('')
+    setSuccessMsg('')
+    const updates = {
       type: 'video',
       video_url: url,
-      cloudinary_public_id: publicId
-    }))
-    handleSave()
+      cloudinary_public_id: publicId,
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('lessons')
+      .update(updates)
+      .eq('id', lessonId)
+
+    if (!error) {
+      setLesson((prev: any) => ({
+        ...prev,
+        ...updates
+      }))
+      setSuccessMsg('تم رفع الفيديو وحفظه بنجاح!')
+      setTimeout(() => setSuccessMsg(''), 3000)
+    } else {
+      setErrorMsg(`فشل حفظ الفيديو المرفوع: ${error.message}`)
+    }
+    setSaving(false)
   }
 
   if (loading) return (
@@ -214,6 +238,10 @@ export default function LessonEditorPage() {
               <span className="text-success font-bold flex items-center gap-2 bg-success/10 px-3 py-1.5 rounded-lg text-sm">
                 <CheckCircle2 className="w-4 h-4" />
                 {successMsg}
+              </span>
+            ) : errorMsg ? (
+              <span className="text-red-600 font-bold flex items-center gap-2 bg-red-100 px-3 py-1.5 rounded-lg text-sm">
+                {errorMsg}
               </span>
             ) : <div></div>}
             
