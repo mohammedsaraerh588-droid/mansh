@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 export function createSupabaseServerClient() {
   const cookieStore = cookies()
@@ -24,7 +25,6 @@ export function createSupabaseServerClient() {
 }
 
 export function createSupabaseAdminClient() {
-  const { createClient } = require('@supabase/supabase-js')
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

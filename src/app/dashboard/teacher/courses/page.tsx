@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { PlusCircle, Search, Video, Filter, ArrowRight, Loader2 } from 'lucide-react'
+import { Users, Star } from 'lucide-react'
 
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<any[]>([])
