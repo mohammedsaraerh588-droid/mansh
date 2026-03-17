@@ -67,7 +67,7 @@ export default function NewCoursePage() {
         category_id: data.categoryId,
         level: data.level,
         price: data.price,
-        status: 'draft',
+        status: 'published',
       })
       .select()
       .single()
