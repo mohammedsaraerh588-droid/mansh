@@ -3,39 +3,29 @@ import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'gold' | 'dark' | 'outline'
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon'
+  variant?: 'primary'|'secondary'|'ghost'|'danger'|'outline'
+  size?: 'sm'|'md'|'lg'|'xl'|'icon'
   isLoading?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading, leftIcon, rightIcon, children, disabled, ...props }, ref) => {
-    const vMap: Record<string, string> = {
-      primary:   'btn btn-gold',
-      gold:      'btn btn-gold',
-      secondary: 'btn btn-outline',
-      outline:   'btn btn-outline',
-      ghost:     'btn btn-ghost',
-      dark:      'btn btn-dark',
-      danger:    'btn btn-danger',
+  ({ className, variant='primary', size='md', isLoading, leftIcon, rightIcon, children, disabled, ...props }, ref) => {
+    const v: Record<string,string> = {
+      primary:  'btn btn-primary',
+      secondary:'btn btn-secondary',
+      outline:  'btn btn-secondary',
+      ghost:    'btn btn-ghost',
+      danger:   'btn btn-danger',
     }
-    const sMap: Record<string, string> = {
-      sm:   'btn-sm',
-      md:   'btn-md',
-      lg:   'btn-lg',
-      xl:   'btn-xl',
-      icon: 'p-2',
+    const s: Record<string,string> = {
+      sm:'btn-sm', md:'btn-md', lg:'btn-lg', xl:'btn-xl', icon:'p-2',
     }
     return (
-      <button
-        ref={ref}
-        disabled={disabled || isLoading}
-        className={cn(vMap[variant] || 'btn btn-gold', sMap[size], className)}
-        {...props}
-      >
-        {isLoading && <Loader2 className="w-4 h-4 spin" />}
+      <button ref={ref} disabled={disabled||isLoading}
+        className={cn(v[variant]||'btn btn-primary', s[size], className)} {...props}>
+        {isLoading && <Loader2 size={15} className="spin"/>}
         {!isLoading && leftIcon}
         {children}
         {!isLoading && rightIcon}
