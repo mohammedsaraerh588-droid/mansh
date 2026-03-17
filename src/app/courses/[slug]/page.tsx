@@ -11,7 +11,7 @@ export const revalidate = 60
 export default async function CourseDetailsPage({ params }: { params: { slug: string } }) {
   const supabase = createSupabaseServerClient()
 
-  const { data: course } = await supabase
+  let { data: course } = await supabase
     .from('courses')
     .select(`
       *,
@@ -24,6 +24,27 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
     `)
     .eq('slug', params.slug)
     .single()
+
+  // If course not found, try searching by a normalized slug pattern
+  if (!course) {
+    const { data: alternativeCourse } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        teacher:profiles(full_name, avatar_url, headline),
+        category:categories(name_ar),
+        modules(
+          id, title, description, position, lessons_count,
+          lessons(id, title, type, video_duration, is_preview, position)
+        )
+      `)
+      .ilike('slug', `${params.slug}%`)
+      .single()
+    
+    if (alternativeCourse) {
+      course = alternativeCourse
+    }
+  }
 
   if (!course) {
     notFound()
