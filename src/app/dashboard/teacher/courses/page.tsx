@@ -1,148 +1,83 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
-import { PlusCircle, Search, Video, Filter, ArrowRight, Loader2 } from 'lucide-react'
-import { Users, Star } from 'lucide-react'
+import { PlusCircle, Search, Video, Users, Star, Loader2 } from 'lucide-react'
 
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [search,  setSearch]  = useState('')
   const supabase = createSupabaseBrowserClient()
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+  useEffect(()=>{
+    (async()=>{
+      const { data:{ session } } = await supabase.auth.getSession()
       if (!session) return
+      const { data } = await supabase.from('courses')
+        .select('id,title,status,total_students,price,currency,avg_rating,created_at,category:categories(name_ar)')
+        .eq('teacher_id',session.user.id).order('created_at',{ascending:false})
+      if (data) setCourses(data); setLoading(false)
+    })()
+  },[])
 
-      const { data } = await supabase
-        .from('courses')
-        .select(`
-          id, title, status, total_students, price, currency, avg_rating, created_at,
-          category:categories(name_ar)
-        `)
-        .eq('teacher_id', session.user.id)
-        .order('created_at', { ascending: false })
+  const filtered = courses.filter(c=>c.title?.toLowerCase().includes(search.toLowerCase()))
+  const statusLabel = (s:string) => s==='published'?'منشور':s==='pending'?'قيد المراجعة':'مسودة'
+  const statusBadge = (s:string) => s==='published'?'badge-green':s==='pending'?'badge-gold':'badge-gray'
 
-      if (data) setCourses(data)
-      setLoading(false)
-    }
-    
-    fetchCourses()
-  }, [])
-
-  const filteredCourses = courses.filter(c => 
-    c.title?.toLowerCase().includes(search.toLowerCase())
-  )
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  if (loading) return <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><Loader2 size={30} className="spin" style={{color:'var(--gold)'}}/></div>
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div style={{display:'flex',flexDirection:'column',gap:22}}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/teacher">
-            <Button variant="ghost" className="p-2 border border-border bg-white hover:bg-surface-2 text-text-secondary">
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              إدارة الدورات
-            </h1>
-            <p className="text-text-secondary">إدارة وتعديل كافة الدورات الخاصة بك.</p>
-          </div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:14}}>
+        <div>
+          <p style={{fontSize:11,fontWeight:800,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--gold)',marginBottom:5}}>المحتوى</p>
+          <h1 style={{fontSize:26,fontWeight:900,color:'var(--txt1)',marginBottom:4}}>إدارة الدورات</h1>
+          <p style={{fontSize:14,color:'var(--txt2)'}}>إدارة وتعديل كافة دوراتك التدريبية.</p>
         </div>
-        <Link href="/dashboard/teacher/courses/new">
-          <Button variant="primary" leftIcon={<PlusCircle className="w-5 h-5" />}>
-            إنشاء دورة جديدة
-          </Button>
+        <Link href="/dashboard/teacher/courses/new" className="btn btn-gold btn-md" style={{textDecoration:'none',display:'inline-flex'}}>
+          <PlusCircle size={16}/>دورة جديدة
         </Link>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="w-5 h-5 text-text-muted absolute right-4 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text" 
-            placeholder="ابحث عن دورة..." 
-            className="w-full pl-4 pr-12 py-3 bg-white border border-border rounded-xl outline-none focus:border-primary transition-all shadow-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Button variant="ghost" className="bg-white border-border shadow-sm text-text-secondary" leftIcon={<Filter className="w-4 h-4" />}>
-          تصفية
-        </Button>
+      {/* Search */}
+      <div style={{position:'relative'}}>
+        <span style={{position:'absolute',right:13,top:'50%',transform:'translateY(-50%)',color:'var(--txt3)',display:'flex'}}>
+          <Search size={15}/>
+        </span>
+        <input className="inp" style={{paddingRight:40}} placeholder="ابحث عن دورة..." value={search} onChange={e=>setSearch(e.target.value)}/>
       </div>
 
-      {/* Courses Grid */}
-      {filteredCourses.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-border">
-          <div className="w-20 h-20 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-6 text-text-muted">
-            <Video className="w-10 h-10" />
+      {/* Grid */}
+      {filtered.length===0 ? (
+        <div className="card" style={{padding:56,textAlign:'center',border:'2px dashed var(--border)'}}>
+          <div style={{width:60,height:60,borderRadius:16,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px'}}>
+            <Video size={26} style={{color:'var(--txt3)'}}/>
           </div>
-          <h3 className="text-xl font-bold mb-2">لا توجد دورات مطابقة</h3>
-          <p className="text-text-secondary mb-8">ابدأ بإنشاء دورة جديدة لجذب الطلاب.</p>
-          <Link href="/dashboard/teacher/courses/new">
-            <Button variant="secondary">إنشاء دورتك الأولى</Button>
-          </Link>
+          <h3 style={{fontSize:17,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>لا توجد دورات</h3>
+          <p style={{fontSize:14,color:'var(--txt2)',marginBottom:20}}>ابدأ بإنشاء دورتك الأولى الآن.</p>
+          <Link href="/dashboard/teacher/courses/new" className="btn btn-gold btn-md" style={{textDecoration:'none',display:'inline-flex'}}>إنشاء دورة</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <div key={course.id} className="glass-card flex flex-col group hover:border-primary/50 transition-all duration-300">
-              <div className="p-5 flex-1">
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`badge ${
-                    course.status === 'published' ? 'badge-success' :
-                    course.status === 'pending' ? 'badge-warning' : 'badge-gray'
-                  }`}>
-                    {course.status === 'published' ? 'منشور' :
-                     course.status === 'pending' ? 'قيد المراجعة' : 'مسودة'}
-                  </span>
-                  <span className="text-xs text-text-muted font-medium">
-                    {course.category?.name_ar || 'بدون تصنيف'}
-                  </span>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:18}}>
+          {filtered.map(c=>(
+            <div key={c.id} className="card card-hover" style={{display:'flex',flexDirection:'column',overflow:'hidden'}}>
+              <div style={{padding:'18px 18px 14px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                  <span className={`badge ${statusBadge(c.status)}`}>{statusLabel(c.status)}</span>
+                  <span style={{fontSize:11,color:'var(--txt3)'}}>{c.category?.name_ar||'بدون تصنيف'}</span>
                 </div>
-                
-                <h3 className="text-lg font-bold mb-3 group-hover:text-primary transition-colors">
-                  {course.title}
-                </h3>
-                
-                <div className="flex items-center gap-6 text-sm text-text-secondary mb-6">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-primary" />
-                    <span>{course.total_students || 0} طالباً</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-secondary fill-secondary" />
-                    <span>{course.avg_rating > 0 ? course.avg_rating.toFixed(1) : 'جديد'}</span>
-                  </div>
+                <h3 style={{fontWeight:800,fontSize:15,marginBottom:12,color:'var(--txt1)',lineHeight:1.4}}>{c.title}</h3>
+                <div style={{display:'flex',gap:14,fontSize:13,color:'var(--txt2)'}}>
+                  <span style={{display:'flex',alignItems:'center',gap:5}}><Users size={13} style={{color:'var(--gold)'}}/>{c.total_students||0}</span>
+                  <span style={{display:'flex',alignItems:'center',gap:5}}><Star size={13} style={{fill:'var(--gold2)',color:'var(--gold2)'}}/>{c.avg_rating>0?c.avg_rating.toFixed(1):'جديد'}</span>
                 </div>
               </div>
-
-              <div className="p-5 bg-surface-2 border-t border-border flex items-center justify-between rounded-b-3xl">
-                <div className="font-black text-lg text-secondary">
-                  {formatPrice(course.price, course.currency)}
-                </div>
-                <Link href={`/dashboard/teacher/courses/${course.id}`}>
-                  <Button variant="ghost" size="sm" className="font-bold text-primary hover:bg-white border-transparent hover:border-primary/20">
-                    تعديل الدورة
-                  </Button>
-                </Link>
+              <div style={{padding:'12px 18px',background:'var(--bg2)',borderTop:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'auto'}}>
+                <span style={{fontWeight:900,fontSize:15,color:'var(--gold)'}}>{formatPrice(c.price,c.currency)}</span>
+                <Link href={`/dashboard/teacher/courses/${c.id}`} className="btn btn-outline btn-sm" style={{textDecoration:'none'}}>تعديل</Link>
               </div>
             </div>
           ))}

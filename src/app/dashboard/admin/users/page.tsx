@@ -1,165 +1,95 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
-import { Users, Search, Target, ShieldAlert, ArrowRight, Loader2 } from 'lucide-react'
+import { Users, Search, Loader2 } from 'lucide-react'
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([])
+  const [users,   setUsers]   = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [isAdmin, setIsAdmin] = useState(false)
-  
-  const router = useRouter()
+  const [search,  setSearch]  = useState('')
+  const router   = useRouter()
   const supabase = createSupabaseBrowserClient()
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
 
   const fetchUsers = async () => {
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data:{ session } } = await supabase.auth.getSession()
     if (!session) return
-
-    // Verify Admin
-    const { data: pData } = await supabase.from('profiles').select('role').eq('id', session.user.id).single()
-    
-    if (pData?.role !== 'admin') {
-      router.push('/dashboard/student')
-      return
-    }
-    setIsAdmin(true)
-
-    // Fetch all users
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-      
-    if (data) setUsers(data)
-    setLoading(false)
+    const { data:p } = await supabase.from('profiles').select('role').eq('id',session.user.id).single()
+    if (p?.role!=='admin') { router.push('/dashboard/student'); return }
+    const { data } = await supabase.from('profiles').select('*').order('created_at',{ascending:false})
+    if (data) setUsers(data); setLoading(false)
   }
 
-  const changeUserRole = async (userId: string, newRole: string) => {
-    if (!confirm(`هل أنت متأكد من تغيير صلاحية هذا المستخدم إلى ${newRole}؟`)) return
+  useEffect(()=>{ fetchUsers() },[])
 
-    // Optimistic Update
-    setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u))
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role: newRole })
-      .eq('id', userId)
-
-    if (error) {
-      alert('حدث خطأ أثناء تغيير الصلاحية.')
-      fetchUsers() // revert
-    }
+  const changeRole = async (id:string, role:string) => {
+    if (!confirm(`تغيير الصلاحية إلى ${role === 'teacher'?'معلم':role==='admin'?'مدير':'طالب'}؟`)) return
+    setUsers(u=>u.map(x=>x.id===id?{...x,role}:x))
+    const { error } = await supabase.from('profiles').update({role}).eq('id',id)
+    if (error) { alert('حدث خطأ.'); fetchUsers() }
   }
 
-  const filteredUsers = users.filter(user => 
-    user.email?.toLowerCase().includes(search.toLowerCase()) || 
-    user.full_name?.toLowerCase().includes(search.toLowerCase())
+  const filtered = users.filter(u=>
+    u.email?.toLowerCase().includes(search.toLowerCase()) ||
+    u.full_name?.toLowerCase().includes(search.toLowerCase())
   )
 
-  if (loading) return (
-    <div className="min-h-[40vh] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    </div>
-  )
+  const roleLabel = (r:string) => r==='admin'?'مدير':r==='teacher'?'معلم':'طالب'
+  const roleBadge = (r:string) => r==='admin'?'badge-red':r==='teacher'?'badge-dark':'badge-gray'
 
-  if (!isAdmin) return null
+  if (loading) return <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><Loader2 size={30} className="spin" style={{color:'var(--gold)'}}/></div>
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 border-b border-border pb-6">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/admin">
-            <Button variant="ghost" className="p-2 border border-border bg-white hover:bg-surface-2 text-text-secondary">
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Users className="w-6 h-6 text-primary" />
-              إدارة المستخدمين والصلاحيات
-            </h1>
-            <p className="text-sm text-text-secondary mt-1">
-              يمكنك من خلال هذه الصفحة ترقية الطلاب إلى معلمين أو العكس.
-            </p>
-          </div>
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      <div>
+        <p style={{fontSize:11,fontWeight:800,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--gold)',marginBottom:5}}>إدارة النظام</p>
+        <h1 style={{fontSize:26,fontWeight:900,color:'var(--txt1)',marginBottom:4,display:'flex',alignItems:'center',gap:10}}>
+          <Users size={22} style={{color:'var(--gold)'}}/>إدارة المستخدمين
+        </h1>
+        <p style={{fontSize:14,color:'var(--txt2)'}}>ترقية الطلاب إلى معلمين أو تغيير الصلاحيات.</p>
+      </div>
+
+      {/* Search */}
+      <div className="card" style={{padding:20}}>
+        <div style={{position:'relative'}}>
+          <span style={{position:'absolute',right:13,top:'50%',transform:'translateY(-50%)',color:'var(--txt3)',display:'flex'}}>
+            <Search size={15}/>
+          </span>
+          <input className="inp" style={{paddingRight:40}} placeholder="ابحث بالاسم أو البريد..." value={search} onChange={e=>setSearch(e.target.value)}/>
         </div>
       </div>
 
-      <div className="glass-card bg-white border border-border p-6 rounded-xl">
-        {/* Search */}
-        <div className="flex items-center gap-4 mb-6 relative">
-          <Search className="w-5 h-5 text-text-muted absolute right-4" />
-          <input 
-            type="text" 
-            placeholder="ابحث بالاسم أو البريد الإلكتروني..." 
-            className="w-full pl-4 pr-12 py-3 bg-surface border border-border rounded-lg outline-none focus:border-primary transition-colors"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        {/* Users Table */}
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr className="bg-surface-2 border-b border-border">
-                <th className="text-right py-3 px-4 font-semibold text-text-secondary">الاسم</th>
-                <th className="text-right py-3 px-4 font-semibold text-text-secondary">البريد الإلكتروني</th>
-                <th className="text-center py-3 px-4 font-semibold text-text-secondary">الصلاحية الحالية</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-secondary">تغيير الصلاحية</th>
+      {/* Table */}
+      <div className="card" style={{overflow:'hidden'}}>
+        <table className="tbl">
+          <thead><tr>
+            <th>المستخدم</th><th>البريد الإلكتروني</th>
+            <th style={{textAlign:'center'}}>الصلاحية</th><th style={{textAlign:'center'}}>تغيير</th>
+          </tr></thead>
+          <tbody>
+            {filtered.length===0 ? (
+              <tr><td colSpan={4} style={{textAlign:'center',padding:32,color:'var(--txt3)'}}>لا يوجد مستخدمون مطابقون</td></tr>
+            ) : filtered.map(u=>(
+              <tr key={u.id}>
+                <td style={{fontWeight:700}}>{u.full_name||'بدون اسم'}</td>
+                <td style={{color:'var(--txt2)',fontSize:13}}>{u.email}</td>
+                <td style={{textAlign:'center'}}>
+                  <span className={`badge ${roleBadge(u.role)}`}>{roleLabel(u.role)}</span>
+                </td>
+                <td style={{textAlign:'center'}}>
+                  <select className="inp" style={{width:'auto',padding:'6px 10px',fontSize:13}}
+                    value={u.role} onChange={e=>changeRole(u.id,e.target.value)}>
+                    <option value="student">طالب</option>
+                    <option value="teacher">معلم</option>
+                    <option value="admin">مدير</option>
+                  </select>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-8 text-text-muted">
-                    لا يوجد مستخدمين مطابقين للبحث
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-border hover:bg-surface transition-colors">
-                    <td className="py-3 px-4 font-bold">{user.full_name || 'بدون اسم'}</td>
-                    <td className="py-3 px-4 text-text-secondary">{user.email}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className={`badge ${
-                        user.role === 'admin' ? 'badge-error' :
-                        user.role === 'teacher' ? 'bg-primary-light text-primary-dark border-primary/20 border' :
-                        'badge-gray'
-                      }`}>
-                        {user.role === 'admin' ? 'مدير المنصة' : user.role === 'teacher' ? 'معلم' : 'طالب'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-left">
-                       <select 
-                          className="px-3 py-1.5 bg-surface border border-border rounded-md text-sm outline-none cursor-pointer"
-                          value={user.role}
-                          onChange={(e) => changeUserRole(user.id, e.target.value)}
-                        >
-                          <option value="student">طالب</option>
-                          <option value="teacher">معلم</option>
-                          <option value="admin">مدير المنصة</option>
-                       </select>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-
     </div>
   )
 }

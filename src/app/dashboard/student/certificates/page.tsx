@@ -1,91 +1,66 @@
 'use client'
-
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Award, Download, ExternalLink, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import Link from 'next/link'
 
 export default function StudentCertificates() {
-  const [certificates, setCertificates] = useState<any[]>([])
+  const [certs,   setCerts]   = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createSupabaseBrowserClient()
 
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+  useEffect(()=>{
+    (async()=>{
+      const { data:{ session } } = await supabase.auth.getSession()
       if (!session) return
+      const { data } = await supabase.from('certificates')
+        .select('id,issued_at,verification_code,certificate_url,courses(title)')
+        .eq('student_id',session.user.id).order('issued_at',{ascending:false})
+      setCerts(data||[]); setLoading(false)
+    })()
+  },[])
 
-      const { data } = await supabase
-        .from('certificates')
-        .select(`
-          id,
-          issued_at,
-          verification_code,
-          certificate_url,
-          courses ( title, title_ar )
-        `)
-        .eq('student_id', session.user.id)
-        .order('issued_at', { ascending: false })
-      
-      setCertificates(data || [])
-      setLoading(false)
-    }
-    
-    fetchCertificates()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  if (loading) return <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><Loader2 size={30} className="spin" style={{color:'var(--gold)'}}/></div>
 
   return (
-    <div className="space-y-8">
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
       <div>
-        <h1 className="text-3xl font-bold mb-2">الشهادات</h1>
-        <p className="text-text-secondary">سجل جميع دوراتك المكتملة وشهاداتك المعتمدة</p>
+        <p style={{fontSize:11,fontWeight:800,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--gold)',marginBottom:5}}>مكتسباتي</p>
+        <h1 style={{fontSize:26,fontWeight:900,color:'var(--txt1)',marginBottom:4}}>الشهادات</h1>
+        <p style={{fontSize:14,color:'var(--txt2)'}}>سجل جميع دوراتك المكتملة وشهاداتك المعتمدة.</p>
       </div>
 
-      {certificates.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="w-20 h-20 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-6 text-text-muted border border-border">
-            <Award className="w-10 h-10" />
+      {certs.length===0 ? (
+        <div className="card" style={{padding:56,textAlign:'center'}}>
+          <div style={{width:64,height:64,borderRadius:18,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+            <Award size={28} style={{color:'var(--txt3)'}}/>
           </div>
-          <h3 className="text-xl font-bold mb-3">لم تحصل على أي شهادة بعد</h3>
-          <p className="text-text-secondary mb-6">أكمل دوراتك بنسبة 100% للحصول على شهادات معتمدة</p>
-          <Link href="/dashboard/student/courses">
-            <Button variant="primary">متابعة التعلم</Button>
-          </Link>
+          <h3 style={{fontSize:18,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>لم تحصل على أي شهادة بعد</h3>
+          <p style={{fontSize:14,color:'var(--txt2)',marginBottom:22}}>أكمل دوراتك بنسبة 100% للحصول على شهادات معتمدة.</p>
+          <Link href="/dashboard/student/courses" className="btn btn-gold btn-md" style={{textDecoration:'none',display:'inline-flex'}}>متابعة التعلم</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {certificates.map((cert) => (
-            <div key={cert.id} className="glass-card flex flex-col items-center text-center p-6 border-2 border-primary/10 hover:border-primary/30 transition-all shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-yellow-50 flex items-center justify-center mb-4 text-yellow-600 border border-yellow-200">
-                <Award className="w-8 h-8" />
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:18}}>
+          {certs.map(cert=>(
+            <div key={cert.id} className="card" style={{padding:24,display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',position:'relative',overflow:'hidden'}}>
+              <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:'linear-gradient(90deg,var(--gold),var(--gold3))'}}/>
+              <div style={{width:56,height:56,borderRadius:14,background:'linear-gradient(135deg,#faf6ec,#f5edd8)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14,border:'1px solid rgba(160,120,40,.2)'}}>
+                <Award size={24} style={{color:'var(--gold)'}}/>
               </div>
-              <h3 className="font-bold text-lg mb-2 text-secondary">{cert.courses?.title}</h3>
-              <p className="text-sm text-text-secondary mb-4">
-                تاريخ الإصدار: {new Date(cert.issued_at).toLocaleDateString('ar-EG')}
+              <h3 style={{fontWeight:800,fontSize:15,marginBottom:6,color:'var(--txt1)'}}>{cert.courses?.title}</h3>
+              <p style={{fontSize:12,color:'var(--txt3)',marginBottom:12}}>
+                {new Date(cert.issued_at).toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'})}
               </p>
-              
-              <div className="text-xs text-text-muted bg-surface-2 px-3 py-1.5 rounded-lg mb-6 w-full break-all border border-border cursor-copy">
-                رمز التحقق: {cert.verification_code}
+              <div style={{fontSize:11,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,padding:'6px 12px',marginBottom:16,wordBreak:'break-all',color:'var(--txt3)',width:'100%'}}>
+                رمز التحقق: <span style={{fontWeight:700,color:'var(--gold)',fontSize:12}}>{cert.verification_code}</span>
               </div>
-
-              <div className="flex gap-3 w-full mt-auto">
-                <Button variant="secondary" className="flex-1 text-xs py-2 shadow-none" disabled={!cert.certificate_url}>
-                  <Download className="w-4 h-4 ml-1" />
-                  تحميل
-                </Button>
-                <Button variant="ghost" className="flex-1 text-xs py-2 bg-surface-2">
-                  <ExternalLink className="w-4 h-4 ml-1" />
-                  مشاركة
-                </Button>
+              <div style={{display:'flex',gap:8,width:'100%'}}>
+                <button className="btn btn-outline btn-sm" style={{flex:1}} disabled={!cert.certificate_url}>
+                  <Download size={13}/>تحميل
+                </button>
+                <button className="btn btn-ghost btn-sm" style={{flex:1,background:'var(--bg2)'}}>
+                  <ExternalLink size={13}/>مشاركة
+                </button>
               </div>
             </div>
           ))}
