@@ -5,7 +5,7 @@ import { stripe } from '@/lib/stripe'
 export async function POST(req: Request) {
   try {
     const { courseId } = await req.json()
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
 
     // 1. Get user session
     const { data: { session } } = await supabase.auth.getSession()

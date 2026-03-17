@@ -6,7 +6,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
   const body = await req.text()
-  const signature = headers().get('Stripe-Signature') as string
+  const headersList = await headers()
+  const signature = headersList.get('Stripe-Signature') as string
 
   let event: Stripe.Event
 
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
       return new NextResponse('Webhook Error: Missing metadata', { status: 400 })
     }
 
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
 
     // Create the enrollment
     await supabase.from('enrollments').insert({

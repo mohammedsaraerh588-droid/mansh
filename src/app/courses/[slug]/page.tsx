@@ -8,7 +8,7 @@ export const revalidate = 60
 
 export default async function CourseDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase = createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
 
   // First, try to fetch the course with the exact slug
   const { data: courseData, error: courseError } = await supabase
