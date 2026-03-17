@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { User, Mail, Globe, Twitter, Linkedin, Loader2, Save, FileText, Briefcase } from 'lucide-react'
-import Navbar from '@/components/layout/Navbar'
+import { User, Globe, Twitter, Linkedin, Loader2, Save, Briefcase } from 'lucide-react'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null)
@@ -75,9 +74,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-2 pt-24 pb-12">
-      <Navbar />
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="min-h-screen py-8 px-4" style={{background:'var(--surface-2)'}}>
+      <div className="container mx-auto max-w-4xl">
         <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
           
           {/* Header Profile */}
