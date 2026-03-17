@@ -64,7 +64,7 @@ export default function LessonEditorPage() {
     const updates = {
       title: lesson.title,
       content: lesson.content,
-      is_free: lesson.is_free,
+      is_preview: lesson.is_preview,
       type: lesson.type,
       video_url: lesson.video_url,
       cloudinary_public_id: lesson.cloudinary_public_id,
@@ -132,13 +132,13 @@ export default function LessonEditorPage() {
             <div className="flex items-center gap-3 p-4 bg-surface-2 border border-border rounded-lg">
               <input 
                 type="checkbox" 
-                id="is_free" 
+                id="is_preview" 
                 className="w-5 h-5 accent-primary rounded border-border"
-                checked={lesson.is_free}
-                onChange={(e) => setLesson({...lesson, is_free: e.target.checked})}
+                checked={lesson.is_preview}
+                onChange={(e) => setLesson({...lesson, is_preview: e.target.checked})}
               />
               <div className="flex flex-col">
-                <label htmlFor="is_free" className="font-bold cursor-pointer select-none">معاينة مجانية</label>
+                <label htmlFor="is_preview" className="font-bold cursor-pointer select-none">معاينة مجانية</label>
                 <span className="text-xs text-text-secondary">اسمح للطلاب بمشاهدة هذا الدرس مجاناً قبل الشراء.</span>
               </div>
             </div>

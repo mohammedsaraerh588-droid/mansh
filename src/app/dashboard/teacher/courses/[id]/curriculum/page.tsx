@@ -114,7 +114,7 @@ export default function CurriculumManager() {
         title: newLessonTitle.trim(),
         position: newPosition,
         type: 'video', // Default
-        is_free: false
+        is_preview: false
       })
       .select()
       .single()
@@ -226,7 +226,7 @@ export default function CurriculumManager() {
                               ) : (
                                 <span className="flex items-center gap-1"><FileText className="w-3 h-3"/> مقالة</span>
                               )}
-                              {lesson.is_free && (
+                              {lesson.is_preview && (
                                 <span className="bg-success/10 text-success px-1.5 py-0.5 rounded text-[10px]">متاح مجاناً (معاينة)</span>
                               )}
                             </div>
