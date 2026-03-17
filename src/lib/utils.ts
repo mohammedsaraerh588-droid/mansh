@@ -31,12 +31,40 @@ export function formatDate(date: string) {
 }
 
 export function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .trim()
+  // Map of Arabic characters to English equivalents for URL-friendly slugs
+  const arabicMap: Record<string, string> = {
+    'ا': 'a', 'أ': 'a', 'إ': 'a', 'آ': 'a',
+    'ب': 'b', 'ت': 't', 'ث': 'th',
+    'ج': 'j', 'ح': 'h', 'خ': 'kh',
+    'د': 'd', 'ذ': 'dh',
+    'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh',
+    'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z',
+    'ع': 'a', 'غ': 'gh',
+    'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm',
+    'ن': 'n', 'ه': 'h', 'و': 'w', 'ي': 'y',
+    'ة': 'a'
+  }
+
+  let slug = text.toLowerCase()
+  
+  // Replace Arabic characters
+  for (const [arabic, english] of Object.entries(arabicMap)) {
+    slug = slug.replace(new RegExp(arabic, 'g'), english)
+  }
+  
+  // Replace spaces with hyphens
+  slug = slug.replace(/\s+/g, '-')
+  
+  // Remove special characters except hyphens
+  slug = slug.replace(/[^a-z0-9-]/g, '')
+  
+  // Replace multiple hyphens with single hyphen
+  slug = slug.replace(/-+/g, '-')
+  
+  // Trim hyphens from start and end
+  slug = slug.replace(/^-+|-+$/g, '')
+  
+  return slug
 }
 
 export function getLevelLabel(level: string) {
