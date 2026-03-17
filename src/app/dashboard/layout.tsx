@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{color:'var(--gold)'}} />
       </div>
     )
   }
@@ -79,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {item.name}
                 </Link>
               ))}
-              <div className="h-px bg-white/5 my-4 mx-4" />
+              <div className="h-px my-4 mx-4" style={{background:'var(--border)'}} />
               <Link
                 href="/profile"
                 className={`nav-item ${pathname === '/profile' ? 'active' : ''}`}
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Settings className="w-5 h-5 shrink-0" />
                 إعدادات الحساب
               </Link>
-              <button onClick={handleSignOut} className="nav-item text-red-400 hover:text-red-300 hover:bg-red-500/10 w-full text-right mt-2">
+      <button onClick={handleSignOut} className="nav-item w-full text-right mt-2" style={{color:'#ef4444'}} onMouseEnter={e=>(e.currentTarget.style.background='#fef2f2')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
                 <LogOut className="w-5 h-5 shrink-0" />
                 تسجيل الخروج
               </button>

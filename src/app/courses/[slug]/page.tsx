@@ -10,237 +10,145 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
   const { slug } = await params
   const supabase = await createSupabaseServerClient()
 
-  // First, try to fetch the course with the exact slug
   const { data: courseData, error: courseError } = await supabase
-    .from('courses')
-    .select(`
-      *,
-      teacher:profiles(full_name, avatar_url, headline),
-      category:categories(name_ar)
-    `)
-    .eq('slug', slug)
-    .single()
+    .from('courses').select('*, teacher:profiles(full_name,avatar_url,headline), category:categories(name_ar)')
+    .eq('slug', slug).single()
 
-  // If course not found, try searching by a normalized slug pattern
   let course = courseData
   if (!course && courseError) {
-    const { data: alternativeCourse } = await supabase
-      .from('courses')
-      .select(`
-        *,
-        teacher:profiles(full_name, avatar_url, headline),
-        category:categories(name_ar)
-      `)
-      .ilike('slug', `${slug}%`)
-      .single()
+    const { data: alt } = await supabase
+      .from('courses').select('*, teacher:profiles(full_name,avatar_url,headline), category:categories(name_ar)')
+      .ilike('slug', `${slug}%`).single()
+    if (alt) course = alt
+  }
+  if (!course) notFound()
 
-    if (alternativeCourse) {
-      course = alternativeCourse
+  const { data: modules } = await supabase.from('modules').select('*').eq('course_id', course.id).order('position',{ascending:true})
+  if (modules) {
+    for (const mod of modules) {
+      const { data: lessons } = await supabase.from('lessons').select('*').eq('module_id', mod.id).order('position',{ascending:true})
+      mod.lessons = lessons || []
     }
   }
-
-  if (!course) {
-    notFound()
-  }
-
-  // Fetch modules separately to avoid complex joins
-  const { data: modules } = await supabase
-    .from('modules')
-    .select(`*`)
-    .eq('course_id', course.id)
-    .order('position', { ascending: true })
-
-  // Fetch lessons for each module
-  if (modules && modules.length > 0) {
-    for (const module of modules) {
-      const { data: lessons } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('module_id', module.id)
-        .order('position', { ascending: true })
-      module.lessons = lessons || []
-    }
-  }
-
   course.modules = modules || []
 
-  // Check enrollment status
   let isEnrolled = false
   const { data: { session } } = await supabase.auth.getSession()
-
   if (session) {
-    const { data: enrollment } = await supabase
-      .from('enrollments')
-      .select('id, payment_status')
-      .eq('student_id', session.user.id)
-      .eq('course_id', course.id)
-      .single()
-
-    if (enrollment && (enrollment.payment_status === 'completed' || enrollment.payment_status === 'free')) {
-      isEnrolled = true
-    }
+    const { data: enr } = await supabase.from('enrollments').select('id,payment_status')
+      .eq('student_id', session.user.id).eq('course_id', course.id).single()
+    if (enr && (enr.payment_status === 'completed' || enr.payment_status === 'free')) isEnrolled = true
   }
 
   const whatYouLearn = course.what_you_learn || []
   const requirements = course.requirements || []
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Hero Section */}
-      <div className="bg-surface-2 pt-24 pb-16 border-b border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-2 opacity-50" />
-        <div className="container mx-auto px-4 relative z-10">
+    <div className="min-h-screen pb-20" style={{background:'var(--surface)'}}>
+
+      {/* Hero */}
+      <div className="hero-bg pt-24 pb-16" style={{borderBottom:'1px solid rgba(255,255,255,0.08)'}}>
+        <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-12">
 
             {/* Info */}
-            <div className="flex-1 lg:pl-12">
+            <div className="flex-1">
               <div className="flex items-center gap-3 mb-6">
-                {course.category?.name_ar && (
-                  <span className="badge bg-primary/20 text-primary-light px-3 py-1">
-                    {course.category.name_ar}
-                  </span>
-                )}
-                <span className="badge bg-white/10 text-white px-3 py-1">
-                  {getLevelLabel(course.level)}
-                </span>
+                {course.category?.name_ar && <span className="badge badge-gold">{course.category.name_ar}</span>}
+                <span className="text-xs font-bold px-3 py-1 rounded-full" style={{background:'rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.8)'}}>{getLevelLabel(course.level)}</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black mb-5 leading-tight text-white">{course.title}</h1>
+              <p className="text-lg mb-8 leading-relaxed" style={{color:'rgba(255,255,255,0.65)'}}>{course.description || course.short_description}</p>
+
+              <div className="flex flex-wrap items-center gap-6 text-sm mb-8" style={{color:'rgba(255,255,255,0.5)'}}>
+                <div className="flex items-center gap-2"><Star className="w-4 h-4 fill-current" style={{color:'var(--gold)'}}/><span className="font-bold text-white">{course.avg_rating||'جديد'}</span>{course.total_reviews>0&&<span>({course.total_reviews} تقييم)</span>}</div>
+                <div className="flex items-center gap-2"><Users className="w-4 h-4"/><span>{course.total_students} طالب</span></div>
+                <div className="flex items-center gap-2"><Clock className="w-4 h-4"/><span>{formatDuration(course.duration_hours)}</span></div>
+                <div className="flex items-center gap-2"><BookOpen className="w-4 h-4"/><span>{course.total_lessons} درس</span></div>
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
-                {course.title}
-              </h1>
-
-              <p className="text-xl text-text-secondary mb-8 leading-relaxed">
-                {course.description || course.short_description}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-6 text-sm text-text-muted mb-8">
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-secondary fill-secondary" />
-                  <span className="font-bold text-white">{course.avg_rating || 'جديد'}</span>
-                  {course.total_reviews > 0 && <span>({course.total_reviews} تقييم)</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 opacity-70" />
-                  <span>{course.total_students} طالب</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 opacity-70" />
-                  <span>{formatDuration(course.duration_hours)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 opacity-70" />
-                  <span>{course.total_lessons} درس</span>
-                </div>
-              </div>
-
-              {/* Teacher Info */}
-              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 w-max">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-3 border border-white/10">
-                  {course.teacher?.avatar_url ? (
-                    <img src={course.teacher.avatar_url} alt="Teacher" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold">
-                      {course.teacher?.full_name?.[0] || 'م'}
-                    </div>
-                  )}
+              {/* Teacher */}
+              <div className="inline-flex items-center gap-3 p-3 rounded-xl" style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.1)'}}>
+                <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center font-black text-sm" style={{background:'var(--gradient-gold)',color:'var(--primary)'}}>
+                  {course.teacher?.avatar_url ? <img src={course.teacher.avatar_url} alt="" className="w-full h-full object-cover"/> : course.teacher?.full_name?.[0]||'م'}
                 </div>
                 <div>
-                  <div className="text-sm text-text-muted mb-0.5">مقدم الدورة</div>
-                  <div className="font-bold">{course.teacher?.full_name}</div>
+                  <div className="text-xs mb-0.5" style={{color:'rgba(255,255,255,0.45)'}}>مقدم الدورة</div>
+                  <div className="font-bold text-sm text-white">{course.teacher?.full_name}</div>
                 </div>
               </div>
             </div>
 
-            {/* Sticky Sidebar / Purchase Card */}
-            <div className="lg:w-[400px] shrink-0">
-              <div className="glass-card p-6 lg:-mt-32 relative z-20 shadow-2xl shadow-black/50 lg:sticky lg:top-32">
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-6 bg-surface-3 group">
-                  {course.thumbnail_url ? (
-                    <img src={course.thumbnail_url} alt="Thumbnail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white/20">
-                      <Video className="w-16 h-16" />
-                    </div>
-                  )}
+            {/* Purchase Card */}
+            <div className="lg:w-[380px] shrink-0">
+              <div className="glass-card p-6 lg:-mt-8 lg:sticky lg:top-28 shadow-lg">
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-5 group" style={{background:'var(--surface-3)'}}>
+                  {course.thumbnail_url
+                    ? <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                    : <div className="w-full h-full flex items-center justify-center" style={{background:'var(--navy)'}}><Video className="w-12 h-12 opacity-20" style={{color:'var(--gold)'}}/></div>}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <PlayCircle className="w-16 h-16 text-white" />
+                    <PlayCircle className="w-14 h-14 text-white"/>
                   </div>
                 </div>
 
-                <div className="text-3xl font-black mb-6">
-                  {formatPrice(course.price, course.currency)}
+                <div className="mb-5">
+                  <span className="text-3xl font-black" style={{color:'var(--gold-dark)'}}>{formatPrice(course.price,course.currency)}</span>
                   {course.original_price && course.original_price > course.price && (
-                    <span className="text-lg text-text-muted line-through mr-3 font-normal">
-                      {formatPrice(course.original_price, course.currency)}
-                    </span>
+                    <span className="text-base line-through mr-2 font-normal" style={{color:'var(--text-muted)'}}>{formatPrice(course.original_price,course.currency)}</span>
                   )}
                 </div>
 
-                <EnrollButton
-                  courseId={course.id}
-                  price={course.price || 0}
-                  isEnrolled={isEnrolled}
-                  slug={course.slug}
-                />
+                <EnrollButton courseId={course.id} price={course.price||0} isEnrolled={isEnrolled} slug={course.slug}/>
 
-                {!isEnrolled && course.price > 0 && (
-                  <p className="text-center text-xs text-text-muted mb-6">تعلم آمن، انضم آلاف الطلاب</p>
-                )}
-                <div className="space-y-3 pt-6 border-t border-white/5">
-                  <h4 className="font-bold mb-4">تشمل هذه الدورة:</h4>
-                  <div className="flex items-center gap-3 text-sm text-text-secondary">
-                    <Video className="w-4 h-4 text-primary" />
-                    <span>{formatDuration(course.duration_hours)} من الفيديو عند الطلب</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-text-secondary">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                    <span>{course.total_lessons} دروس تفاعلية ومقالات</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-text-secondary">
-                    <GraduationCap className="w-4 h-4 text-primary" />
-                    <span>اختبارات لتقييم المستوى</span>
-                  </div>
-                  {course.certificate_enabled && (
-                    <div className="flex items-center gap-3 text-sm text-text-secondary">
-                      <ShieldCheck className="w-4 h-4 text-primary" />
-                      <span>شهادة إتمام معتمدة قابة للتحقق</span>
+                <div className="space-y-3 pt-5 mt-5" style={{borderTop:'1px solid var(--border)'}}>
+                  <h4 className="font-black mb-3" style={{color:'var(--text-primary)'}}>تشمل هذه الدورة:</h4>
+                  {[
+                    [Video, `${formatDuration(course.duration_hours)} من الفيديو عند الطلب`],
+                    [BookOpen, `${course.total_lessons} دروس تفاعلية`],
+                    [GraduationCap, 'اختبارات لتقييم المستوى'],
+                    ...(course.certificate_enabled ? [[ShieldCheck, 'شهادة إتمام معتمدة']] : []),
+                  ].map(([Icon, text]: any, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm" style={{color:'var(--text-secondary)'}}>
+                      <Icon className="w-4 h-4 shrink-0" style={{color:'var(--gold)'}}/>
+                      <span>{text}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
+      {/* Body */}
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Main Content */}
-          <div className="flex-1 lg:pl-12 space-y-12">
+          <div className="flex-1 space-y-10">
 
-            {/* What you'll learn */}
             {whatYouLearn.length > 0 && (
               <section className="glass-card p-8">
-                <h2 className="text-2xl font-bold mb-6">ماذا ستتعلم في هذه الدورة؟</h2>
+                <h2 className="text-2xl font-black mb-6" style={{color:'var(--text-primary)'}}>ماذا ستتعلم؟</h2>
+                <div className="gold-separator mb-6" style={{margin:'0 0 24px'}} />
                 <div className="grid sm:grid-cols-2 gap-4">
                   {whatYouLearn.map((item: string, i: number) => (
                     <div key={i} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                      <span className="text-text-secondary text-sm">{item}</span>
+                      <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" style={{color:'var(--gold)'}}/>
+                      <span className="text-sm" style={{color:'var(--text-secondary)'}}>{item}</span>
                     </div>
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Requirements */}
             {requirements.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-6">المتطلبات</h2>
-                <ul className="list-disc list-inside space-y-2 text-text-secondary">
-                  {requirements.map((req: string, i: number) => (
-                    <li key={i}>{req}</li>
+                <h2 className="text-2xl font-black mb-5" style={{color:'var(--text-primary)'}}>المتطلبات</h2>
+                <ul className="space-y-2">
+                  {requirements.map((r: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-sm" style={{color:'var(--text-secondary)'}}>
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{background:'var(--gold)'}}/>
+                      {r}
+                    </li>
                   ))}
                 </ul>
               </section>
@@ -248,39 +156,32 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
 
             {/* Curriculum */}
             <section>
-              <h2 className="text-2xl font-bold mb-6">محتوى الدورة</h2>
-              <div className="flex items-center gap-4 text-sm text-text-muted mb-6">
-                <span>{course.modules?.length || 0} فصول</span>
-                <span>•</span>
-                <span>{course.total_lessons} دروس</span>
-                <span>•</span>
-                <span>{formatDuration(course.duration_hours)} إجمالي الطول</span>
-              </div>
-
-              <div className="space-y-4">
+              <h2 className="text-2xl font-black mb-2" style={{color:'var(--text-primary)'}}>محتوى الدورة</h2>
+              <p className="text-sm mb-6" style={{color:'var(--text-secondary)'}}>
+                {course.modules?.length||0} فصول · {course.total_lessons} درس · {formatDuration(course.duration_hours)}
+              </p>
+              <div className="space-y-3">
                 {course.modules?.map((mod: any, i: number) => (
                   <div key={mod.id} className="glass-card overflow-hidden">
-                    <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between font-bold">
+                    <div className="p-4 flex items-center justify-between font-bold" style={{background:'var(--surface-2)',borderBottom:'1px solid var(--border)'}}>
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm">{i + 1}</span>
-                        {mod.title}
+                        <span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black" style={{background:'var(--gold-bg)',color:'var(--gold-dark)'}}>{i+1}</span>
+                        <span style={{color:'var(--text-primary)'}}>{mod.title}</span>
                       </div>
-                      <span className="text-sm font-normal text-text-muted">{mod.lessons?.length || 0} دروس</span>
+                      <span className="text-sm font-normal" style={{color:'var(--text-muted)'}}>{mod.lessons?.length||0} دروس</span>
                     </div>
-                    <div className="divide-y divide-white/5">
-                      {mod.lessons?.map((lesson: any, j: number) => (
-                        <div key={lesson.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                    <div style={{borderTop:'1px solid var(--border)'}}>
+                      {mod.lessons?.map((lesson: any) => (
+                        <div key={lesson.id} className="p-4 flex items-center justify-between group transition-colors" style={{borderBottom:'1px solid var(--border)'}}
+                          onMouseEnter={e=>(e.currentTarget.style.background='var(--surface-2)')}
+                          onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
                           <div className="flex items-center gap-3">
-                            <PlayCircle className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-                            <span className="text-sm text-text-secondary group-hover:text-white transition-colors">{lesson.title}</span>
+                            <PlayCircle className="w-4 h-4 shrink-0" style={{color:'var(--text-muted)'}}/>
+                            <span className="text-sm" style={{color:'var(--text-secondary)'}}>{lesson.title}</span>
                           </div>
-                          <div className="flex items-center gap-4">
-                            {lesson.is_preview && (
-                              <span className="badge badge-primary text-[10px]">معاينة مجانية</span>
-                            )}
-                            {lesson.video_duration > 0 && (
-                              <span className="text-xs text-text-muted">{Math.round(lesson.video_duration / 60)} دقيقة</span>
-                            )}
+                          <div className="flex items-center gap-3">
+                            {lesson.is_preview && <span className="badge badge-gold text-[10px]">مجانية</span>}
+                            {lesson.video_duration>0 && <span className="text-xs" style={{color:'var(--text-muted)'}}>{Math.round(lesson.video_duration/60)} د</span>}
                           </div>
                         </div>
                       ))}
@@ -289,11 +190,8 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
                 ))}
               </div>
             </section>
-
           </div>
-
-          {/* Spacer for sticky sidebar */}
-          <div className="hidden lg:block w-[400px] shrink-0 pointer-events-none" />
+          <div className="hidden lg:block w-[380px] shrink-0 pointer-events-none"/>
         </div>
       </div>
     </div>
