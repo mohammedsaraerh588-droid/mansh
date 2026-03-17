@@ -1,232 +1,87 @@
 'use client'
-
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
-import { ArrowRight, TrendingUp, DollarSign, Users, Download, FileText, Loader2 } from 'lucide-react'
-
-interface Sale {
-  id: string
-  course_id: string
-  student_name: string
-  amount: number
-  currency: string
-  status: string
-  created_at: string
-  course_title?: string
-}
-
-interface CourseStats {
-  id: string
-  title: string
-  total_revenue: number
-  student_count: number
-  currency: string
-}
+import { TrendingUp, DollarSign, FileText, Users, Loader2 } from 'lucide-react'
 
 export default function TeacherSalesPage() {
-  const router = useRouter()
+  const [sales,       setSales]       = useState<any[]>([])
+  const [courseStats, setCourseStats] = useState<any[]>([])
+  const [totalRev,    setTotalRev]    = useState(0)
+  const [loading,     setLoading]     = useState(true)
   const supabase = createSupabaseBrowserClient()
-  const [sales, setSales] = useState<Sale[]>([])
-  const [courseStats, setCourseStats] = useState<CourseStats[]>([])
-  const [totalRevenue, setTotalRevenue] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [currency, setCurrency] = useState('USD')
 
-  useEffect(() => {
-    fetchSalesData()
-  }, [])
+  useEffect(()=>{
+    (async()=>{
+      const { data:{ session } } = await supabase.auth.getSession()
+      if (!session) return
+      const { data:courses } = await supabase.from('courses').select('id,title,price,currency').eq('teacher_id',session.user.id)
+      if (!courses) { setLoading(false); return }
 
-  const fetchSalesData = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/auth/login')
-        return
-      }
+      const { data:enrollments } = await supabase.from('enrollments')
+        .select('id,course_id,amount_paid,currency,enrolled_at,payment_status,profiles(full_name)')
+        .in('course_id', courses.map((c:any)=>c.id))
+        .eq('payment_status','completed')
 
-      // Fetch courses for this teacher
-      const { data: courses } = await supabase
-        .from('courses')
-        .select('id, title, price, currency')
-        .eq('teacher_id', session.user.id)
+      const statsMap: Record<string,any> = {}
+      courses.forEach((c:any)=>{ statsMap[c.id]={ id:c.id, title:c.title, revenue:0, students:0, currency:c.currency||'USD' } })
 
-      if (!courses) {
-        setLoading(false)
-        return
-      }
-
-      // Fetch enrollments to get sales data
-      const { data: enrollments } = await supabase
-        .from('enrollments')
-        .select(`
-          id,
-          course_id,
-          price,
-          currency,
-          created_at,
-          profiles(full_name)
-        `)
-        .in('course_id', courses.map(c => c.id))
-
-      // Process sales data
-      const processedSales: Sale[] = []
+      const processed: any[] = []
       let total = 0
-      const stats: { [key: string]: CourseStats } = {}
-
-      courses.forEach(course => {
-        stats[course.id] = {
-          id: course.id,
-          title: course.title,
-          total_revenue: 0,
-          student_count: 0,
-          currency: course.currency || 'USD'
-        }
+      ;(enrollments||[]).forEach((e:any)=>{
+        processed.push({ id:e.id, student:e.profiles?.full_name||'—', amount:e.amount_paid||0, currency:e.currency||'USD', date:e.enrolled_at, course:courses.find((c:any)=>c.id===e.course_id)?.title||'—' })
+        if (statsMap[e.course_id]) { statsMap[e.course_id].revenue+=e.amount_paid||0; statsMap[e.course_id].students++ }
+        total += e.amount_paid||0
       })
 
-      if (enrollments) {
-        enrollments.forEach((enrollment: any) => {
-          processedSales.push({
-            id: enrollment.id,
-            course_id: enrollment.course_id,
-            student_name: enrollment.profiles?.full_name || 'Unknown',
-            amount: enrollment.price || 0,
-            currency: enrollment.currency || 'USD',
-            status: 'completed',
-            created_at: enrollment.created_at,
-            course_title: courses.find(c => c.id === enrollment.course_id)?.title
-          })
+      setSales(processed); setCourseStats(Object.values(statsMap)); setTotalRev(total); setLoading(false)
+    })()
+  },[])
 
-          // Update stats
-          if (stats[enrollment.course_id]) {
-            stats[enrollment.course_id].total_revenue += enrollment.price || 0
-            stats[enrollment.course_id].student_count += 1
-          }
-          total += enrollment.price || 0
-        })
-      }
+  const fmt = (n:number,c='USD') => new Intl.NumberFormat('ar-SA',{style:'currency',currency:c,minimumFractionDigits:0}).format(n)
+  const fdate = (d:string) => new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'})
 
-      setSales(processedSales)
-      setCourseStats(Object.values(stats))
-      setTotalRevenue(total)
-      setCurrency(courses[0]?.currency || 'USD')
-      setLoading(false)
-    } catch (error) {
-      console.error('Error fetching sales data:', error)
-      setLoading(false)
-    }
-  }
+  if (loading) return <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><Loader2 size={28} className="spin" style={{color:'var(--gold)'}}/></div>
 
-  const formatCurrency = (amount: number, curr: string = currency) => {
-    return new Intl.NumberFormat('ar-EG', {
-      style: 'currency',
-      currency: curr,
-    }).format(amount)
-  }
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  const cards = [
+    {label:'إجمالي الإيرادات', value:fmt(totalRev),              Icon:TrendingUp, bg:'#fdf8ee', ic:'var(--gold)'},
+    {label:'عدد المبيعات',     value:sales.length,               Icon:FileText,  bg:'#eff6ff', ic:'#2563eb'},
+    {label:'متوسط المبيعة',    value:sales.length?fmt(totalRev/sales.length):'—', Icon:DollarSign, bg:'#f0fdf4', ic:'#15803d'},
+  ]
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/teacher">
-          <Button variant="ghost" className="p-2 border border-border bg-white hover:bg-surface-2 text-text-secondary">
-            <ArrowRight className="w-5 h-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3">
-            <DollarSign className="w-6 h-6 text-primary" />
-            المبيعات والإيرادات
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">عرض جميع المبيعات والإيرادات من دوراتك</p>
-        </div>
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      <div>
+        <span className="eyebrow">المبيعات</span>
+        <h1 style={{fontSize:26,fontWeight:900,color:'var(--txt1)'}}>المبيعات والإيرادات</h1>
+        <p style={{fontSize:14,color:'var(--txt2)',marginTop:4}}>نظرة شاملة على جميع مبيعاتك وإيراداتك</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Total Revenue */}
-        <div className="glass-card p-6 bg-white border border-border">
-          <div className="flex items-center justify-between">
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:14}}>
+        {cards.map(({label,value,Icon,bg,ic},i)=>(
+          <div key={i} className="sc" style={{display:'flex',alignItems:'center',gap:14}}>
+            <div style={{width:44,height:44,borderRadius:12,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={20} style={{color:ic}}/></div>
             <div>
-              <p className="text-text-secondary text-sm font-medium">إجمالي الإيرادات</p>
-              <h2 className="text-3xl font-bold mt-2 text-primary">{formatCurrency(totalRevenue)}</h2>
-            </div>
-            <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center text-primary">
-              <TrendingUp className="w-7 h-7" />
+              <div style={{fontSize:12,color:'var(--txt2)',marginBottom:3}}>{label}</div>
+              <div style={{fontSize:20,fontWeight:900,color:'var(--txt1)'}}>{value}</div>
             </div>
           </div>
-        </div>
-
-        {/* Total Sales */}
-        <div className="glass-card p-6 bg-white border border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-text-secondary text-sm font-medium">عدد المبيعات</p>
-              <h2 className="text-3xl font-bold mt-2 text-primary">{sales.length}</h2>
-            </div>
-            <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center text-primary">
-              <FileText className="w-7 h-7" />
-            </div>
-          </div>
-        </div>
-
-        {/* Average Sale */}
-        <div className="glass-card p-6 bg-white border border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-text-secondary text-sm font-medium">متوسط المبيعة</p>
-              <h2 className="text-3xl font-bold mt-2 text-primary">
-                {formatCurrency(sales.length > 0 ? totalRevenue / sales.length : 0)}
-              </h2>
-            </div>
-            <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center text-primary">
-              <DollarSign className="w-7 h-7" />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Course Stats */}
-      {courseStats.length > 0 && (
-        <div className="glass-card p-6 bg-white border border-border">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-border pb-4">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            إحصائيات الدورات
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {courseStats.map((stat) => (
-              <div key={stat.id} className="p-4 border border-border rounded-xl hover:border-primary/50 transition-all">
-                <h3 className="font-bold text-lg mb-3">{stat.title}</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-text-secondary text-sm">الإجمالي</span>
-                    <span className="font-semibold text-primary">{formatCurrency(stat.total_revenue, stat.currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-text-secondary text-sm">عدد الطلاب</span>
-                    <span className="font-semibold flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {stat.student_count}
-                    </span>
-                  </div>
+      {courseStats.length>0 && (
+        <div className="card" style={{padding:22}}>
+          <h2 style={{fontSize:16,fontWeight:900,color:'var(--txt1)',marginBottom:16,display:'flex',alignItems:'center',gap:8}}><TrendingUp size={16} style={{color:'var(--gold)'}}/>إحصائيات الدورات</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
+            {courseStats.map((s:any,i:number)=>(
+              <div key={i} style={{padding:'14px 16px',borderRadius:10,border:'1px solid var(--border)',background:'var(--bg)'}}>
+                <h3 style={{fontWeight:700,fontSize:14,marginBottom:10,color:'var(--txt1)'}}>{s.title}</h3>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:6}}>
+                  <span style={{color:'var(--txt2)'}}>الإيرادات</span>
+                  <span style={{fontWeight:800,color:'var(--gold)'}}>{fmt(s.revenue,s.currency)}</span>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}>
+                  <span style={{color:'var(--txt2)'}}>الطلاب</span>
+                  <span style={{fontWeight:700,color:'var(--txt1)',display:'flex',alignItems:'center',gap:4}}><Users size={12}/>{s.students}</span>
                 </div>
               </div>
             ))}
@@ -234,54 +89,31 @@ export default function TeacherSalesPage() {
         </div>
       )}
 
-      {/* Sales Table */}
-      {sales.length > 0 ? (
-        <div className="glass-card p-6 bg-white border border-border overflow-hidden">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-border pb-4">
-            <FileText className="w-5 h-5 text-primary" />
-            قائمة المبيعات
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-right py-3 px-4 font-bold text-text-secondary">الطالب</th>
-                  <th className="text-right py-3 px-4 font-bold text-text-secondary">الدورة</th>
-                  <th className="text-center py-3 px-4 font-bold text-text-secondary">المبلغ</th>
-                  <th className="text-center py-3 px-4 font-bold text-text-secondary">التاريخ</th>
-                  <th className="text-center py-3 px-4 font-bold text-text-secondary">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((sale) => (
-                  <tr key={sale.id} className="border-b border-border hover:bg-surface-2 transition-colors">
-                    <td className="py-4 px-4 text-sm font-medium">{sale.student_name}</td>
-                    <td className="py-4 px-4 text-sm">{sale.course_title}</td>
-                    <td className="py-4 px-4 text-sm font-semibold text-center text-primary">
-                      {formatCurrency(sale.amount, sale.currency)}
-                    </td>
-                    <td className="py-4 px-4 text-sm text-center text-text-secondary">
-                      {formatDate(sale.created_at)}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="badge badge-success text-xs">مكتمل</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {sales.length>0 ? (
+        <div className="card" style={{overflow:'hidden'}}>
+          <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:8}}>
+            <FileText size={16} style={{color:'var(--gold)'}}/><h2 style={{fontSize:16,fontWeight:900,color:'var(--txt1)'}}>قائمة المبيعات</h2>
           </div>
+          <table className="tbl">
+            <thead><tr><th>الطالب</th><th>الدورة</th><th style={{textAlign:'center'}}>المبلغ</th><th style={{textAlign:'center'}}>التاريخ</th><th style={{textAlign:'center'}}>الحالة</th></tr></thead>
+            <tbody>
+              {sales.map(s=>(
+                <tr key={s.id}>
+                  <td style={{fontWeight:600}}>{s.student}</td>
+                  <td style={{color:'var(--txt2)'}}>{s.course}</td>
+                  <td style={{textAlign:'center',fontWeight:800,color:'var(--gold)'}}>{fmt(s.amount,s.currency)}</td>
+                  <td style={{textAlign:'center',color:'var(--txt3)'}}>{fdate(s.date)}</td>
+                  <td style={{textAlign:'center'}}><span className="badge bg-green">مكتمل</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
-        <div className="glass-card p-12 bg-white border border-dashed border-border text-center">
-          <div className="w-20 h-20 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-6 text-text-muted">
-            <DollarSign className="w-10 h-10" />
-          </div>
-          <h3 className="text-xl font-bold mb-2">لا توجد مبيعات حتى الآن</h3>
-          <p className="text-text-secondary mb-6">ابدأ بإنشاء دورات واحصل على طلاب للبدء في جني الأرباح</p>
-          <Link href="/dashboard/teacher/courses/new">
-            <Button variant="primary">إنشاء دورة جديدة</Button>
-          </Link>
+        <div className="card" style={{padding:56,textAlign:'center'}}>
+          <div style={{width:56,height:56,borderRadius:16,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}><DollarSign size={24} style={{color:'var(--txt3)'}}/></div>
+          <h3 style={{fontSize:17,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>لا توجد مبيعات حتى الآن</h3>
+          <p style={{color:'var(--txt2)',fontSize:14}}>ابدأ بإنشاء دورات لجني الأرباح.</p>
         </div>
       )}
     </div>
