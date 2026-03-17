@@ -1,28 +1,28 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { formatPrice, formatDuration, getLevelLabel } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
 import { PlayCircle, Clock, BookOpen, Users, Star, CheckCircle, ShieldCheck, GraduationCap, Video } from 'lucide-react'
 import EnrollButton from '@/components/courses/EnrollButton'
 
 export const revalidate = 60
 
-export default async function CourseDetailsPage({ params }: { params: { slug: string } }) {
+export default async function CourseDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const supabase = createSupabaseServerClient()
 
   // First, try to fetch the course with the exact slug
-  let { data: course, error: courseError } = await supabase
+  const { data: courseData, error: courseError } = await supabase
     .from('courses')
     .select(`
       *,
       teacher:profiles(full_name, avatar_url, headline),
       category:categories(name_ar)
     `)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   // If course not found, try searching by a normalized slug pattern
+  let course = courseData
   if (!course && courseError) {
     const { data: alternativeCourse } = await supabase
       .from('courses')
@@ -31,9 +31,9 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
         teacher:profiles(full_name, avatar_url, headline),
         category:categories(name_ar)
       `)
-      .ilike('slug', `${params.slug}%`)
+      .ilike('slug', `${slug}%`)
       .single()
-    
+
     if (alternativeCourse) {
       course = alternativeCourse
     }
@@ -67,7 +67,7 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
   // Check enrollment status
   let isEnrolled = false
   const { data: { session } } = await supabase.auth.getSession()
-  
+
   if (session) {
     const { data: enrollment } = await supabase
       .from('enrollments')
@@ -75,12 +75,12 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
       .eq('student_id', session.user.id)
       .eq('course_id', course.id)
       .single()
-      
+
     if (enrollment && (enrollment.payment_status === 'completed' || enrollment.payment_status === 'free')) {
       isEnrolled = true
     }
   }
-  
+
   const whatYouLearn = course.what_you_learn || []
   const requirements = course.requirements || []
 
@@ -91,7 +91,7 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
         <div className="absolute inset-0 bg-gradient-2 opacity-50" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col lg:flex-row gap-12">
-            
+
             {/* Info */}
             <div className="flex-1 lg:pl-12">
               <div className="flex items-center gap-3 mb-6">
@@ -104,11 +104,11 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
                   {getLevelLabel(course.level)}
                 </span>
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
                 {course.title}
               </h1>
-              
+
               <p className="text-xl text-text-secondary mb-8 leading-relaxed">
                 {course.description || course.short_description}
               </p>
@@ -176,13 +176,13 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
                   )}
                 </div>
 
-                <EnrollButton 
-                  courseId={course.id} 
-                  price={course.price || 0} 
-                  isEnrolled={isEnrolled} 
-                  slug={course.slug} 
+                <EnrollButton
+                  courseId={course.id}
+                  price={course.price || 0}
+                  isEnrolled={isEnrolled}
+                  slug={course.slug}
                 />
-                
+
                 {!isEnrolled && course.price > 0 && (
                   <p className="text-center text-xs text-text-muted mb-6">تعلم آمن، انضم آلاف الطلاب</p>
                 )}
@@ -218,7 +218,7 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content */}
           <div className="flex-1 lg:pl-12 space-y-12">
-            
+
             {/* What you'll learn */}
             {whatYouLearn.length > 0 && (
               <section className="glass-card p-8">
@@ -291,7 +291,7 @@ export default async function CourseDetailsPage({ params }: { params: { slug: st
             </section>
 
           </div>
-          
+
           {/* Spacer for sticky sidebar */}
           <div className="hidden lg:block w-[400px] shrink-0 pointer-events-none" />
         </div>
