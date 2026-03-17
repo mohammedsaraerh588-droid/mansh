@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
-import { BookOpen, User, BookMarked, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, LogOut, Menu, X, BookOpen, Home, Sparkles } from 'lucide-react'
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -25,23 +25,17 @@ export default function Navbar() {
       }
     }
     fetchUser()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
       if (session?.user) {
         supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => setProfile(data))
-      } else {
-        setProfile(null)
-      }
+      } else { setProfile(null) }
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -51,110 +45,114 @@ export default function Navbar() {
     window.location.href = '/'
   }
 
-  const navLinks = [
-    { name: 'الرئيسية', href: '/' },
-    { name: 'الدورات', href: '/courses' },
-  ]
-
   const getDashboardLink = () => {
     if (!profile) return '/dashboard/student'
-    switch (profile.role) {
-      case 'admin': return '/dashboard/admin'
-      case 'teacher': return '/dashboard/teacher'
-      default: return '/dashboard/student'
-    }
+    if (profile.role === 'admin') return '/dashboard/admin'
+    if (profile.role === 'teacher') return '/dashboard/teacher'
+    return '/dashboard/student'
   }
 
+  const navLinks = [
+    { name: 'الرئيسية', href: '/', icon: Home },
+    { name: 'الدورات', href: '/courses', icon: BookOpen },
+  ]
+
+  const isHeroPage = pathname === '/'
+
   return (
-    <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/80 backdrop-blur-xl border-b border-border py-4 shadow-sm' : 'bg-transparent py-6'
-      }`}
-    >
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+      isScrolled || !isHeroPage
+        ? 'bg-white/95 backdrop-blur-xl border-b border-border shadow-sm py-3'
+        : 'bg-transparent py-5'
+    }`}>
       <div className="container mx-auto px-4 flex items-center justify-between">
+
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl shadow-sm transition-all duration-300 transform group-hover:-translate-y-1">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+            style={{background:'var(--gradient-1)'}}>
             م
           </div>
-          <span className="text-xl font-bold tracking-tight text-secondary">
-            منصة <span className="text-primary">تعلّم</span>
+          <span className={`text-xl font-black transition-colors ${isScrolled || !isHeroPage ? 'text-secondary' : 'text-white'}`}>
+            منصة <span className="gradient-text">تعلّم</span>
           </span>
         </Link>
 
-        {/* Desktop Nav Actions */}
+        {/* Desktop */}
         <div className="hidden md:flex items-center gap-8">
-          <div className="flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === link.href ? 'text-primary' : 'text-text-secondary'
-                }`}
-              >
+          <div className="flex items-center gap-1">
+            {navLinks.map(link => (
+              <Link key={link.name} href={link.href}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  pathname === link.href
+                    ? 'bg-primary-light text-primary'
+                    : isScrolled || !isHeroPage
+                      ? 'text-text-secondary hover:text-primary hover:bg-surface-2'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}>
+                <link.icon className="w-4 h-4" />
                 {link.name}
               </Link>
             ))}
           </div>
 
-          <div className="flex items-center gap-4 border-r border-border pr-6">
+          <div className={`flex items-center gap-3 pr-6 border-r ${isScrolled || !isHeroPage ? 'border-border' : 'border-white/20'}`}>
             {user ? (
               <>
                 <Link href={getDashboardLink()}>
-                  <Button variant="ghost" className="text-text-secondary hover:text-primary-dark group">
-                    <LayoutDashboard className="w-4 h-4 ml-2 group-hover:text-primary transition-colors" />
+                  <button className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    isScrolled || !isHeroPage ? 'text-text-secondary hover:text-primary hover:bg-surface-2' : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}>
+                    <LayoutDashboard className="w-4 h-4" />
                     لوحة التحكم
-                  </Button>
+                  </button>
                 </Link>
-                <div className="relative group">
-                  <Link href="/profile">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-light group-hover:border-primary transition-colors cursor-pointer">
-                      {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-surface-2 flex items-center justify-center text-sm font-bold text-primary">
-                          {profile?.full_name ? profile.full_name[0] : 'أ'}
+                <Link href="/profile">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-all hover:scale-105 cursor-pointer shadow-sm">
+                    {profile?.avatar_url
+                      ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-sm font-black text-white" style={{background:'var(--gradient-1)'}}>
+                          {profile?.full_name?.[0] || 'أ'}
                         </div>
-                      )}
-                    </div>
-                  </Link>
-                </div>
+                    }
+                  </div>
+                </Link>
               </>
             ) : (
               <>
                 <Link href="/auth/login">
-                  <Button variant="ghost">تسجيل الدخول</Button>
+                  <button className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    isScrolled || !isHeroPage ? 'text-text-secondary hover:text-primary hover:bg-surface-2' : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}>تسجيل الدخول</button>
                 </Link>
                 <Link href="/auth/register">
-                  <Button variant="primary">حساب جديد</Button>
+                  <button className="btn-primary flex items-center gap-2 px-5 py-2.5 text-sm rounded-xl">
+                    <Sparkles className="w-4 h-4" />
+                    ابدأ مجاناً
+                  </button>
                 </Link>
               </>
             )}
           </div>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden text-text-secondary hover:text-primary p-2"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
+        {/* Mobile Toggle */}
+        <button className={`md:hidden p-2 rounded-xl transition-colors ${isScrolled || !isHeroPage ? 'text-text-secondary hover:bg-surface-2' : 'text-white hover:bg-white/10'}`}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="absolute top-100 left-0 w-full bg-white border-b border-border p-4 flex flex-col gap-4 md:hidden shadow-lg">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                pathname === link.href ? 'bg-primary-light text-primary-dark' : 'text-text-secondary hover:bg-surface-2'
+        <div className="md:hidden bg-white border-b border-border p-4 flex flex-col gap-2 shadow-xl">
+          {navLinks.map(link => (
+            <Link key={link.name} href={link.href}
+              className={`flex items-center gap-3 p-3 rounded-xl text-sm font-bold transition-colors ${
+                pathname === link.href ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-surface-2'
               }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
+              onClick={() => setIsMobileMenuOpen(false)}>
+              <link.icon className="w-4 h-4" />
               {link.name}
             </Link>
           ))}
@@ -162,29 +160,23 @@ export default function Navbar() {
           {user ? (
             <>
               <Link href={getDashboardLink()} onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="secondary" className="w-full justify-start">
-                  <LayoutDashboard className="w-4 h-4 ml-2" />
-                  لوحة التحكم
-                </Button>
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-bold text-text-secondary hover:bg-surface-2">
+                  <LayoutDashboard className="w-4 h-4" /> لوحة التحكم
+                </button>
               </Link>
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start mt-2">
-                  <User className="w-4 h-4 ml-2" />
-                  الملف الشخصي
-                </Button>
-              </Link>
-              <Button variant="danger" className="w-full justify-start mt-2" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 ml-2" />
-                تسجيل الخروج
-              </Button>
+              <button onClick={handleSignOut} className="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50">
+                <LogOut className="w-4 h-4" /> تسجيل الخروج
+              </button>
             </>
           ) : (
             <div className="flex flex-col gap-2">
               <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="secondary" className="w-full">تسجيل الدخول</Button>
+                <button className="w-full p-3 rounded-xl text-sm font-bold text-text-secondary border-2 border-border hover:border-primary hover:text-primary transition-all">تسجيل الدخول</button>
               </Link>
               <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="primary" className="w-full">حساب جديد</Button>
+                <button className="btn-primary w-full p-3 text-sm rounded-xl flex items-center justify-center gap-2">
+                  <Sparkles className="w-4 h-4" /> ابدأ مجاناً
+                </button>
               </Link>
             </div>
           )}
