@@ -29,6 +29,8 @@ export async function POST(req: Request) {
         console.error('[FREE_ENROLL]', error)
         return new NextResponse('Enrollment failed', { status: 500 })
       }
+      // Update total_students count
+      await supabase.rpc('increment_course_students', { course_id: courseId }).catch(()=>{})
       return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.slug}/learn` })
     }
 

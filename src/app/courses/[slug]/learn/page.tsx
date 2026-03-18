@@ -57,6 +57,11 @@ export default function CourseLearnPage() {
       { student_id:session.user.id, course_id:course.id, lesson_id:lessonId, is_completed:true, completed_at:new Date().toISOString() },
       { onConflict:'student_id,lesson_id' }
     )
+    // Update enrollment progress percentage
+    const newDone = progress.filter(p=>p.is_completed).length + (isDone(lessonId)?0:1)
+    const pct = totalLessons>0 ? Math.round((newDone/totalLessons)*100) : 0
+    await supabase.from('enrollments').update({ progress_percentage:pct })
+      .eq('student_id',session.user.id).eq('course_id',course.id)
   }
 
   const nextLesson = () => {

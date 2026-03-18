@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p style={{fontSize:10,fontWeight:800,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--txt3)',padding:'4px 10px 10px'}}>القائمة</p>
             <nav style={{display:'flex',flexDirection:'column',gap:2}}>
               {items.map(({label,href,Icon})=>(
-                <Link key={href} href={href} className={`nav-link ${pathname===href?'active':''}`} style={{textDecoration:'none'}}>
+                <Link key={href} href={href} className={`nav-link ${pathname===href || pathname.startsWith(href+'/') && href !== '/dashboard/student' && href !== '/dashboard/teacher' && href !== '/dashboard/admin' ? 'active':''}`} style={{textDecoration:'none'}}>
                   <Icon size={16}/>{label}
                 </Link>
               ))}

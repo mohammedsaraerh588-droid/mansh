@@ -1,69 +1,61 @@
-'use client'
-
-import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { Stethoscope } from 'lucide-react'
+
+function Section({ title, children }: { title:string; children:React.ReactNode }) {
+  return (
+    <div style={{marginBottom:28}}>
+      <h2 style={{fontSize:18,fontWeight:800,color:'var(--txt1)',marginBottom:10,paddingBottom:8,borderBottom:'2px solid var(--teal-soft)'}}>{title}</h2>
+      <div style={{fontSize:14.5,color:'var(--txt2)',lineHeight:1.85}}>{children}</div>
+    </div>
+  )
+}
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <section className="py-16 px-4" style={{ background: 'var(--primary)' }}>
-        <div className="container mx-auto max-w-4xl">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6" style={{ color: 'var(--gold)' }}>
-            <ArrowRight className="w-4 h-4" />
-            العودة إلى الرئيسية
-          </Link>
-          <h1 className="text-4xl font-black text-white mb-4">شروط وأحكام الاستخدام</h1>
-          <p className="text-white/70">آخر تحديث: 17 مارس 2026</p>
-        </div>
-      </section>
-
-      {/* Content */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="prose prose-invert max-w-none" style={{ color: 'var(--text-primary)' }}>
-            
-            <h2 className="text-2xl font-black mt-8 mb-4">1. قبول الشروط</h2>
-            <p>بالدخول إلى واستخدام منصة تعلّم، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي جزء من هذه الشروط، فيرجى عدم استخدام المنصة.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">2. استخدام المنصة</h2>
-            <p>تلتزم بما يلي عند استخدام المنصة:</p>
-            <ul className="list-disc list-inside space-y-2 my-4">
-              <li>عدم استخدام المنصة لأي غرض غير قانوني أو ضار</li>
-              <li>عدم محاولة الوصول غير المصرح به إلى أنظمة المنصة</li>
-              <li>عدم نسخ أو توزيع محتوى المنصة بدون إذن</li>
-              <li>عدم التحرش أو إساءة المعاملة للمستخدمين الآخرين</li>
-              <li>الامتثال لجميع القوانين واللوائح المعمول بها</li>
-            </ul>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">3. حسابات المستخدمين</h2>
-            <p>أنت مسؤول عن الحفاظ على سرية بيانات دخولك. تتعهد بعدم الكشف عن كلمة المرور الخاصة بك لأي شخص آخر. أنت وحدك المسؤول عن جميع الأنشطة التي تحدث تحت حسابك.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">4. الملكية الفكرية</h2>
-            <p>جميع المحتوى على المنصة، بما في ذلك الدورات والفيديوهات والمواد التعليمية، محمي بحقوق الملكية الفكرية. لا يُسمح بنسخ أو توزيع هذا المحتوى بدون إذن صريح من المنصة.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">5. الرسوم والدفع</h2>
-            <p>بعض الدورات قد تتطلب دفع رسوم. عند إجراء عملية شراء، فإنك توافق على دفع الرسوم المحددة. جميع المبيعات نهائية ولا يمكن استردادها إلا في الحالات المحددة في سياسة الاسترجاع.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">6. الشهادات</h2>
-            <p>الشهادات الصادرة من المنصة تثبت إكمالك للدورة. لا تعتبر هذه الشهادات بديلاً عن المؤهلات الرسمية أو الاعتماد الأكاديمي من المؤسسات التعليمية المعترف بها.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">7. تحرير المسؤولية</h2>
-            <p>توفر المنصة محتواها "كما هو" دون أي ضمانات. لا نضمن دقة أو اكتمال أو ملاءمة المحتوى لأي غرض معين. استخدام المنصة يتم على مسؤوليتك الخاصة.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">8. تعديل الشروط</h2>
-            <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت. سيتم إخطارك بأي تغييرات جوهرية عبر البريد الإلكتروني أو إشعار على المنصة. استمرارك في استخدام المنصة يعني قبولك للشروط المعدلة.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">9. الإنهاء</h2>
-            <p>نحتفظ بالحق في إنهاء أو تعليق حسابك إذا انتهكت هذه الشروط أو أي سياسة أخرى للمنصة.</p>
-
-            <h2 className="text-2xl font-black mt-8 mb-4">10. الاتصال بنا</h2>
-            <p>إذا كان لديك أي أسئلة حول هذه الشروط، يرجى التواصل معنا عبر صفحة الاتصال.</p>
-
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <div className="hero" style={{padding:'48px 0'}}>
+        <div className="wrap" style={{position:'relative',zIndex:1}}>
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+            <div style={{width:38,height:38,borderRadius:10,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center'}}><Stethoscope size={18} style={{color:'#fff'}}/></div>
+            <span style={{fontWeight:900,fontSize:16,color:'#fff'}}>منصة تعلّم الطبية</span>
           </div>
+          <h1 style={{fontSize:'clamp(26px,4vw,44px)',fontWeight:900,color:'#fff',marginBottom:8}}>شروط وأحكام الاستخدام</h1>
+          <p style={{color:'rgba(255,255,255,.5)',fontSize:14}}>آخر تحديث: مارس 2026</p>
         </div>
-      </section>
+      </div>
+
+      <div className="wrap" style={{padding:'48px 20px'}}>
+        <div style={{maxWidth:760}}>
+          <Section title="1. قبول الشروط">
+            <p>بالدخول إلى منصة تعلّم الطبية واستخدامها، فإنك توافق على الالتزام بهذه الشروط. إذا كنت لا توافق، يرجى عدم استخدام المنصة.</p>
+          </Section>
+          <Section title="2. استخدام المنصة">
+            <ul style={{paddingRight:18,display:'flex',flexDirection:'column',gap:6}}>
+              {['عدم استخدام المنصة لأي غرض غير قانوني','عدم محاولة الوصول غير المصرح به للأنظمة','عدم نسخ أو توزيع محتوى المنصة بدون إذن','الامتثال لجميع القوانين واللوائح المعمول بها'].map((t,i)=>(
+                <li key={i} style={{listStyle:'disc'}}>{t}</li>
+              ))}
+            </ul>
+          </Section>
+          <Section title="3. حسابات المستخدمين">
+            <p>أنت مسؤول عن الحفاظ على سرية بيانات دخولك وجميع الأنشطة التي تحدث تحت حسابك.</p>
+          </Section>
+          <Section title="4. الملكية الفكرية">
+            <p>جميع المحتوى على المنصة محمي بحقوق الملكية الفكرية. لا يُسمح بنسخ أو توزيع هذا المحتوى بدون إذن صريح.</p>
+          </Section>
+          <Section title="5. الرسوم والدفع">
+            <p>بعض الدورات تتطلب رسوماً. جميع المبيعات نهائية وفق سياسة الاسترجاع المعتمدة.</p>
+          </Section>
+          <Section title="6. الشهادات">
+            <p>شهادات الإتمام تثبت إكمالك للدورة وهي ذات طابع تعليمي داخلي ولا تُعتبر بديلاً عن المؤهلات الرسمية.</p>
+          </Section>
+          <Section title="7. تعديل الشروط">
+            <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت مع إشعارك بالتغييرات الجوهرية.</p>
+          </Section>
+          <Section title="8. الاتصال بنا">
+            <p>للاستفسار عن الشروط، <Link href="/contact" style={{color:'var(--teal)',fontWeight:700,textDecoration:'none'}}>تواصل معنا</Link>.</p>
+          </Section>
+        </div>
+      </div>
     </div>
   )
 }
