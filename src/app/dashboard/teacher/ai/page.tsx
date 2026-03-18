@@ -88,30 +88,50 @@ export default function TeacherAIPage() {
     } finally { setLoading(false) }
   }
 
-  /* ── توليد صورة عبر Pollinations (مجاني 100%) ── */
+  /* ── توليد صورة عبر API route ─────────────── */
   const generateImage = async (overrideText?: string) => {
     const text = (overrideText || input).trim()
     if (!text) return
-    setMsgs(p => [...p, { role:'user', text }, { role:'model', text:'🎨 جاري توليد الصورة...', isLoading:true }])
+    setMsgs(p => [...p,
+      { role:'user',  text },
+      { role:'model', text:'🎨 جاري توليد الصورة الطبية...', isLoading:true }
+    ])
     setInput(''); setImgLoading(true)
-    // Pollinations.ai - مجاني تماماً بدون API key
-    const prompt = encodeURIComponent(`medical educational illustration: ${text}, professional, detailed, clean white background, scientific diagram style`)
-    const url    = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=600&nologo=true`
-    // نتحقق من تحميل الصورة
-    const img = new window.Image()
-    img.onload = () => {
+
+    try {
+      const res  = await fetch('/api/ai-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text }),
+      })
+
+      // إذا أعاد صورة مباشرة (binary)
+      const contentType = res.headers.get('content-type') || ''
+      if (contentType.startsWith('image/')) {
+        const blob   = await res.blob()
+        const imgUrl = URL.createObjectURL(blob)
+        setMsgs(p => p.map((m,i) =>
+          i === p.length-1 ? { role:'model', text:`🎨 "${text}"`, imgUrl } : m
+        ))
+        setImgLoading(false)
+        return
+      }
+
+      // إذا أعاد JSON (fallback URL أو خطأ)
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      // Fallback: نحاول تحميل الصورة من URL مباشرة في المتصفح
+      const imgUrl = data.url
       setMsgs(p => p.map((m,i) =>
-        i === p.length-1 ? { role:'model', text:`🎨 تم توليد الصورة: "${text}"`, imgUrl: url } : m
+        i === p.length-1 ? { role:'model', text:`🎨 "${text}"`, imgUrl } : m
       ))
-      setImgLoading(false)
-    }
-    img.onerror = () => {
+    } catch (e: any) {
       setMsgs(p => p.map((m,i) =>
-        i === p.length-1 ? { role:'model', text:'❌ فشل توليد الصورة. حاول مرة أخرى.' } : m
+        i === p.length-1 ? { role:'model', text:`❌ فشل توليد الصورة: ${e.message}` } : m
       ))
-      setImgLoading(false)
     }
-    img.src = url
+    setImgLoading(false)
   }
 
   const handleSend = () => mode === 'image' ? generateImage() : sendMessage()
@@ -225,9 +245,26 @@ export default function TeacherAIPage() {
                 )}
                 {msg.imgUrl && (
                   <div style={{marginTop:10}}>
-                    <img src={msg.imgUrl} alt="توليد صورة طبية" style={{width:'100%',borderRadius:8,border:'1px solid var(--border)'}}/>
-                    <a href={msg.imgUrl} download="medical-image.jpg" className="btn btn-outline btn-sm" style={{marginTop:8,display:'inline-flex',textDecoration:'none'}}>
-                      تحميل الصورة
+                    <img
+                      src={msg.imgUrl}
+                      alt="صورة طبية"
+                      style={{width:'100%',borderRadius:8,border:'1px solid var(--border)',minHeight:60}}
+                      onError={e=>{
+                        const t = e.currentTarget
+                        // إذا فشل التحميل نعرض رابط مباشر
+                        t.style.display='none'
+                        const p = t.parentElement
+                        if (p && !p.querySelector('.img-err')) {
+                          const d = document.createElement('div')
+                          d.className='img-err'
+                          d.innerHTML=`<p style="color:var(--err);font-size:13px;margin-bottom:8px">⚠️ تعذّر عرض الصورة مباشرةً</p><a href="${msg.imgUrl}" target="_blank" rel="noopener" style="color:var(--teal);font-size:13px;font-weight:700">🔗 افتح الصورة في تبويب جديد</a>`
+                          p.appendChild(d)
+                        }
+                      }}
+                    />
+                    <a href={msg.imgUrl} download target="_blank" rel="noopener"
+                      className="btn btn-outline btn-sm" style={{marginTop:8,display:'inline-flex',textDecoration:'none'}}>
+                      ⬇️ تحميل الصورة
                     </a>
                   </div>
                 )}
