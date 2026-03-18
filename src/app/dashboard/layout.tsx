@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { LayoutDashboard, BookOpen, Award, Video, BarChart, FileText, Settings, Users, LogOut, Loader2 } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Award, Video, BarChart, FileText, Settings, Users, LogOut, Loader2, Sparkles } from 'lucide-react'
 
 const NAV = {
   student: [
@@ -14,6 +14,7 @@ const NAV = {
   teacher: [
     { label:'لوحة التحكم',         href:'/dashboard/teacher',              Icon:LayoutDashboard },
     { label:'إدارة الدورات',       href:'/dashboard/teacher/courses',      Icon:Video },
+    { label:'مساعد AI',            href:'/dashboard/teacher/ai',           Icon:Sparkles },
     { label:'المبيعات',            href:'/dashboard/teacher/sales',        Icon:BarChart },
     { label:'الاختبارات',          href:'/dashboard/teacher/quizzes',      Icon:FileText },
   ],
