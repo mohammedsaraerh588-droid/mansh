@@ -146,7 +146,7 @@ export default function TeacherAIPage() {
             </div>
             <div>
               <h1 style={{fontSize:20,fontWeight:900,color:'var(--txt1)'}}>مساعد AI الطبي</h1>
-              <p style={{fontSize:12,color:'var(--txt3)'}}>مجاني تماماً • Gemini Flash + Pollinations</p>
+              <p style={{fontSize:12,color:'var(--txt3)'}}>مجاني تماماً • Pollinations AI • بدون حدود</p>
             </div>
           </div>
         </div>
@@ -309,7 +309,7 @@ export default function TeacherAIPage() {
           accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.webp,.gif"
           onChange={e=>{ if(e.target.files?.[0]) setFile(e.target.files[0]) }}/>
         <p style={{fontSize:11,color:'var(--txt3)',textAlign:'center',marginTop:6}}>
-          Gemini 1.5 Flash (Google) • Pollinations.ai للصور • مجاني 100%
+          Pollinations AI • مجاني 100% بدون API key • بدون حدود يومية
         </p>
       </div>
     </div>

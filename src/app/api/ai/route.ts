@@ -1,53 +1,55 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const POLLINATIONS_URL = 'https://text.pollinations.ai/'
 
-const SAFETY = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT,        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,       threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-]
-
-const SYS = `أنت مساعد تعليمي طبي متخصص للمعلمين على منصة تعلّم الطبية.
-مهمتك مساعدة المعلمين في إعداد المحتوى الطبي، شرح المفاهيم، إنشاء أسئلة MCQ، وتحليل الملفات.
+const SYSTEM = `أنت مساعد تعليمي طبي متخصص للمعلمين على منصة تعلّم الطبية.
+مهمتك مساعدة المعلمين في:
+- إعداد المحتوى التعليمي الطبي وشرح المفاهيم الطبية بأسلوب واضح
+- إنشاء أسئلة MCQ للاختبارات الطبية
+- تحليل الملفات والوثائق الطبية
+- اقتراح خطط دراسية وأساليب التدريس
 أجب دائماً باللغة العربية بأسلوب علمي واضح ومنظم.`
 
-// نجرب نماذج متعددة — الأسرع والأوفر مجاناً أولاً
-const MODELS = [
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-flash',
-]
-
-async function tryModels(fn: (model: any) => Promise<string>): Promise<string> {
-  let lastErr: any
-  for (const modelName of MODELS) {
+async function callAI(messages: any[], retries = 3): Promise<string> {
+  for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName, safetySettings: SAFETY, systemInstruction: SYS })
-      return await fn(model)
+      const res = await fetch(POLLINATIONS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages,
+          model:  'openai',
+          stream: false,
+          seed:   Math.floor(Math.random() * 9999),
+        }),
+      })
+      if (!res.ok) {
+        const txt = await res.text()
+        throw new Error(`HTTP ${res.status}: ${txt.slice(0, 100)}`)
+      }
+      const text = await res.text()
+      if (!text?.trim()) throw new Error('Empty response')
+      return text.trim()
     } catch (e: any) {
-      lastErr = e
-      const is429 = e?.message?.includes('429') || e?.message?.includes('quota') || e?.message?.includes('RESOURCE_EXHAUSTED')
-      if (!is429) throw e
-      console.warn(`[AI] ${modelName} quota, trying next...`)
-      await new Promise(r => setTimeout(r, 800))
+      if (attempt === retries - 1) throw e
+      await new Promise(r => setTimeout(r, 1200 * (attempt + 1)))
     }
   }
-  throw lastErr
+  throw new Error('Failed after retries')
 }
 
 export async function POST(req: Request) {
   try {
+    // تحقق من صلاحيات المعلم
     const supabase = await createSupabaseServerClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single()
-    if (!['teacher','admin'].includes(profile?.role))
-      return NextResponse.json({ error: 'ليس لديك صلاحية استخدام AI' }, { status: 403 })
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', session.user.id).single()
+    if (!['teacher', 'admin'].includes(profile?.role))
+      return NextResponse.json({ error: 'ليس لديك صلاحية استخدام المساعد الذكي' }, { status: 403 })
 
     const formData = await req.formData()
     const mode    = formData.get('mode') as string
@@ -55,48 +57,55 @@ export async function POST(req: Request) {
     const history = JSON.parse((formData.get('history') as string) || '[]')
     const file    = formData.get('file') as File | null
 
-    // ── وضع تحليل الملف ─────────────────────
+    // ── تحليل ملف ───────────────────────────────
     if (file) {
-      const bytes  = await file.arrayBuffer()
-      const base64 = Buffer.from(bytes).toString('base64')
-      const prompt = message || 'حلّل هذا الملف وقدّم ملخصاً شاملاً مع أبرز النقاط الطبية.'
-      const text = await tryModels(m => m.generateContent([
-        { inlineData: { data: base64, mimeType: file.type } },
-        { text: prompt }
-      ]).then((r: any) => r.response.text()))
+      let fileContent = ''
+      if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+        fileContent = await file.text()
+      } else if (file.type === 'application/pdf') {
+        fileContent = `[ملف PDF: ${file.name} - الحجم: ${Math.round(file.size/1024)}KB]\nملاحظة: تحليل PDF محدود في هذه النسخة.`
+      } else if (file.type.startsWith('image/')) {
+        fileContent = `[صورة: ${file.name} - ${file.type}]`
+      } else {
+        fileContent = `[ملف: ${file.name} - ${file.type}]`
+      }
+      const prompt = message || 'حلّل هذا المحتوى وقدّم ملخصاً شاملاً مع أبرز النقاط الطبية.'
+      const msgs = [
+        { role: 'system',    content: SYSTEM },
+        { role: 'user', content: `${prompt}\n\nمحتوى الملف:\n${fileContent.slice(0, 8000)}` }
+      ]
+      const text = await callAI(msgs)
       return NextResponse.json({ text })
     }
 
-    // ── وضع توليد أسئلة MCQ ─────────────────
+    // ── توليد أسئلة MCQ ─────────────────────────
     if (mode === 'quiz') {
-      const count  = formData.get('count') || '5'
-      const prompt = `أنشئ ${count} أسئلة MCQ طبية عن: "${message}"
-كل سؤال: 4 خيارات، إجابة صحيحة واحدة، تنوع في المستوى.
-أجب بـ JSON فقط بدون أي نص خارجي:
-[{"question":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"option_a","explanation":"..."}]`
-      const raw = await tryModels(m => m.generateContent(prompt).then((r: any) => r.response.text()))
-      const clean = raw.replace(/```json\n?|\n?```/g,'').trim()
+      const count = formData.get('count') || '5'
+      const msgs = [
+        { role: 'system', content: SYSTEM },
+        { role: 'user', content: `أنشئ ${count} أسئلة MCQ طبية عن: "${message}"
+كل سؤال: 4 خيارات (أ ب ج د)، إجابة صحيحة واحدة، تنوع بين التذكر والفهم والتطبيق.
+أجب بـ JSON فقط بدون أي نص خارجي أو markdown:
+[{"question":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"option_a","explanation":"..."}]` }
+      ]
+      const raw   = await callAI(msgs)
+      const clean = raw.replace(/```json\n?|\n?```/g, '').trim()
       try   { return NextResponse.json({ questions: JSON.parse(clean), text: raw }) }
       catch { return NextResponse.json({ text: raw }) }
     }
 
-    // ── وضع المحادثة العادية ─────────────────
-    const text = await tryModels(m => {
-      const chat = m.startChat({
-        history: history.map((h: any) => ({ role: h.role, parts: [{ text: h.text }] }))
-      })
-      return chat.sendMessage(message).then((r: any) => r.response.text())
-    })
+    // ── محادثة عادية ────────────────────────────
+    const msgs = [
+      { role: 'system', content: SYSTEM },
+      ...history.map((h: any) => ({ role: h.role === 'model' ? 'assistant' : h.role, content: h.text })),
+      { role: 'user', content: message }
+    ]
+    const text = await callAI(msgs)
     return NextResponse.json({ text })
 
   } catch (err: any) {
     console.error('[AI_ERROR]', err)
     const msg = err?.message || 'خطأ غير معروف'
-    const is429 = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')
-    return NextResponse.json({
-      error: is429
-        ? '⏳ تم استنفاد الحد المجاني مؤقتاً. يرجى الانتظار دقيقة والمحاولة مجدداً.'
-        : `❌ ${msg}`
-    }, { status: is429 ? 429 : 500 })
+    return NextResponse.json({ error: `❌ ${msg}` }, { status: 500 })
   }
 }
