@@ -70,8 +70,20 @@ export default function Navbar() {
 
         {/* Actions */}
         <div style={{display:'flex',alignItems:'center',gap:8}} className="hidden md:flex">
-          <button onClick={toggle} className="toggle" style={{justifyContent:dark?'flex-end':'flex-start'}} title="تبديل المظهر">
-            <span className="toggle-knob">{dark?<Moon size={10} color="#fff"/>:<Sun size={10} color="#0f766e"/>}</span>
+          <button onClick={toggle}
+            title={dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
+            style={{
+              display:'flex', alignItems:'center', gap:7,
+              padding:'7px 12px', borderRadius:9, cursor:'pointer',
+              border:`1px solid ${solid ? 'var(--border2)' : 'rgba(255,255,255,.2)'}`,
+              background: solid ? 'var(--surface)' : 'rgba(255,255,255,.08)',
+              color: solid ? 'var(--txt2)' : 'rgba(255,255,255,.75)',
+              fontSize:13, fontWeight:600, transition:'all .2s',
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)'}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=solid?'var(--border2)':'rgba(255,255,255,.2)';(e.currentTarget as HTMLElement).style.color=solid?'var(--txt2)':'rgba(255,255,255,.75)'}}>
+            {dark ? <Sun size={15}/> : <Moon size={15}/>}
+            {dark ? 'فاتح' : 'مظلم'}
           </button>
           {user ? (
             <>
@@ -101,11 +113,8 @@ export default function Navbar() {
 
         {/* Mobile */}
         <div style={{display:'flex',alignItems:'center',gap:8}} className="md:hidden">
-          <button onClick={toggle} className="toggle" style={{justifyContent:dark?'flex-end':'flex-start'}}>
-            <span className="toggle-knob">{dark?<Moon size={10} color="#fff"/>:<Sun size={10} color="#0f766e"/>}</span>
-          </button>
           <button onClick={()=>setOpen(!open)} style={{background:'none',border:'none',cursor:'pointer',color:solid?'var(--txt1)':'#fff',padding:4,display:'flex'}}>
-            {open?<X size={20}/>:<Menu size={20}/>}
+            {open?<X size={22}/>:<Menu size={22}/>}
           </button>
         </div>
       </div>
@@ -120,6 +129,11 @@ export default function Navbar() {
               <I size={15}/>{label}
             </Link>
           ))}
+          <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
+          <button onClick={toggle} className="nav-link" style={{background:'none',border:'none',width:'100%',textAlign:'right',fontFamily:'inherit'}}>
+            {dark ? <Sun size={15}/> : <Moon size={15}/>}
+            {dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
+          </button>
           <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
           {user ? (
             <>
