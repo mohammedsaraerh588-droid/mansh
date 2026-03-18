@@ -71,7 +71,11 @@ export default function TeacherAIPage() {
       const res  = await fetch('/api/ai', { method:'POST', body:fd })
       const data = await res.json()
 
-      if (!res.ok) throw new Error(data.error || 'خطأ')
+      if (!res.ok || data.error) {
+        const errText = data.error || 'خطأ غير معروف'
+        setMsgs(p => p.map((m,i) => i===p.length-1 ? { role:'model', text: errText } : m))
+        return
+      }
 
       setMsgs(p => p.map((m,i) =>
         i === p.length-1 ? { role:'model', text: data.text, questions: data.questions } : m

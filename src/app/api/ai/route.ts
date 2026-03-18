@@ -11,100 +11,92 @@ const SAFETY = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
 ]
 
+const SYS = `أنت مساعد تعليمي طبي متخصص للمعلمين على منصة تعلّم الطبية.
+مهمتك مساعدة المعلمين في إعداد المحتوى الطبي، شرح المفاهيم، إنشاء أسئلة MCQ، وتحليل الملفات.
+أجب دائماً باللغة العربية بأسلوب علمي واضح ومنظم.`
+
+// نجرب نماذج متعددة — الأسرع والأوفر مجاناً أولاً
+const MODELS = [
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-flash',
+]
+
+async function tryModels(fn: (model: any) => Promise<string>): Promise<string> {
+  let lastErr: any
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName, safetySettings: SAFETY, systemInstruction: SYS })
+      return await fn(model)
+    } catch (e: any) {
+      lastErr = e
+      const is429 = e?.message?.includes('429') || e?.message?.includes('quota') || e?.message?.includes('RESOURCE_EXHAUSTED')
+      if (!is429) throw e
+      console.warn(`[AI] ${modelName} quota, trying next...`)
+      await new Promise(r => setTimeout(r, 800))
+    }
+  }
+  throw lastErr
+}
+
 export async function POST(req: Request) {
   try {
-    // تحقق من صلاحيات المعلم
     const supabase = await createSupabaseServerClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', session.user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single()
     if (!['teacher','admin'].includes(profile?.role))
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'ليس لديك صلاحية استخدام AI' }, { status: 403 })
 
     const formData = await req.formData()
-    const mode     = formData.get('mode') as string      // 'chat' | 'file' | 'quiz'
-    const message  = formData.get('message') as string
-    const history  = JSON.parse((formData.get('history') as string) || '[]')
-    const file     = formData.get('file') as File | null
+    const mode    = formData.get('mode') as string
+    const message = (formData.get('message') as string) || ''
+    const history = JSON.parse((formData.get('history') as string) || '[]')
+    const file    = formData.get('file') as File | null
 
-    const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-      safetySettings: SAFETY,
-      systemInstruction: `أنت مساعد تعليمي طبي متخصص للمعلمين على منصة تعلّم الطبية. 
-مهمتك مساعدة المعلمين في:
-- إعداد المحتوى التعليمي الطبي
-- شرح المفاهيم الطبية بأسلوب واضح
-- إنشاء أسئلة MCQ للاختبارات
-- تحليل الملفات والوثائق الطبية
-- اقتراح خطط دراسية
-أجب دائماً باللغة العربية بأسلوب علمي واضح ومنظم.`,
-    })
-
-    // وضع المحادثة العادية
-    if (mode === 'chat' && !file) {
-      const chat = model.startChat({
-        history: history.map((h: any) => ({
-          role: h.role,
-          parts: [{ text: h.text }]
-        }))
-      })
-      const result = await chat.sendMessage(message)
-      return NextResponse.json({ text: result.response.text() })
-    }
-
-    // وضع تحليل الملف
+    // ── وضع تحليل الملف ─────────────────────
     if (file) {
       const bytes  = await file.arrayBuffer()
       const base64 = Buffer.from(bytes).toString('base64')
-      const mime   = file.type
-
       const prompt = message || 'حلّل هذا الملف وقدّم ملخصاً شاملاً مع أبرز النقاط الطبية.'
-
-      const result = await model.generateContent([
-        { inlineData: { data: base64, mimeType: mime } },
+      const text = await tryModels(m => m.generateContent([
+        { inlineData: { data: base64, mimeType: file.type } },
         { text: prompt }
-      ])
-      return NextResponse.json({ text: result.response.text() })
+      ]).then((r: any) => r.response.text()))
+      return NextResponse.json({ text })
     }
 
-    // وضع توليد الأسئلة
+    // ── وضع توليد أسئلة MCQ ─────────────────
     if (mode === 'quiz') {
-      const prompt = `أنشئ ${formData.get('count') || 5} أسئلة MCQ طبية حول الموضوع التالي:
-"${message}"
-
-الشروط:
-- كل سؤال له 4 خيارات (أ، ب، ج، د)
-- الخيار الصحيح واحد فقط
-- أسئلة متنوعة تختبر الفهم والتطبيق
-- مناسبة لطلاب الطب
-
-أجب بصيغة JSON فقط بدون أي نص إضافي:
-[
-  {
-    "question": "نص السؤال",
-    "option_a": "الخيار أ",
-    "option_b": "الخيار ب", 
-    "option_c": "الخيار ج",
-    "option_d": "الخيار د",
-    "correct_option": "option_a",
-    "explanation": "شرح الإجابة الصحيحة"
-  }
-]`
-      const result = await model.generateContent(prompt)
-      const text   = result.response.text().replace(/```json\n?|\n?```/g, '').trim()
-      try {
-        const questions = JSON.parse(text)
-        return NextResponse.json({ questions, text })
-      } catch {
-        return NextResponse.json({ text })
-      }
+      const count  = formData.get('count') || '5'
+      const prompt = `أنشئ ${count} أسئلة MCQ طبية عن: "${message}"
+كل سؤال: 4 خيارات، إجابة صحيحة واحدة، تنوع في المستوى.
+أجب بـ JSON فقط بدون أي نص خارجي:
+[{"question":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"option_a","explanation":"..."}]`
+      const raw = await tryModels(m => m.generateContent(prompt).then((r: any) => r.response.text()))
+      const clean = raw.replace(/```json\n?|\n?```/g,'').trim()
+      try   { return NextResponse.json({ questions: JSON.parse(clean), text: raw }) }
+      catch { return NextResponse.json({ text: raw }) }
     }
 
-    return NextResponse.json({ error: 'Unknown mode' }, { status: 400 })
+    // ── وضع المحادثة العادية ─────────────────
+    const text = await tryModels(m => {
+      const chat = m.startChat({
+        history: history.map((h: any) => ({ role: h.role, parts: [{ text: h.text }] }))
+      })
+      return chat.sendMessage(message).then((r: any) => r.response.text())
+    })
+    return NextResponse.json({ text })
+
   } catch (err: any) {
     console.error('[AI_ERROR]', err)
-    return NextResponse.json({ error: err.message || 'AI error' }, { status: 500 })
+    const msg = err?.message || 'خطأ غير معروف'
+    const is429 = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')
+    return NextResponse.json({
+      error: is429
+        ? '⏳ تم استنفاد الحد المجاني مؤقتاً. يرجى الانتظار دقيقة والمحاولة مجدداً.'
+        : `❌ ${msg}`
+    }, { status: is429 ? 429 : 500 })
   }
 }
