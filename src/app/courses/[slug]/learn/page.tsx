@@ -1,266 +1,188 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
 import { VideoPlayer } from '@/components/ui/VideoPlayer'
-import { PlayCircle, CheckCircle, FileText, Menu, ChevronRight, Loader2 } from 'lucide-react'
+import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X } from 'lucide-react'
 
 export default function CourseLearnPage() {
-  const { slug } = useParams()
-  const router = useRouter()
-  const supabase = createSupabaseBrowserClient()
-  
-  const [course, setCourse] = useState<any>(null)
+  const { slug }   = useParams()
+  const router     = useRouter()
+  const supabase   = createSupabaseBrowserClient()
+
+  const [course,       setCourse]       = useState<any>(null)
   const [activeLesson, setActiveLesson] = useState<any>(null)
-  const [progress, setProgress] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [progress,     setProgress]     = useState<any[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [sidebar,      setSidebar]      = useState(true)
 
   useEffect(() => {
-    const fetchCourseAndProgress = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/auth/login')
-        return
-      }
+    (async () => {
+      const { data:{ session } } = await supabase.auth.getSession()
+      if (!session) { router.push('/auth/login'); return }
 
-      // Fetch course and curriculum
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select(`
-          id, title,
-          modules(
-            id, title, position,
-            lessons(id, title, type, content, video_url, cloudinary_public_id, position)
-          )
-        `)
-        .eq('slug', slug)
-        .single()
-
-      if (!courseData) {
-        router.push('/dashboard/student')
-        return
-      }
+      const { data: c } = await supabase.from('courses')
+        .select('id,title,modules(id,title,position,lessons(id,title,type,content,video_url,cloudinary_public_id,is_preview,position))')
+        .eq('slug', slug).single()
+      if (!c) { router.push('/dashboard/student'); return }
 
       // Check enrollment
-      const { data: enrollment } = await supabase
-        .from('enrollments')
-        .select('id, payment_status')
-        .eq('student_id', session.user.id)
-        .eq('course_id', courseData.id)
-        .single()
-
-      if (!enrollment || (enrollment.payment_status !== 'completed' && enrollment.payment_status !== 'free')) {
-        // Not enrolled or not paid, redirect back to course details
-        router.push(`/courses/${slug}`)
-        return
+      const { data: enr } = await supabase.from('enrollments').select('payment_status')
+        .eq('student_id', session.user.id).eq('course_id', c.id).single()
+      if (!enr || !['completed','free'].includes(enr.payment_status)) {
+        router.push(`/courses/${slug}`); return
       }
 
-      // Fetch progress
-      const { data: progressData } = await supabase
-        .from('lesson_progress')
-        .select('lesson_id, is_completed')
-        .eq('student_id', session.user.id)
-        .eq('course_id', courseData.id)
+      c.modules?.sort((a:any,b:any)=>a.position-b.position)
+      c.modules?.forEach((m:any)=>m.lessons?.sort((a:any,b:any)=>a.position-b.position))
 
-      // Sort
-      courseData.modules?.sort((a: any, b: any) => a.position - b.position)
-      courseData.modules?.forEach((m: any) => m.lessons?.sort((a: any, b: any) => a.position - b.position))
+      const { data: prog } = await supabase.from('lesson_progress')
+        .select('lesson_id,is_completed').eq('student_id',session.user.id).eq('course_id',c.id)
 
-      setCourse(courseData)
-      setProgress(progressData || [])
-
-      // Set first lesson as active if none selected
-      if (courseData.modules?.[0]?.lessons?.[0]) {
-        setActiveLesson(courseData.modules[0].lessons[0])
-      }
-
+      setCourse(c)
+      setProgress(prog||[])
+      if (c.modules?.[0]?.lessons?.[0]) setActiveLesson(c.modules[0].lessons[0])
       setLoading(false)
-    }
-
-    fetchCourseAndProgress()
+    })()
   }, [slug])
 
-  const markLessonCompleted = async (lessonId: string) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session || !course) return
+  const isDone = (id:string) => progress.some(p=>p.lesson_id===id&&p.is_completed)
 
-    // Optismistic update
-    if (!progress.find(p => p.lesson_id === lessonId)?.is_completed) {
-      setProgress([...progress, { lesson_id: lessonId, is_completed: true }])
-    }
-
-    await supabase.from('lesson_progress').upsert({
-      student_id: session.user.id,
-      course_id: course.id,
-      lesson_id: lessonId,
-      is_completed: true,
-      completed_at: new Date().toISOString()
-    }, { onConflict: 'student_id,lesson_id' })
-  }
-
-  const navigateToNextLesson = () => {
-    if (!course || !activeLesson) return
-    
-    // Find current indices
-    let mIdx = -1, lIdx = -1
-    course.modules.forEach((m: any, i: number) => {
-      const idx = m.lessons.findIndex((l: any) => l.id === activeLesson.id)
-      if (idx !== -1) {
-        mIdx = i
-        lIdx = idx
-      }
-    })
-
-    if (mIdx === -1) return
-
-    // Next in same module
-    if (lIdx + 1 < course.modules[mIdx].lessons.length) {
-      setActiveLesson(course.modules[mIdx].lessons[lIdx + 1])
-    } 
-    // Next module
-    else if (mIdx + 1 < course.modules.length && course.modules[mIdx + 1].lessons.length > 0) {
-      setActiveLesson(course.modules[mIdx + 1].lessons[0])
-    }
-  }
-
-  const handleLessonComplete = () => {
-    markLessonCompleted(activeLesson.id)
-    navigateToNextLesson()
-  }
-
-  if (loading || !course) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-bold">جاري تحميل الدورة...</h2>
-        </div>
-      </div>
+  const markDone = async (lessonId:string) => {
+    const { data:{ session } } = await supabase.auth.getSession()
+    if (!session||!course) return
+    if (!isDone(lessonId)) setProgress(p=>[...p,{lesson_id:lessonId,is_completed:true}])
+    await supabase.from('lesson_progress').upsert(
+      { student_id:session.user.id, course_id:course.id, lesson_id:lessonId, is_completed:true, completed_at:new Date().toISOString() },
+      { onConflict:'student_id,lesson_id' }
     )
   }
 
-  const isCompleted = (lessonId: string) => progress.some(p => p.lesson_id === lessonId && p.is_completed)
+  const nextLesson = () => {
+    if (!course||!activeLesson) return
+    let mi=-1,li=-1
+    course.modules.forEach((m:any,i:number)=>{
+      const idx=m.lessons.findIndex((l:any)=>l.id===activeLesson.id)
+      if(idx!==-1){mi=i;li=idx}
+    })
+    if(mi===-1) return
+    if(li+1<course.modules[mi].lessons.length) setActiveLesson(course.modules[mi].lessons[li+1])
+    else if(mi+1<course.modules.length&&course.modules[mi+1].lessons.length>0) setActiveLesson(course.modules[mi+1].lessons[0])
+  }
+
+  const handleComplete = () => { markDone(activeLesson.id); nextLesson() }
+
+  const completedCount = progress.filter(p=>p.is_completed).length
+  const totalLessons   = course?.modules?.reduce((s:number,m:any)=>s+(m.lessons?.length||0),0)||0
+  const pct            = totalLessons>0 ? Math.round((completedCount/totalLessons)*100) : 0
+
+  if (loading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
+      <div style={{textAlign:'center'}}>
+        <Loader2 size={36} className="spin" style={{color:'var(--teal)',margin:'0 auto 12px'}}/>
+        <p style={{color:'var(--txt2)',fontSize:14}}>جاري تحميل الدورة...</p>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="h-screen flex flex-col bg-surface fixed inset-0 z-50">
+    <div style={{height:'100vh',display:'flex',flexDirection:'column',background:'var(--bg)',position:'fixed',inset:0,zIndex:50}}>
+
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-4 border-b border-white/10 bg-surface-2 shrink-0">
-        <div className="flex items-center gap-4">
-          <Link href={`/courses/${slug}`} className="p-2 hover:bg-white/10 rounded-lg text-text-muted transition-colors">
-            <ChevronRight className="w-6 h-6" />
+      <header style={{height:56,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px',background:'var(--surface)',borderBottom:'1px solid var(--border)',flexShrink:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <Link href={`/courses/${slug}`} style={{display:'flex',alignItems:'center',justifyContent:'center',width:32,height:32,borderRadius:8,border:'1px solid var(--border)',background:'var(--bg2)',textDecoration:'none',color:'var(--txt2)'}}>
+            <ChevronRight size={16}/>
           </Link>
-          <div className="h-6 w-px bg-white/10" />
-          <h1 className="font-bold truncate max-w-sm">{course.title}</h1>
+          <span style={{fontWeight:700,fontSize:14,color:'var(--txt1)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:280}}>{course.title}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
-            <Menu className="w-5 h-5" />
-          </Button>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          {/* Progress */}
+          <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--txt2)'}}>
+            <div style={{width:100,height:5,borderRadius:99,background:'var(--bg3)',overflow:'hidden'}}>
+              <div style={{height:'100%',background:'var(--teal)',borderRadius:99,width:`${pct}%`,transition:'width .5s'}}/>
+            </div>
+            <span style={{fontWeight:700,color:'var(--teal)'}}>{pct}%</span>
+          </div>
+          <button onClick={()=>setSidebar(!sidebar)} style={{display:'flex',alignItems:'center',justifyContent:'center',width:32,height:32,borderRadius:8,border:'1px solid var(--border)',background:'var(--bg2)',cursor:'pointer'}}>
+            {sidebar?<X size={15} style={{color:'var(--txt2)'}}/>:<Menu size={15} style={{color:'var(--txt2)'}}/>}
+          </button>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-y-auto bg-surface relative">
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+
+        {/* Main area */}
+        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column'}}>
           {activeLesson ? (
-            <div className="max-w-5xl mx-auto w-full p-4 lg:p-8">
-              <h2 className="text-2xl font-bold mb-6">{activeLesson.title}</h2>
-              
-              {/* Media Player / Content Area */}
-              <div className="mb-8">
-                {activeLesson.type === 'video' ? (
-                  <VideoPlayer 
-                    publicId={activeLesson.cloudinary_public_id}
-                    url={activeLesson.video_url}
-                    title={activeLesson.title}
-                    onEnded={handleLessonComplete}
-                  />
-                ) : (
-                  <div className="p-8 prose prose-invert max-w-none min-h-[400px]">
-                    {activeLesson.content ? (
-                      <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
-                    ) : (
-                      <p className="text-text-muted text-center pt-20">لا يوجد محتوى نصي.</p>
-                    )}
-                  </div>
-                )}
-              </div>
+            <div style={{maxWidth:900,width:'100%',margin:'0 auto',padding:'24px 20px 80px'}}>
+              <h2 style={{fontSize:20,fontWeight:900,marginBottom:16,color:'var(--txt1)'}}>{activeLesson.title}</h2>
+
+              {/* Video or text */}
+              {activeLesson.type==='video' ? (
+                <VideoPlayer publicId={activeLesson.cloudinary_public_id} url={activeLesson.video_url} title={activeLesson.title} onEnded={handleComplete}/>
+              ) : (
+                <div style={{padding:24,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,minHeight:300,lineHeight:1.8,color:'var(--txt1)',fontSize:15}}>
+                  {activeLesson.content
+                    ? <div dangerouslySetInnerHTML={{__html:activeLesson.content}}/>
+                    : <p style={{color:'var(--txt3)',textAlign:'center',paddingTop:40}}>لا يوجد محتوى نصي لهذا الدرس.</p>}
+                </div>
+              )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between p-6 glass-card mb-20 md:mb-0">
-                <Button 
-                  variant={isCompleted(activeLesson.id) ? 'secondary' : 'primary'} 
-                  onClick={handleLessonComplete}
-                  leftIcon={<CheckCircle className="w-5 h-5" />}
-                  className={isCompleted(activeLesson.id) ? 'text-accent border-accent/50' : ''}
-                >
-                  {isCompleted(activeLesson.id) ? 'مكتمل' : 'اكتمال ومتابعة'}
-                </Button>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:20,padding:'16px 20px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12}}>
+                <button onClick={handleComplete} className={`btn btn-lg ${isDone(activeLesson.id)?'btn-outline':'btn-primary'}`}
+                  style={{minWidth:160}}>
+                  <CheckCircle size={16}/>
+                  {isDone(activeLesson.id) ? 'مكتمل ✓' : 'اكتمال والتالي'}
+                </button>
+                <button onClick={nextLesson} className="btn btn-outline btn-md" style={{display:'flex',alignItems:'center',gap:6}}>
+                  الدرس التالي<ChevronLeft size={14}/>
+                </button>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-text-muted">
-              اختر درساً للبدء
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--txt3)',fontSize:14}}>
+              اختر درساً من القائمة للبدء
             </div>
           )}
         </div>
 
-        {/* Sidebar Curriculum */}
-        <div className={`
-          w-80 border-r border-white/10 bg-surface-2 flex flex-col shrink-0 transition-transform duration-300
-          absolute lg:relative right-0 h-full z-40
-          ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0 hidden lg:flex'}
-        `}>
-          <div className="p-4 border-b border-white/5 text-sm font-bold text-text-secondary sticky top-0 bg-surface-2 z-10">
-            محتوى الدورة
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {course.modules?.map((mod: any, i: number) => (
-              <div key={mod.id} className="space-y-2">
-                <h3 className="font-bold text-sm bg-surface-3 p-3 rounded-lg border border-white/5 flex gap-2">
-                  <span className="text-primary-light">الفصل {i + 1}:</span>
-                  {mod.title}
-                </h3>
-                <div className="space-y-1 pl-4">
-                  {mod.lessons?.map((lesson: any) => {
-                    const active = activeLesson?.id === lesson.id
-                    const completed = isCompleted(lesson.id)
-
+        {/* Sidebar */}
+        {sidebar && (
+          <div style={{width:300,borderRight:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',overflowY:'auto',flexShrink:0}}>
+            <div style={{padding:'12px 14px',borderBottom:'1px solid var(--border)',fontWeight:800,fontSize:13,color:'var(--txt2)',position:'sticky',top:0,background:'var(--surface)',zIndex:1}}>
+              محتوى الدورة
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'10px 10px'}}>
+              {course.modules?.map((mod:any,mi:number)=>(
+                <div key={mod.id} style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:800,color:'var(--txt3)',padding:'4px 8px',marginBottom:4,letterSpacing:'.05em'}}>
+                    الفصل {mi+1}: {mod.title}
+                  </div>
+                  {mod.lessons?.map((les:any)=>{
+                    const active  = activeLesson?.id===les.id
+                    const done    = isDone(les.id)
                     return (
-                      <button
-                        key={lesson.id}
-                        onClick={() => {
-                          setActiveLesson(lesson)
-                          if (window.innerWidth < 1024) setSidebarOpen(false)
-                        }}
-                        className={`
-                          w-full text-right p-3 rounded-xl flex items-start gap-3 transition-all text-sm
-                          ${active ? 'bg-primary/20 text-primary-light font-bold border border-primary/20' : 'hover:bg-white/5 text-text-secondary'}
-                        `}
-                      >
-                        <div className="mt-0.5 shrink-0">
-                          {completed ? (
-                            <CheckCircle className="w-4 h-4 text-accent" />
-                          ) : lesson.type === 'video' ? (
-                            <PlayCircle className="w-4 h-4 opacity-50" />
-                          ) : (
-                            <FileText className="w-4 h-4 opacity-50" />
-                          )}
+                      <button key={les.id} onClick={()=>setActiveLesson(les)}
+                        style={{width:'100%',textAlign:'right',padding:'9px 10px',borderRadius:8,border:'none',cursor:'pointer',display:'flex',alignItems:'flex-start',gap:8,marginBottom:2,background:active?'var(--teal-soft)':'transparent',transition:'background .12s'}}
+                        onMouseEnter={e=>{ if(!active)(e.currentTarget as HTMLElement).style.background='var(--bg2)' }}
+                        onMouseLeave={e=>{ if(!active)(e.currentTarget as HTMLElement).style.background='transparent' }}>
+                        <div style={{marginTop:2,flexShrink:0}}>
+                          {done ? <CheckCircle size={14} style={{color:'var(--ok)'}}/> :
+                           les.type==='video' ? <PlayCircle size={14} style={{color:active?'var(--teal)':'var(--txt3)'}}/> :
+                           <FileText size={14} style={{color:active?'var(--teal)':'var(--txt3)'}}/>}
                         </div>
-                        <span className="leading-snug">{lesson.title}</span>
+                        <span style={{fontSize:13,fontWeight:active?700:500,color:active?'var(--teal)':'var(--txt2)',lineHeight:1.4}}>{les.title}</span>
                       </button>
                     )
                   })}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

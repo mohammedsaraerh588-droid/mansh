@@ -1,78 +1,52 @@
 'use client'
 
-import { CldVideoPlayer } from 'next-cloudinary'
-import 'next-cloudinary/dist/cld-video-player.css'
-
-interface VideoPlayerProps {
-  publicId?: string;
-  url?: string;
-  title?: string;
-  onEnded?: () => void;
+interface Props {
+  publicId?: string
+  url?: string
+  title?: string
+  onEnded?: () => void
 }
 
-export function VideoPlayer({ publicId, url, title, onEnded }: VideoPlayerProps) {
-  // 1. YouTube Detection
+export function VideoPlayer({ publicId, url, title, onEnded }: Props) {
+
+  // YouTube
   const isYouTube = url?.includes('youtube.com') || url?.includes('youtu.be')
-  
   if (isYouTube) {
-    const videoId = url?.includes('v=') 
-      ? url.split('v=')[1]?.split('&')[0] 
+    const videoId = url?.includes('v=')
+      ? url.split('v=')[1]?.split('&')[0]
       : url?.split('/').pop()
-
     return (
-      <div className="aspect-video w-full">
-        <iframe
-          width="100%"
-          height="100%"
-          src={`https://www.youtube.com/embed/${videoId}`}
-          title={title || "YouTube video player"}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          className="rounded-xl overflow-hidden"
-        ></iframe>
+      <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:12,overflow:'hidden',background:'#000'}}>
+        <iframe style={{position:'absolute',inset:0,width:'100%',height:'100%'}}
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
+          title={title||'فيديو'} frameBorder="0" allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"/>
       </div>
     )
   }
 
-  // 2. Cloudinary Player
-  if (publicId) {
+  // Cloudinary أو رابط مباشر
+  const videoSrc = publicId
+    ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}`
+    : url
+
+  if (videoSrc) {
     return (
-      <div className="rounded-xl overflow-hidden border border-white/5 shadow-2xl">
-        <CldVideoPlayer
-          width="1920"
-          height="1080"
-          src={publicId}
-          onEnded={onEnded}
-          colors={{
-            accent: '#3b82f6', // primary blue
-            base: '#0f172a',   // surface dark
-            text: '#ffffff'
-          }}
-          fontFace="Inter"
-          logo={false}
-        />
+      <div style={{borderRadius:12,overflow:'hidden',background:'#000',boxShadow:'var(--s3)'}}>
+        <video src={videoSrc} controls style={{width:'100%',maxHeight:520,display:'block'}}
+          onEnded={onEnded} title={title}
+          controlsList="nodownload">
+          متصفحك لا يدعم تشغيل الفيديو.
+        </video>
       </div>
     )
   }
 
-  // 3. Fallback Native Player (Direct URL)
-  if (url) {
-    return (
-       <div className="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-2xl">
-          <video 
-            src={url} 
-            controls 
-            className="w-full h-full"
-            onEnded={onEnded}
-          />
-       </div>
-    )
-  }
-
+  // لا يوجد فيديو
   return (
-    <div className="aspect-video w-full bg-surface-3 flex flex-col items-center justify-center text-text-muted rounded-xl border border-dashed border-border">
-      <p>لا يوجد فيديو متاح لهذا الدرس</p>
+    <div style={{aspectRatio:'16/9',background:'var(--bg3)',borderRadius:12,border:'2px dashed var(--border2)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8}}>
+      <span style={{fontSize:32}}>🎬</span>
+      <p style={{fontSize:14,color:'var(--txt3)'}}>لم يتم رفع فيديو لهذا الدرس بعد</p>
     </div>
   )
 }

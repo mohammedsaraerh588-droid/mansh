@@ -18,16 +18,20 @@ export async function POST(req: Request) {
     if (!profile || !['teacher','admin'].includes(profile.role))
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
+    // resource_type يأتي من الطلب (video أو image)
+    const body = await req.json().catch(() => ({}))
+    const resourceType = body.resource_type === 'image' ? 'image' : 'video'
+
     const timestamp = Math.round(Date.now() / 1000)
     const folder    = `mansh/courses/${session.user.id}`
 
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder, resource_type: 'video' },
+      { timestamp, folder, resource_type: resourceType },
       process.env.CLOUDINARY_API_SECRET!
     )
 
     return NextResponse.json({
-      signature, timestamp, folder,
+      signature, timestamp, folder, resourceType,
       cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
       apiKey:    process.env.CLOUDINARY_API_KEY,
     })

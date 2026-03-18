@@ -72,12 +72,12 @@ export default function EditCoursePage() {
     const file = e.target.files?.[0]; if (!file) return
     setUploadingThumb(true)
     try {
-      const res  = await fetch('/api/upload-signature', { method:'POST' })
+      const res  = await fetch('/api/upload-signature', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({resource_type:'image'}) })
       const { signature,timestamp,folder,cloudName,apiKey } = await res.json()
       const fd = new FormData()
       fd.append('file', file); fd.append('signature', signature)
       fd.append('timestamp', String(timestamp)); fd.append('api_key', apiKey)
-      fd.append('folder', folder); fd.append('resource_type','image')
+      fd.append('folder', folder)
       const up = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,{method:'POST',body:fd})
       const data = await up.json()
       if (up.ok) setForm(p=>({...p,thumbnail_url:data.secure_url}))
