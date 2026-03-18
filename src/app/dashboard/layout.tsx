@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading) return (
     <div style={{minHeight:'60vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <Loader2 size={32} className="spin" style={{color:'var(--gold)'}}/>
+      <Loader2 size={32} className="spin" style={{color:'var(--teal)'}}/>
     </div>
   )
 

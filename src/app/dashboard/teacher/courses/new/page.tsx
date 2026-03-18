@@ -51,7 +51,7 @@ export default function NewCoursePage() {
       level: form.level, price: Number(form.price),
       description: form.description.trim(),
       short_description: form.description.trim().substring(0,200),
-      status: 'draft',
+      status: 'published',
     }).select().single()
     setSubmitting(false)
     if (err) { setError(err.message); return }
