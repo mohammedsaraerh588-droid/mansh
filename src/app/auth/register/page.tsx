@@ -2,43 +2,41 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
-import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
-
-const schema = z.object({
-  fullName:        z.string().min(3,'الاسم 3 أحرف على الأقل'),
-  email:           z.string().email('البريد غير صالح'),
-  password:        z.string().min(6,'6 أحرف على الأقل'),
-  confirmPassword: z.string(),
-}).refine(d=>d.password===d.confirmPassword,{message:'كلمات المرور غير متطابقة',path:['confirmPassword']})
-type Form = z.infer<typeof schema>
+import { Mail, Lock, User, AlertCircle, CheckCircle, Stethoscope } from 'lucide-react'
 
 export default function RegisterPage() {
-  const [err,     setErr]     = useState<string|null>(null)
-  const [success, setSuccess] = useState(false)
-  const router = useRouter()
+  const [form,     setForm]     = useState({ name:'', email:'', password:'', confirm:'' })
+  const [err,      setErr]      = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [success,  setSuccess]  = useState(false)
+  const router  = useRouter()
   const supabase = createSupabaseBrowserClient()
-  const { register, handleSubmit, formState:{ errors, isSubmitting } } = useForm<Form>({ resolver:zodResolver(schema) })
 
-  const onSubmit = async (d: Form) => {
-    setErr(null)
-    const { error } = await supabase.auth.signUp({ email:d.email, password:d.password, options:{ data:{ full_name:d.fullName } } })
-    if (error) { setErr(error.message.includes('already registered')?'هذا البريد مسجّل مسبقاً.':'حدث خطأ، حاول مرة أخرى.'); return }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr('')
+    if (form.name.trim().length < 3) { setErr('الاسم 3 أحرف على الأقل'); return }
+    if (form.password.length < 6)    { setErr('كلمة المرور 6 أحرف على الأقل'); return }
+    if (form.password !== form.confirm){ setErr('كلمتا المرور غير متطابقتين'); return }
+    setLoading(true)
+    const { error } = await supabase.auth.signUp({
+      email: form.email, password: form.password,
+      options: { data: { full_name: form.name.trim() } }
+    })
+    setLoading(false)
+    if (error) { setErr(error.message.includes('already') ? 'هذا البريد مسجّل مسبقاً.' : 'حدث خطأ. حاول مرة أخرى.'); return }
     setSuccess(true)
-    setTimeout(()=>{ router.push('/dashboard/student'); router.refresh() }, 1800)
+    setTimeout(() => { router.push('/dashboard/student'); router.refresh() }, 1800)
   }
 
   if (success) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
       <div className="card" style={{padding:40,textAlign:'center',maxWidth:360,width:'100%'}}>
-        <div style={{width:64,height:64,borderRadius:'50%',background:'#f0fdf4',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
-          <CheckCircle size={32} style={{color:'#16a34a'}}/>
+        <div style={{width:60,height:60,borderRadius:'50%',background:'var(--ok-bg)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+          <CheckCircle size={28} style={{color:'var(--ok)'}}/>
         </div>
-        <h2 style={{fontSize:22,fontWeight:900,marginBottom:8,color:'var(--txt1)'}}>تم التسجيل بنجاح!</h2>
+        <h2 style={{fontSize:21,fontWeight:900,marginBottom:8,color:'var(--txt1)'}}>تم التسجيل بنجاح!</h2>
         <p style={{fontSize:14,color:'var(--txt2)'}}>جاري توجيهك للوحة التحكم...</p>
       </div>
     </div>
@@ -47,16 +45,18 @@ export default function RegisterPage() {
   return (
     <div style={{minHeight:'100vh',display:'flex',background:'var(--bg)'}}>
       {/* Decorative */}
-      <div className="hero-wrap hidden lg:flex" style={{flex:1,alignItems:'center',justifyContent:'center',padding:48}}>
+      <div className="hero hidden lg:flex" style={{flex:1,alignItems:'center',justifyContent:'center',padding:48}}>
         <div style={{textAlign:'center',position:'relative',zIndex:1}}>
-          <div style={{width:64,height:64,borderRadius:18,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,fontWeight:900,color:'#fff',margin:'0 auto 24px'}}>م</div>
-          <h2 style={{fontSize:36,fontWeight:900,color:'#fff',marginBottom:12}}>انضم إلينا اليوم</h2>
-          <div className="gold-bar"/>
-          <p style={{color:'rgba(255,255,255,.55)',fontSize:15,maxWidth:280,margin:'18px auto',lineHeight:1.8}}>أنشئ حسابك مجاناً وابدأ رحلتك نحو الاحتراف.</p>
-          <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:260,margin:'28px auto 0',textAlign:'right'}}>
-            {['شهادات رقمية معتمدة','وصول مدى الحياة للمحتوى','دعم متخصص على مدار الساعة'].map((t,i)=>(
-              <div key={i} style={{display:'flex',alignItems:'center',gap:10,fontSize:14,color:'rgba(255,255,255,.6)'}}>
-                <CheckCircle size={15} style={{color:'var(--gold)',flexShrink:0}}/>{t}
+          <div style={{width:60,height:60,borderRadius:16,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px',boxShadow:'var(--st)'}}>
+            <Stethoscope size={28} style={{color:'#fff'}}/>
+          </div>
+          <h2 style={{fontSize:34,fontWeight:900,color:'#fff',marginBottom:10}}>انضم إلى المجتمع الطبي</h2>
+          <div style={{width:40,height:3,background:'var(--teal)',borderRadius:2,margin:'0 auto 18px'}}/>
+          <p style={{color:'rgba(255,255,255,.52)',fontSize:15,maxWidth:280,margin:'0 auto',lineHeight:1.8}}>أنشئ حسابك مجاناً وابدأ رحلتك في التعلم الطبي.</p>
+          <div style={{display:'flex',flexDirection:'column',gap:8,maxWidth:260,margin:'24px auto 0',textAlign:'right'}}>
+            {['محتوى علمي دقيق','شهادات إتمام رقمية','اختبارات تفاعلية'].map((t,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'rgba(255,255,255,.55)'}}>
+                <CheckCircle size={13} style={{color:'var(--teal)',flexShrink:0}}/>{t}
               </div>
             ))}
           </div>
@@ -67,27 +67,29 @@ export default function RegisterPage() {
       <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
         <div style={{width:'100%',maxWidth:420}}>
           <div className="card" style={{padding:32}}>
-            <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>إنشاء حساب جديد</h1>
-            <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24}}>انضم لآلاف المتعلمين مجاناً</p>
-
+            <h1 style={{fontSize:23,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>إنشاء حساب جديد</h1>
+            <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24}}>انضم مجاناً وابدأ التعلم الآن</p>
             {err && (
-              <div style={{display:'flex',alignItems:'center',gap:8,padding:'11px 14px',borderRadius:10,background:'#fef2f2',border:'1px solid #fecaca',marginBottom:18}}>
-                <AlertCircle size={15} style={{color:'var(--red)',flexShrink:0}}/><p style={{fontSize:13,color:'var(--red)'}}>{err}</p>
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'var(--err-bg)',border:'1px solid rgba(220,38,38,.15)',marginBottom:18}}>
+                <AlertCircle size={14} style={{color:'var(--err)',flexShrink:0}}/><span style={{fontSize:13,color:'var(--err)'}}>{err}</span>
               </div>
             )}
-
-            <form onSubmit={handleSubmit(onSubmit)} style={{display:'flex',flexDirection:'column',gap:14}}>
-              <Input label="الاسم الكامل" placeholder="أحمد محمد" leftIcon={<User size={15}/>} {...register('fullName')} error={errors.fullName?.message}/>
-              <Input label="البريد الإلكتروني" type="email" placeholder="name@example.com" leftIcon={<Mail size={15}/>} {...register('email')} error={errors.email?.message} dir="ltr"/>
-              <Input label="كلمة المرور" type="password" placeholder="••••••••" leftIcon={<Lock size={15}/>} {...register('password')} error={errors.password?.message} dir="ltr"/>
-              <Input label="تأكيد كلمة المرور" type="password" placeholder="••••••••" leftIcon={<Lock size={15}/>} {...register('confirmPassword')} error={errors.confirmPassword?.message} dir="ltr"/>
-              <button type="submit" disabled={isSubmitting} className="btn btn-gold btn-lg" style={{width:'100%',marginTop:6}}>
-                {isSubmitting ? 'جاري التسجيل...' : 'إنشاء الحساب'}
+            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:13}}>
+              <Input label="الاسم الكامل" placeholder="أحمد محمد" leftIcon={<User size={14}/>}
+                value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/>
+              <Input label="البريد الإلكتروني" type="email" placeholder="name@example.com" leftIcon={<Mail size={14}/>}
+                value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required dir="ltr"/>
+              <Input label="كلمة المرور" type="password" placeholder="••••••••" leftIcon={<Lock size={14}/>}
+                value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required dir="ltr"/>
+              <Input label="تأكيد كلمة المرور" type="password" placeholder="••••••••" leftIcon={<Lock size={14}/>}
+                value={form.confirm} onChange={e=>setForm({...form,confirm:e.target.value})} required dir="ltr"/>
+              <button type="submit" disabled={loading} className="btn btn-primary btn-lg btn-full" style={{marginTop:4}}>
+                {loading ? 'جاري التسجيل...' : 'إنشاء الحساب'}
               </button>
             </form>
-
             <p style={{textAlign:'center',fontSize:13,marginTop:18,color:'var(--txt2)'}}>
-              لديك حساب؟{' '}<Link href="/auth/login" style={{fontWeight:800,color:'var(--gold)',textDecoration:'none'}}>سجّل الدخول</Link>
+              لديك حساب؟{' '}
+              <Link href="/auth/login" style={{fontWeight:800,color:'var(--teal)',textDecoration:'none'}}>سجّل الدخول</Link>
             </p>
           </div>
         </div>

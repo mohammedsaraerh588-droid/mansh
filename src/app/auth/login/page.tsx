@@ -2,88 +2,89 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
-import { Mail, Lock, AlertCircle, ArrowLeft, Users, BookOpen, Star } from 'lucide-react'
-
-const schema = z.object({
-  email:    z.string().email('البريد غير صالح'),
-  password: z.string().min(6,'6 أحرف على الأقل'),
-})
-type Form = z.infer<typeof schema>
+import { Mail, Lock, AlertCircle, Stethoscope } from 'lucide-react'
 
 export default function LoginPage() {
-  const [err, setErr] = useState<string|null>(null)
-  const router = useRouter()
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [err,      setErr]      = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const router  = useRouter()
   const supabase = createSupabaseBrowserClient()
-  const { register, handleSubmit, formState:{ errors, isSubmitting } } = useForm<Form>({ resolver:zodResolver(schema) })
 
-  const onSubmit = async (d: Form) => {
-    setErr(null)
-    const { error } = await supabase.auth.signInWithPassword({ email:d.email, password:d.password })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(''); setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
     if (error) { setErr('البريد الإلكتروني أو كلمة المرور غير صحيحة'); return }
-    router.push('/dashboard/student'); router.refresh()
+    // redirect based on role
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const { data: p } = await supabase.from('profiles').select('role').eq('id',session.user.id).single()
+      const role = p?.role || 'student'
+      router.push(role==='admin'?'/dashboard/admin':role==='teacher'?'/dashboard/teacher':'/dashboard/student')
+      router.refresh()
+    }
   }
 
   return (
     <div style={{minHeight:'100vh',display:'flex',background:'var(--bg)'}}>
-      {/* Left decorative */}
-      <div className="hero-wrap" style={{flex:1,display:'none',alignItems:'center',justifyContent:'center',padding:48}} className="hidden lg:flex hero-wrap">
-        <div style={{textAlign:'center',position:'relative',zIndex:1}}>
-          <div style={{width:64,height:64,borderRadius:18,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,fontWeight:900,color:'#fff',margin:'0 auto 24px'}}>م</div>
-          <h2 style={{fontSize:38,fontWeight:900,color:'#fff',marginBottom:12}}>مرحباً بعودتك</h2>
-          <div className="gold-bar"/>
-          <p style={{color:'rgba(255,255,255,.55)',fontSize:15,maxWidth:280,margin:'18px auto',lineHeight:1.8}}>سجّل دخولك لمتابعة رحلتك التعليمية واستكشاف أحدث الدورات.</p>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,maxWidth:260,margin:'32px auto 0'}}>
-            {[['10K+','طالب مسجّل',Users],['500+','دورة متاحة',BookOpen],['4.9★','تقييم',Star],['+100','معلم',Users]].map(([v,l,Icon]:any,i)=>(
-              <div key={i} style={{padding:'14px 12px',background:'rgba(255,255,255,.07)',borderRadius:12,textAlign:'center'}}>
-                <div style={{fontSize:20,fontWeight:900,color:'var(--gold)'}}>{v}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.4)',marginTop:2}}>{l}</div>
-              </div>
-            ))}
+      {/* Decorative side */}
+      <div className="hero" style={{flex:1,display:'none',position:'relative'}} className="hidden lg:flex">
+        <div style={{position:'relative',zIndex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',padding:48,textAlign:'center'}}>
+          <div style={{width:60,height:60,borderRadius:16,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:22,boxShadow:'var(--st)'}}>
+            <Stethoscope size={28} style={{color:'#fff'}}/>
           </div>
+          <h2 style={{fontSize:34,fontWeight:900,color:'#fff',marginBottom:10}}>مرحباً بعودتك</h2>
+          <div style={{width:40,height:3,background:'var(--teal)',borderRadius:2,margin:'0 auto 18px'}}/>
+          <p style={{color:'rgba(255,255,255,.52)',fontSize:15,maxWidth:280,lineHeight:1.8}}>سجّل دخولك لمتابعة رحلتك التعليمية الطبية.</p>
         </div>
       </div>
 
       {/* Form */}
       <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px'}}>
         <div style={{width:'100%',maxWidth:420}}>
-          <div className="lg:hidden" style={{textAlign:'center',marginBottom:32}}>
+          {/* Mobile logo */}
+          <div style={{textAlign:'center',marginBottom:28}} className="lg:hidden">
             <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
-              <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,color:'#fff'}}>م</div>
-              <span style={{fontWeight:900,fontSize:17,color:'var(--txt1)'}}>منصة <span className="g-text">تعلّم</span></span>
+              <div style={{width:34,height:34,borderRadius:9,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>
+                <Stethoscope size={16}/>
+              </div>
+              <span style={{fontWeight:900,fontSize:16,color:'var(--txt1)'}}>منصة تعلّم الطبية</span>
             </Link>
           </div>
 
           <div className="card" style={{padding:32}}>
-            <h1 style={{fontSize:24,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>تسجيل الدخول</h1>
-            <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:28}}>أدخل بياناتك للمتابعة</p>
+            <h1 style={{fontSize:23,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>تسجيل الدخول</h1>
+            <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24}}>أدخل بياناتك للمتابعة</p>
 
             {err && (
-              <div style={{display:'flex',alignItems:'center',gap:8,padding:'11px 14px',borderRadius:10,background:'#fef2f2',border:'1px solid #fecaca',marginBottom:20}}>
-                <AlertCircle size={15} style={{color:'var(--red)',flexShrink:0}}/><p style={{fontSize:13,color:'var(--red)'}}>{err}</p>
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'var(--err-bg)',border:'1px solid rgba(220,38,38,.15)',marginBottom:18}}>
+                <AlertCircle size={14} style={{color:'var(--err)',flexShrink:0}}/>
+                <span style={{fontSize:13,color:'var(--err)'}}>{err}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{display:'flex',flexDirection:'column',gap:16}}>
+            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
               <Input label="البريد الإلكتروني" type="email" placeholder="name@example.com"
-                leftIcon={<Mail size={16}/>} {...register('email')} error={errors.email?.message} dir="ltr"/>
+                leftIcon={<Mail size={15}/>} value={email} onChange={e=>setEmail(e.target.value)} required dir="ltr"/>
               <Input label="كلمة المرور" type="password" placeholder="••••••••"
-                leftIcon={<Lock size={16}/>} {...register('password')} error={errors.password?.message} dir="ltr"/>
-              <div style={{textAlign:'left'}}>
-                <Link href="/auth/forgot-password" style={{fontSize:12,fontWeight:700,color:'var(--gold)',textDecoration:'none'}}>نسيت كلمة المرور؟</Link>
+                leftIcon={<Lock size={15}/>} value={password} onChange={e=>setPassword(e.target.value)} required dir="ltr"/>
+              <div style={{textAlign:'left',marginTop:-4}}>
+                <Link href="/auth/forgot-password" style={{fontSize:12,fontWeight:700,color:'var(--teal)',textDecoration:'none'}}>
+                  نسيت كلمة المرور؟
+                </Link>
               </div>
-              <button type="submit" disabled={isSubmitting} className="btn btn-gold btn-lg" style={{width:'100%',marginTop:4}}>
-                {isSubmitting ? 'جاري التحقق...' : 'تسجيل الدخول'}
+              <button type="submit" disabled={loading} className="btn btn-primary btn-lg btn-full" style={{marginTop:4}}>
+                {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
               </button>
             </form>
 
             <p style={{textAlign:'center',fontSize:13,marginTop:20,color:'var(--txt2)'}}>
               ليس لديك حساب؟{' '}
-              <Link href="/auth/register" style={{fontWeight:800,color:'var(--gold)',textDecoration:'none'}}>أنشئ حساباً</Link>
+              <Link href="/auth/register" style={{fontWeight:800,color:'var(--teal)',textDecoration:'none'}}>أنشئ حساباً مجاناً</Link>
             </p>
           </div>
         </div>
