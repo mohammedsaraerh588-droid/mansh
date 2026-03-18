@@ -74,14 +74,14 @@ export default function Navbar() {
             title={dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
             style={{
               display:'flex', alignItems:'center', gap:7,
-              padding:'7px 12px', borderRadius:9, cursor:'pointer',
-              border:`1px solid ${solid ? 'var(--border2)' : 'rgba(255,255,255,.2)'}`,
-              background: solid ? 'var(--surface)' : 'rgba(255,255,255,.08)',
-              color: solid ? 'var(--txt2)' : 'rgba(255,255,255,.75)',
-              fontSize:13, fontWeight:600, transition:'all .2s',
+              padding:'7px 13px', borderRadius:9, cursor:'pointer',
+              border:'1.5px solid var(--border2)',
+              background:'var(--bg2)',
+              color:'var(--txt1)',
+              fontSize:13, fontWeight:700, transition:'all .2s',
             }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)'}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=solid?'var(--border2)':'rgba(255,255,255,.2)';(e.currentTarget as HTMLElement).style.color=solid?'var(--txt2)':'rgba(255,255,255,.75)'}}>
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)';(e.currentTarget as HTMLElement).style.background='var(--teal-soft)'}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--border2)';(e.currentTarget as HTMLElement).style.color='var(--txt1)';(e.currentTarget as HTMLElement).style.background='var(--bg2)'}}>
             {dark ? <Sun size={15}/> : <Moon size={15}/>}
             {dark ? 'فاتح' : 'مظلم'}
           </button>
