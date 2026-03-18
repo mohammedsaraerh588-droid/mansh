@@ -1,139 +1,115 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
-import { ArrowRight, BookOpen, Settings, Users, Loader2 } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
+import { ArrowRight, BookOpen, Settings, Users, Eye, Loader2, CheckCircle } from 'lucide-react'
 
 export default function ManageCoursePage() {
-  const { id } = useParams()
-  const router = useRouter()
-  const [course, setCourse] = useState<any>(null)
+  const { id }   = useParams()
+  const router   = useRouter()
+  const [course, setCourse]   = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [publishing, setPublishing] = useState(false)
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    const fetchCourse = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+    (async () => {
+      const { data:{ session } } = await supabase.auth.getSession()
       if (!session) return
-
       const { data, error } = await supabase
-        .from('courses')
-        .select(`*, categories(name, name_ar)`)
-        .eq('id', id)
-        .eq('teacher_id', session.user.id)
-        .single()
-
-      if (error || !data) {
-        router.push('/dashboard/teacher')
-        return
-      }
-      setCourse(data)
-      setLoading(false)
-    }
-    fetchCourse()
+        .from('courses').select('*,categories(name_ar)')
+        .eq('id',id).eq('teacher_id',session.user.id).single()
+      if (error || !data) { router.push('/dashboard/teacher/courses'); return }
+      setCourse(data); setLoading(false)
+    })()
   }, [id])
 
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
+  const handlePublish = async () => {
+    setPublishing(true)
+    await supabase.from('courses').update({ status:'pending' }).eq('id', id)
+    setCourse((p:any) => ({...p, status:'pending'}))
+    setPublishing(false)
   }
 
+  const statusLabel = (s:string) => s==='published'?'منشور':s==='pending'?'قيد المراجعة':s==='draft'?'مسودة':'مؤرشف'
+  const statusClass = (s:string) => s==='published'?'badge-green':s==='pending'?'badge-yellow':'badge-gray'
+
+  if (loading) return (
+    <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
+      <Loader2 size={30} className="spin" style={{color:'var(--teal)'}}/>
+    </div>
+  )
+
   return (
-    <div className="space-y-8">
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/teacher">
-          <Button variant="ghost" className="p-2 border border-border bg-white hover:bg-surface-2 text-text-secondary">
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+      <div style={{display:'flex',alignItems:'flex-start',gap:14,paddingBottom:18,borderBottom:'1px solid var(--border)'}}>
+        <Link href="/dashboard/teacher/courses">
+          <button className="btn btn-outline btn-sm" style={{padding:'8px',marginTop:3}}><ArrowRight size={16}/></button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3">
-            إدارة الدورة: {course.title}
-            <span className={`badge text-xs ${
-              course.status === 'published' ? 'badge-success' :
-              course.status === 'pending' ? 'badge-warning' : 'badge-gray'
-            }`}>
-              {course.status === 'published' ? 'منشور' :
-               course.status === 'pending' ? 'قيد المراجعة' : 'مسودة'}
-            </span>
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">تحديث محتوى وتفاصيل الدورة الخاصة بك</p>
+        <div style={{flex:1}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <h1 style={{fontSize:22,fontWeight:900,color:'var(--txt1)'}}>{course.title}</h1>
+            <span className={`badge ${statusClass(course.status)}`}>{statusLabel(course.status)}</span>
+          </div>
+          <p style={{fontSize:13,color:'var(--txt2)',marginTop:3}}>إدارة محتوى وتفاصيل الدورة</p>
         </div>
+        {course.status==='published' && (
+          <Link href={`/courses/${course.slug}`} target="_blank" className="btn btn-outline btn-md" style={{textDecoration:'none'}}>
+            <Eye size={15}/>معاينة
+          </Link>
+        )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Main Details Card */}
-        <div className="md:col-span-2 glass-card p-6 bg-white border border-border">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b border-border pb-4 text-secondary">
-            <Settings className="w-5 h-5 text-primary" />
+      <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:20,alignItems:'start'}}>
+        {/* Actions */}
+        <div className="card" style={{padding:22}}>
+          <h2 style={{fontWeight:800,fontSize:15,color:'var(--txt1)',marginBottom:16,paddingBottom:10,borderBottom:'1px solid var(--border)'}}>
             خيارات الإدارة
           </h2>
-          
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Link href={`/dashboard/teacher/courses/${id}/curriculum`} className="block group">
-              <div className="p-6 rounded-xl border-2 border-border hover:border-primary bg-surface-2 hover:bg-primary-light transition-all h-full text-center flex flex-col items-center justify-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-primary group-hover:scale-110 transition-transform">
-                  <BookOpen className="w-7 h-7" />
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+            {[
+              { href:`/dashboard/teacher/courses/${id}/curriculum`, Icon:BookOpen, t:'المنهج والدروس',    d:'أضف وتنظيم الفصول والدروس والفيديوهات' },
+              { href:`/dashboard/teacher/courses/${id}/edit`,       Icon:Settings, t:'تعديل تفاصيل الدورة', d:'عدّل العنوان والوصف والسعر والصورة'      },
+            ].map(({href,Icon,t,d})=>(
+              <Link key={href} href={href} style={{textDecoration:'none'}}>
+                <div className="card card-hover" style={{padding:'20px 18px',textAlign:'center',cursor:'pointer'}}>
+                  <div style={{width:50,height:50,borderRadius:13,background:'var(--teal-soft)',border:'1px solid rgba(13,148,136,.15)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
+                    <Icon size={22} style={{color:'var(--teal)'}}/>
+                  </div>
+                  <div style={{fontWeight:800,fontSize:14,color:'var(--txt1)',marginBottom:5}}>{t}</div>
+                  <div style={{fontSize:12,color:'var(--txt2)',lineHeight:1.5}}>{d}</div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-primary-dark">المنهج والدروس</h3>
-                  <p className="text-sm text-text-secondary">إضافة الفصول ومقاطع الفيديو</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link href={`/dashboard/teacher/courses/${id}/edit`} className="block group">
-              <div className="p-6 rounded-xl border-2 border-border hover:border-primary bg-surface-2 hover:bg-primary-light transition-all h-full text-center flex flex-col items-center justify-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-primary group-hover:scale-110 transition-transform">
-                  <Settings className="w-7 h-7" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-primary-dark">تفاصيل الدورة</h3>
-                  <p className="text-sm text-text-secondary">تعديل العنوان، الوصف، والسعر</p>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Quick Stats Card */}
-        <div className="glass-card p-6 bg-white border border-border h-fit">
-          <h3 className="font-bold text-lg mb-4 text-secondary border-b border-border pb-2">نظرة سريعة</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-text-secondary">التصنيف</span>
-              <span className="font-semibold">{course.categories?.name_ar || '-'}</span>
+        {/* Quick info */}
+        <div className="card" style={{padding:22,display:'flex',flexDirection:'column',gap:14}}>
+          <h3 style={{fontWeight:800,fontSize:15,color:'var(--txt1)',paddingBottom:10,borderBottom:'1px solid var(--border)'}}>نظرة سريعة</h3>
+          {[
+            { l:'التصنيف',        v: course.categories?.name_ar || '—' },
+            { l:'الطلاب',         v: <span style={{display:'flex',alignItems:'center',gap:5}}><Users size={12}/>{course.total_students||0}</span> },
+            { l:'السعر',          v: <span style={{color:'var(--teal)',fontWeight:700}}>{formatPrice(course.price,course.currency)}</span> },
+            { l:'إجمالي الدروس',  v: `${course.total_lessons||0} درس` },
+          ].map(({l,v},i)=>(
+            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:13}}>
+              <span style={{color:'var(--txt2)'}}>{l}</span>
+              <span style={{fontWeight:700,color:'var(--txt1)'}}>{v as any}</span>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-text-secondary">الطلاب المسجلين</span>
-              <span className="font-semibold flex items-center justify-center gap-1 bg-primary-light text-primary-dark px-2 py-0.5 rounded-md">
-                <Users className="w-3 h-3" />
-                {course.total_students || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-text-secondary">السعر</span>
-              <span className="font-bold text-success">{course.price} {course.currency}</span>
-            </div>
+          ))}
 
-            {course.status === 'draft' && (
-              <div className="pt-4 border-t border-border mt-4">
-                <Button className="w-full" variant="primary">
-                  طلب مراجعة ونشر
-                </Button>
-                <p className="text-xs text-text-muted mt-2 text-center">
-                  يجب إضافة محتوى (دروس) قبل النشر.
-                </p>
-              </div>
-            )}
-          </div>
+          {course.status==='draft' && (
+            <div style={{paddingTop:12,borderTop:'1px solid var(--border)'}}>
+              <button onClick={handlePublish} disabled={publishing} className="btn btn-primary btn-md btn-full">
+                {publishing ? <><Loader2 size={14} className="spin"/>جاري الإرسال...</> : <><CheckCircle size={14}/>طلب المراجعة والنشر</>}
+              </button>
+              <p style={{fontSize:11,color:'var(--txt3)',textAlign:'center',marginTop:6}}>تأكد من إضافة محتوى قبل الإرسال</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

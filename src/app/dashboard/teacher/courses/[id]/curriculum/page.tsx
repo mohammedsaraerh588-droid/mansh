@@ -1,333 +1,217 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { ArrowRight, Plus, GripVertical, Video, FileText, Trash2, Edit2, CheckCircle2, Loader2, PlayCircle, BookOpen } from 'lucide-react'
+import { ArrowRight, Plus, Video, FileText, Trash2, Edit2, Loader2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function CurriculumManager() {
-  const { id } = useParams()
-  const router = useRouter()
+  const { id }  = useParams()
+  const router  = useRouter()
   const supabase = createSupabaseBrowserClient()
 
-  const [course, setCourse] = useState<any>(null)
-  const [modules, setModules] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [course,          setCourse]         = useState<any>(null)
+  const [modules,         setModules]        = useState<any[]>([])
+  const [loading,         setLoading]        = useState(true)
+  const [addingModule,    setAddingModule]   = useState(false)
+  const [newModTitle,     setNewModTitle]    = useState('')
+  const [addingLessonTo,  setAddingLessonTo] = useState<string|null>(null)
+  const [newLesTitle,     setNewLesTitle]    = useState('')
+  const [savingMod,       setSavingMod]      = useState(false)
+  const [savingLes,       setSavingLes]      = useState(false)
+  const [collapsed,       setCollapsed]      = useState<Record<string,boolean>>({})
 
-  // State for new module creation
-  const [isAddingModule, setIsAddingModule] = useState(false)
-  const [newModuleTitle, setNewModuleTitle] = useState('')
+  useEffect(() => { fetchData() }, [id])
 
-  // State for new lesson creation
-  const [addingLessonTo, setAddingLessonTo] = useState<string | null>(null)
-  const [newLessonTitle, setNewLessonTitle] = useState('')
-
-  useEffect(() => {
-    fetchCurriculum()
-  }, [id])
-
-  const fetchCurriculum = async () => {
+  const fetchData = async () => {
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data:{ session } } = await supabase.auth.getSession()
     if (!session) return
-
-    // Verify ownership
-    const { data: courseData } = await supabase
-      .from('courses')
-      .select('id, title, teacher_id')
-      .eq('id', id)
-      .single()
-
-    if (!courseData || courseData.teacher_id !== session.user.id) {
-      router.push('/dashboard/teacher/courses')
-      return;
+    const { data:c } = await supabase.from('courses').select('id,title,teacher_id').eq('id',id).single()
+    if (!c || c.teacher_id!==session.user.id) { router.push('/dashboard/teacher/courses'); return }
+    setCourse(c)
+    const { data:mods } = await supabase.from('modules').select('*,lessons(*)').eq('course_id',id).order('position',{ascending:true})
+    if (mods) {
+      mods.forEach((m:any) => m.lessons?.sort((a:any,b:any)=>a.position-b.position))
+      setModules(mods)
     }
-
-    setCourse(courseData)
-
-    // Fetch modules with lessons
-    const { data: moduleData } = await supabase
-      .from('modules')
-      .select(`
-        *,
-        lessons(*)
-      `)
-      .eq('course_id', id)
-      .order('position', { ascending: true })
-
-    // Sort lessons inside modules
-    if (moduleData) {
-      moduleData.forEach(m => {
-        m.lessons?.sort((a: any, b: any) => a.position - b.position)
-      })
-      setModules(moduleData)
-    }
-    
     setLoading(false)
   }
 
-  const handleAddModule = async () => {
-    if (!newModuleTitle.trim()) return
+  const addModule = async () => {
+    if (!newModTitle.trim()) return
+    setSavingMod(true)
+    const pos = modules.length ? Math.max(...modules.map(m=>m.position))+1 : 1
+    const { data, error } = await supabase.from('modules')
+      .insert({ course_id:id, title:newModTitle.trim(), position:pos }).select().single()
+    setSavingMod(false)
+    if (!error && data) { setModules([...modules,{...data,lessons:[]}]); setNewModTitle(''); setAddingModule(false) }
+  }
 
-    const newPosition = modules.length > 0 ? Math.max(...modules.map(m => m.position)) + 1 : 1
+  const deleteModule = async (modId:string) => {
+    if (!confirm('حذف هذا الفصل وجميع دروسه؟')) return
+    setModules(modules.filter(m=>m.id!==modId))
+    await supabase.from('modules').delete().eq('id',modId)
+  }
 
-    const { data, error } = await supabase
-      .from('modules')
-      .insert({
-        course_id: id,
-        title: newModuleTitle.trim(),
-        position: newPosition
-      })
-      .select()
-      .single()
-
+  const addLesson = async (modId:string) => {
+    if (!newLesTitle.trim()) return
+    setSavingLes(true)
+    const mod = modules.find(m=>m.id===modId)
+    const pos = mod?.lessons?.length ? Math.max(...mod.lessons.map((l:any)=>l.position))+1 : 1
+    const { data, error } = await supabase.from('lessons')
+      .insert({ module_id:modId, course_id:id, title:newLesTitle.trim(), position:pos, type:'video', is_preview:false }).select().single()
+    setSavingLes(false)
     if (!error && data) {
-      setModules([...modules, { ...data, lessons: [] }])
-      setNewModuleTitle('')
-      setIsAddingModule(false)
-    } else if (error) {
-      console.error('Add Module Error:', error)
-      alert(`فشل إضافة الفصل: ${error.message}`)
+      setModules(modules.map(m=>m.id===modId?{...m,lessons:[...m.lessons,data]}:m))
+      setAddingLessonTo(null); setNewLesTitle('')
     }
   }
 
-  const handleDeleteModule = async (moduleId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا الفصل بجميع دروسه؟')) return
-    
-    // Optimistic UI
-    setModules(modules.filter(m => m.id !== moduleId))
-    await supabase.from('modules').delete().eq('id', moduleId)
+  const deleteLesson = async (modId:string, lesId:string) => {
+    if (!confirm('حذف هذا الدرس؟')) return
+    setModules(modules.map(m=>m.id===modId?{...m,lessons:m.lessons.filter((l:any)=>l.id!==lesId)}:m))
+    await supabase.from('lessons').delete().eq('id',lesId)
   }
 
-  const handleAddLesson = async (moduleId: string) => {
-    if (!newLessonTitle.trim()) return
-
-    const moduleIdx = modules.findIndex(m => m.id === moduleId)
-    const targetModule = modules[moduleIdx]
-    const newPosition = targetModule.lessons.length > 0 ? Math.max(...targetModule.lessons.map((l:any) => l.position)) + 1 : 1
-
-    const { data, error } = await supabase
-      .from('lessons')
-      .insert({
-        module_id: moduleId,
-        course_id: id,
-        title: newLessonTitle.trim(),
-        position: newPosition,
-        type: 'video', // Default
-        is_preview: false
-      })
-      .select()
-      .single()
-
-    if (!error && data) {
-      const updatedModules = [...modules]
-      updatedModules[moduleIdx].lessons.push(data)
-      setModules(updatedModules)
-      
-      setAddingLessonTo(null)
-      setNewLessonTitle('')
-    } else if (error) {
-      console.error('Add Lesson Error:', error)
-      alert(`فشل إضافة الدرس: ${error.message}`)
-    }
-  }
-
-  const handleDeleteLesson = async (moduleId: string, lessonId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا الدرس؟')) return
-    
-    const updatedModules = [...modules]
-    const mIdx = updatedModules.findIndex(m => m.id === moduleId)
-    updatedModules[mIdx].lessons = updatedModules[mIdx].lessons.filter((l:any) => l.id !== lessonId)
-    setModules(updatedModules)
-
-    await supabase.from('lessons').delete().eq('id', lessonId)
-  }
+  const toggleCollapse = (modId:string) => setCollapsed(p=>({...p,[modId]:!p[modId]}))
 
   if (loading) return (
-    <div className="min-h-[40vh] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
+      <Loader2 size={30} className="spin" style={{color:'var(--teal)'}}/>
     </div>
   )
 
+  const totalLessons = modules.reduce((s,m)=>s+(m.lessons?.length||0),0)
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-20">
-      
+    <div style={{maxWidth:800,margin:'0 auto',display:'flex',flexDirection:'column',gap:20,paddingBottom:60}}>
+
       {/* Header */}
-      <div className="flex items-center gap-4 border-b border-border pb-6">
+      <div style={{display:'flex',alignItems:'center',gap:14,paddingBottom:18,borderBottom:'1px solid var(--border)'}}>
         <Link href={`/dashboard/teacher/courses/${id}`}>
-          <Button variant="ghost" className="p-2 border border-border bg-white hover:bg-surface-2 text-text-secondary">
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+          <button className="btn btn-outline btn-sm" style={{padding:'8px'}}><ArrowRight size={16}/></button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            المنهج والدروس
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            إضافة وتنظيم فصول الدورة ومقاطع الفيديو ({course?.title})
-          </p>
+        <div style={{flex:1}}>
+          <h1 style={{fontSize:22,fontWeight:900,color:'var(--txt1)'}}>المنهج والدروس</h1>
+          <p style={{fontSize:13,color:'var(--txt2)',marginTop:2}}>{course?.title} — {modules.length} فصل · {totalLessons} درس</p>
         </div>
+        <button onClick={()=>setAddingModule(true)} className="btn btn-primary btn-md">
+          <Plus size={15}/>فصل جديد
+        </button>
       </div>
 
-      {/* Modules List */}
-      <div className="space-y-6">
-        {modules.length === 0 ? (
-          <div className="text-center p-12 glass-card bg-white border border-border border-dashed">
-            <div className="w-16 h-16 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-4 border border-border">
-              <BookOpen className="w-8 h-8 text-text-muted" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">لا يوجد فصول حتى الآن</h3>
-            <p className="text-text-secondary mb-6 text-sm">ابدأ ببناء منهجك من خلال إضافة الفصل الأول.</p>
-            <Button variant="primary" onClick={() => setIsAddingModule(true)}>
-              <Plus className="w-4 h-4 ml-2" />
-              إضافة فصل جديد
-            </Button>
+      {/* Empty state */}
+      {modules.length===0 && !addingModule && (
+        <div className="card" style={{padding:56,textAlign:'center'}}>
+          <div style={{width:60,height:60,borderRadius:16,background:'var(--teal-soft)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+            <BookOpen size={26} style={{color:'var(--teal)'}}/>
           </div>
-        ) : (
-          modules.map((mod: any, mIdx: number) => (
-            <div key={mod.id} className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
-              {/* Module Header */}
-              <div className="bg-surface-2 p-4 flex items-center justify-between border-b border-border group">
-                <div className="flex items-center gap-3">
-                  <div className="cursor-move text-text-muted hover:text-text-primary p-1">
-                    <GripVertical className="w-5 h-5" />
+          <h3 style={{fontSize:17,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>لا توجد فصول بعد</h3>
+          <p style={{fontSize:14,color:'var(--txt2)',marginBottom:20}}>ابدأ ببناء منهجك من خلال إضافة الفصل الأول.</p>
+          <button onClick={()=>setAddingModule(true)} className="btn btn-primary btn-lg">
+            <Plus size={16}/>إضافة فصل جديد
+          </button>
+        </div>
+      )}
+
+      {/* Modules */}
+      {modules.map((mod:any, mIdx:number)=>(
+        <div key={mod.id} className="card" style={{overflow:'hidden'}}>
+          {/* Module header */}
+          <div style={{padding:'13px 16px',background:'var(--bg2)',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:30,height:30,borderRadius:8,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff',flexShrink:0}}>{mIdx+1}</div>
+            <span style={{fontWeight:800,fontSize:15,color:'var(--txt1)',flex:1}}>{mod.title}</span>
+            <span style={{fontSize:12,color:'var(--txt3)'}}>{mod.lessons?.length||0} دروس</span>
+            <button onClick={()=>toggleCollapse(mod.id)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--txt3)',display:'flex',padding:4}}>
+              {collapsed[mod.id]?<ChevronDown size={16}/>:<ChevronUp size={16}/>}
+            </button>
+            <button onClick={()=>deleteModule(mod.id)} style={{background:'none',border:'none',cursor:'pointer',display:'flex',padding:4}}
+              onMouseEnter={e=>(e.currentTarget.style.color='var(--err)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--txt3)')}>
+              <Trash2 size={15} style={{color:'inherit'}}/>
+            </button>
+          </div>
+
+          {!collapsed[mod.id] && (
+            <div style={{padding:'10px 12px',display:'flex',flexDirection:'column',gap:6}}>
+              {/* Lessons */}
+              {mod.lessons?.length===0 && addingLessonTo!==mod.id && (
+                <p style={{fontSize:13,color:'var(--txt3)',textAlign:'center',padding:'12px 0',fontStyle:'italic'}}>لا توجد دروس — أضف درساً الآن</p>
+              )}
+              {mod.lessons?.map((les:any, lIdx:number)=>(
+                <div key={les.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',transition:'background .12s'}}
+                  onMouseEnter={e=>(e.currentTarget.style.background='var(--bg2)')}
+                  onMouseLeave={e=>(e.currentTarget.style.background='var(--surface)')}>
+                  <div style={{width:26,height:26,borderRadius:7,background:'var(--teal-soft)',border:'1px solid rgba(13,148,136,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    {les.type==='video'?<Video size={12} style={{color:'var(--teal)'}}/>:<FileText size={12} style={{color:'var(--teal)'}}/>}
                   </div>
-                  <h3 className="font-bold text-lg">
-                    <span className="text-primary-light ml-2 font-black">الفصل {mIdx + 1}:</span>
-                    {mod.title}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleDeleteModule(mod.id)} className="p-2 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors">
-                    <Trash2 className="w-4 h-4" />
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:700,fontSize:13.5,color:'var(--txt1)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{les.title}</div>
+                    <div style={{fontSize:11,color:'var(--txt3)',display:'flex',gap:8,marginTop:2}}>
+                      <span>{les.type==='video'?'فيديو':'نص'}</span>
+                      {les.video_url && <span style={{color:'var(--ok)'}}>✓ تم رفع الفيديو</span>}
+                      {les.is_preview && <span style={{color:'var(--teal)'}}>معاينة مجانية</span>}
+                    </div>
+                  </div>
+                  <Link href={`/dashboard/teacher/courses/${id}/curriculum/lesson/${les.id}`}>
+                    <button className="btn btn-outline btn-sm" style={{fontSize:12}}>
+                      <Edit2 size={11}/>تعديل ومحتوى
+                    </button>
+                  </Link>
+                  <button onClick={()=>deleteLesson(mod.id,les.id)} style={{background:'none',border:'none',cursor:'pointer',display:'flex',padding:4,color:'var(--txt3)'}}
+                    onMouseEnter={e=>(e.currentTarget.style.color='var(--err)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--txt3)')}>
+                    <Trash2 size={14} style={{color:'inherit'}}/>
                   </button>
                 </div>
-              </div>
+              ))}
 
-              {/* Lessons List */}
-              <div className="p-4 bg-white">
-                {mod.lessons?.length === 0 ? (
-                  <p className="text-sm text-text-muted text-center py-4 italic">لا توجد دروس في هذا الفصل. قم بإضافة درس جديد.</p>
-                ) : (
-                  <div className="space-y-2 mb-4">
-                    {mod.lessons.map((lesson: any, lIdx: number) => (
-                      <div key={lesson.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary-light hover:bg-primary/5 transition-colors group bg-surface">
-                        <div className="flex items-center gap-3">
-                          <div className="cursor-move text-text-muted/50 hover:text-text-primary p-1">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                            lesson.type === 'video' ? 'bg-primary-light text-primary-dark' : 'bg-surface-3 text-text-secondary'
-                          }`}>
-                            {lIdx + 1}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm">{lesson.title}</p>
-                            <div className="flex items-center gap-2 text-[11px] text-text-muted mt-1 font-medium">
-                              {lesson.type === 'video' ? (
-                                <span className="flex items-center gap-1"><PlayCircle className="w-3 h-3"/> فيديو</span>
-                              ) : (
-                                <span className="flex items-center gap-1"><FileText className="w-3 h-3"/> مقالة</span>
-                              )}
-                              {lesson.is_preview && (
-                                <span className="bg-success/10 text-success px-1.5 py-0.5 rounded text-[10px]">متاح مجاناً (معاينة)</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Lesson Actions */}
-                        <div className="flex items-center gap-2">
-                          <Link href={`/dashboard/teacher/courses/${id}/curriculum/lesson/${lesson.id}`}>
-                            <button className="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
-                              <Edit2 className="w-3.5 h-3.5" />
-                              تعديل ومحتوى
-                            </button>
-                          </Link>
-                          <button onClick={() => handleDeleteLesson(mod.id, lesson.id)} className="p-2 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Add Lesson inline form */}
-                {addingLessonTo === mod.id ? (
-                  <div className="flex items-center gap-2 mt-4 bg-surface p-3 rounded-lg border border-border">
-                    <Input 
-                      placeholder="عنوان الدرس الجديد..." 
-                      className="flex-1 bg-white" 
-                      value={newLessonTitle}
-                      onChange={(e) => setNewLessonTitle(e.target.value)}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddLesson(mod.id)
-                        if (e.key === 'Escape') setAddingLessonTo(null)
-                      }}
-                    />
-                    <Button variant="primary" onClick={() => handleAddLesson(mod.id)} size="sm">إضافة</Button>
-                    <Button variant="ghost" onClick={() => {
-                        setAddingLessonTo(null);
-                        setNewLessonTitle('');
-                    }} size="sm">إلغاء</Button>
-                  </div>
-                ) : (
-                  <div className="mt-2">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full text-text-secondary text-sm border-2 border-dashed border-border hover:border-primary hover:text-primary transition-all bg-surface-2" 
-                      onClick={() => setAddingLessonTo(mod.id)}
-                    >
-                      <Plus className="w-4 h-4 ml-1" />
-                      إضافة درس لهذا الفصل
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-
-        {/* Global Add Module Form / Button */}
-        {modules.length > 0 && (
-          isAddingModule ? (
-             <div className="bg-white p-6 rounded-xl border-2 border-primary/30 shadow-sm border-dashed">
-                <h3 className="font-bold text-lg mb-4 text-primary">إضافة فصل جديد</h3>
-                <div className="flex items-center gap-3">
-                  <Input 
-                    placeholder="عنوان الفصل (مثال: مقدمة إلى البرمجة)" 
-                    className="flex-1" 
-                    value={newModuleTitle}
-                    onChange={(e) => setNewModuleTitle(e.target.value)}
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddModule()
-                      if (e.key === 'Escape') setIsAddingModule(false)
-                    }}
-                  />
-                  <Button variant="primary" onClick={handleAddModule}>إنشاء</Button>
-                  <Button variant="ghost" onClick={() => {
-                      setIsAddingModule(false);
-                      setNewModuleTitle('');
-                  }}>إلغاء</Button>
+              {/* Add lesson */}
+              {addingLessonTo===mod.id ? (
+                <div style={{display:'flex',gap:8,marginTop:6}}>
+                  <input className="inp" style={{flex:1}} placeholder="عنوان الدرس الجديد..." autoFocus
+                    value={newLesTitle} onChange={e=>setNewLesTitle(e.target.value)}
+                    onKeyDown={e=>{ if(e.key==='Enter')addLesson(mod.id); if(e.key==='Escape'){setAddingLessonTo(null);setNewLesTitle('')} }}/>
+                  <button onClick={()=>addLesson(mod.id)} disabled={savingLes} className="btn btn-primary btn-sm">
+                    {savingLes?<Loader2 size={13} className="spin"/>:'إضافة'}
+                  </button>
+                  <button onClick={()=>{setAddingLessonTo(null);setNewLesTitle('')}} className="btn btn-outline btn-sm">إلغاء</button>
                 </div>
+              ) : (
+                <button onClick={()=>setAddingLessonTo(mod.id)} style={{marginTop:4,padding:'9px',borderRadius:9,border:'2px dashed var(--border2)',background:'transparent',cursor:'pointer',fontSize:13,fontWeight:600,color:'var(--txt2)',width:'100%',transition:'all .15s'}}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)'}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--border2)';(e.currentTarget as HTMLElement).style.color='var(--txt2)'}}>
+                  + إضافة درس
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="pt-4 text-center">
-              <Button variant="secondary" onClick={() => setIsAddingModule(true)} className="bg-white border-border shadow-sm">
-                <Plus className="w-5 h-5 ml-2" />
-                إضافة فصل جديد إضافي
-              </Button>
-            </div>
-          )
-        )}
-      </div>
-      
+          )}
+        </div>
+      ))}
+
+      {/* Add module form */}
+      {addingModule && (
+        <div className="card" style={{padding:22,border:'2px dashed var(--teal)'}}>
+          <h3 style={{fontWeight:800,fontSize:15,color:'var(--txt1)',marginBottom:14}}>فصل جديد</h3>
+          <div style={{display:'flex',gap:10}}>
+            <input className="inp" style={{flex:1}} placeholder="عنوان الفصل (مثال: مقدمة في علم الأحياء)" autoFocus
+              value={newModTitle} onChange={e=>setNewModTitle(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter')addModule(); if(e.key==='Escape'){setAddingModule(false);setNewModTitle('')} }}/>
+            <button onClick={addModule} disabled={savingMod} className="btn btn-primary btn-md">
+              {savingMod?<Loader2 size={15} className="spin"/>:'إنشاء'}
+            </button>
+            <button onClick={()=>{setAddingModule(false);setNewModTitle('')}} className="btn btn-outline btn-md">إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      {modules.length>0 && !addingModule && (
+        <button onClick={()=>setAddingModule(true)} style={{alignSelf:'center',padding:'10px 24px',borderRadius:10,border:'2px dashed var(--border2)',background:'transparent',cursor:'pointer',fontSize:14,fontWeight:700,color:'var(--txt2)',transition:'all .15s'}}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)'}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--border2)';(e.currentTarget as HTMLElement).style.color='var(--txt2)'}}>
+          + إضافة فصل آخر
+        </button>
+      )}
     </div>
   )
 }

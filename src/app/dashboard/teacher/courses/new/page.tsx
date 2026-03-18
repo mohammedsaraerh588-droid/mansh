@@ -1,203 +1,143 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { slugify } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Category } from '@/types'
-import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react'
-
-const courseSchema = z.object({
-  title: z.string().min(5, 'العنوان يجب أن يكون 5 أحرف على الأقل'),
-  titleAr: z.string().optional(),
-  description: z.string().min(20, 'الوصف يجب أن يكون 20 حرف على الأقل'),
-  categoryId: z.string().min(1, 'يرجى اختيار تصنيف'),
-  level: z.enum(['beginner', 'intermediate', 'advanced', 'all']),
-  price: z.coerce.number().min(0, 'السعر لا يمكن أن يكون سالباً'),
-})
-
-type CourseForm = z.infer<typeof courseSchema>
+import { AlertCircle, ArrowRight, Loader2, BookOpen } from 'lucide-react'
+import Link from 'next/link'
 
 export default function NewCoursePage() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [categories, setCategories] = useState<any[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error,      setError]      = useState('')
+  const router  = useRouter()
   const supabase = createSupabaseBrowserClient()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(courseSchema),
-    defaultValues: {
-      level: 'beginner',
-      price: 0
-    }
+  const [form, setForm] = useState({
+    title:'', description:'', categoryId:'',
+    level:'beginner', price:'0',
   })
+  const [errs, setErrs] = useState<any>({})
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase.from('categories').select('*').order('name_ar')
-      if (data) setCategories(data)
-      setLoading(false)
-    }
-    fetchCategories()
+    supabase.from('categories').select('*').order('name_ar')
+      .then(({ data }) => { if (data) setCategories(data); setLoading(false) })
   }, [])
 
-  const onSubmit = async (data: any) => {
-    setError(null)
-    const { data: { session } } = await supabase.auth.getSession()
+  const validate = () => {
+    const e: any = {}
+    if (form.title.trim().length < 5)   e.title       = 'العنوان 5 أحرف على الأقل'
+    if (form.description.trim().length < 20) e.description = 'الوصف 20 حرف على الأقل'
+    if (!form.categoryId)                e.categoryId  = 'اختر تصنيفاً'
+    if (isNaN(Number(form.price)) || Number(form.price) < 0) e.price = 'سعر غير صحيح'
+    setErrs(e)
+    return Object.keys(e).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validate()) return
+    setSubmitting(true); setError('')
+    const { data:{ session } } = await supabase.auth.getSession()
     if (!session) return
-
-    const slug = slugify(data.title) + '-' + Math.random().toString(36).substring(2, 6)
-
-    const { data: newCourse, error: insertError } = await supabase
-      .from('courses')
-      .insert({
-        teacher_id: session.user.id,
-        title: data.title,
-        title_ar: data.titleAr || data.title,
-        slug,
-        category_id: data.categoryId,
-        level: data.level,
-        price: data.price,
-        description: data.description,
-        short_description: data.description.substring(0, 200),
-        status: 'published',
-      })
-      .select()
-      .single()
-
-    if (insertError) {
-      setError(insertError.message)
-      return
-    }
-
-    if (newCourse) {
-      router.push(`/dashboard/teacher/courses/${newCourse.id}`)
-    }
+    const slug = slugify(form.title) + '-' + Math.random().toString(36).substring(2,6)
+    const { data: course, error: err } = await supabase.from('courses').insert({
+      teacher_id: session.user.id,
+      title: form.title.trim(),
+      title_ar: form.title.trim(),
+      slug, category_id: form.categoryId,
+      level: form.level, price: Number(form.price),
+      description: form.description.trim(),
+      short_description: form.description.trim().substring(0,200),
+      status: 'draft',
+    }).select().single()
+    setSubmitting(false)
+    if (err) { setError(err.message); return }
+    router.push(`/dashboard/teacher/courses/${course.id}`)
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  if (loading) return (
+    <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
+      <Loader2 size={30} className="spin" style={{color:'var(--teal)'}}/>
+    </div>
+  )
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-          <ArrowRight className="w-5 h-5" />
-        </button>
+    <div style={{maxWidth:680,margin:'0 auto',display:'flex',flexDirection:'column',gap:22}}>
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',gap:14,paddingBottom:18,borderBottom:'1px solid var(--border)'}}>
+        <Link href="/dashboard/teacher/courses">
+          <button className="btn btn-outline btn-sm" style={{padding:'8px'}}><ArrowRight size={16}/></button>
+        </Link>
         <div>
-          <h1 className="text-2xl font-bold">إنشاء دورة جديدة</h1>
-          <p className="text-text-secondary text-sm">أدخل المعلومات الأساسية للبدء، يمكنك تعديل وإضافة المزيد لاحقاً.</p>
+          <h1 style={{fontSize:22,fontWeight:900,color:'var(--txt1)'}}>إنشاء دورة جديدة</h1>
+          <p style={{fontSize:13,color:'var(--txt2)',marginTop:2}}>أدخل المعلومات الأساسية، يمكنك تعديل كل شيء لاحقاً.</p>
         </div>
       </div>
 
-      <div className="glass-card p-8">
+      {/* Form */}
+      <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:20}}>
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 text-red-400">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-sm">{error}</p>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'var(--err-bg)',border:'1px solid rgba(220,38,38,.15)'}}>
+            <AlertCircle size={15} style={{color:'var(--err)',flexShrink:0}}/>
+            <span style={{fontSize:13,color:'var(--err)'}}>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Input
-            label="عنوان الدورة"
-            placeholder="مثال: دورة Next.js الشاملة 2024"
-            {...register('title')}
-            error={errors.title?.message}
-          />
+        <div className="card" style={{padding:24,display:'flex',flexDirection:'column',gap:16}}>
+          <h3 style={{fontWeight:800,fontSize:15,color:'var(--txt1)',paddingBottom:10,borderBottom:'1px solid var(--border)'}}>معلومات الدورة</h3>
+
+          <Input label="عنوان الدورة *" placeholder="مثال: مقدمة في علم التشريح"
+            value={form.title} onChange={e=>setForm({...form,title:e.target.value})}
+            error={errs.title}/>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
-              الوصف <span className="text-red-500">*</span>
-            </label>
-            <textarea
+            <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--txt2)'}}>الوصف *</label>
+            <textarea className="inp" style={{minHeight:100,resize:'vertical'}}
               placeholder="اكتب وصفاً شاملاً عن الدورة والمهارات التي سيتعلمها الطالب..."
-              {...register('description')}
-              className="input-field w-full h-24 resize-none bg-surface-2/50"
-            />
-            {errors.description && <p className="mt-1.5 text-sm text-red-500/90">{errors.description.message}</p>}
+              value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/>
+            {errs.description && <p style={{marginTop:4,fontSize:12,color:'var(--err)'}}>{errs.description}</p>}
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                التصنيف <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('categoryId')}
-                className="input-field appearance-none w-full bg-surface-2/50 cursor-pointer"
-              >
+              <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--txt2)'}}>التصنيف *</label>
+              <select className="inp" value={form.categoryId} onChange={e=>setForm({...form,categoryId:e.target.value})}>
                 <option value="">اختر التصنيف</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id} className="bg-surface">{c.name_ar}</option>
-                ))}
+                {categories.map(c=><option key={c.id} value={c.id}>{c.name_ar}</option>)}
               </select>
-              {errors.categoryId && <p className="mt-1.5 text-sm text-red-500/90">{errors.categoryId.message}</p>}
+              {errs.categoryId && <p style={{marginTop:4,fontSize:12,color:'var(--err)'}}>{errs.categoryId}</p>}
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                المستوى <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('level')}
-                className="input-field appearance-none w-full bg-surface-2/50 cursor-pointer"
-              >
-                <option value="beginner" className="bg-surface">مبتدئ</option>
-                <option value="intermediate" className="bg-surface">متوسط</option>
-                <option value="advanced" className="bg-surface">متقدم</option>
-                <option value="all" className="bg-surface">جميع المستويات</option>
+              <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--txt2)'}}>المستوى *</label>
+              <select className="inp" value={form.level} onChange={e=>setForm({...form,level:e.target.value})}>
+                <option value="beginner">مبتدئ</option>
+                <option value="intermediate">متوسط</option>
+                <option value="advanced">متقدم</option>
+                <option value="all">جميع المستويات</option>
               </select>
             </div>
           </div>
 
-          <div className="w-1/2 pr-3">
-            <Input
-              label="سعر الدورة ($)"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              {...register('price')}
-              error={errors.price?.message}
-              helperText="ضع 0 لجعل الدورة مجانية بالكامل"
-            />
+          <div style={{maxWidth:240}}>
+            <Input label="سعر الدورة (USD)" type="number" step="0.01" placeholder="0"
+              value={form.price} onChange={e=>setForm({...form,price:e.target.value})}
+              error={errs.price} helperText="ضع 0 لجعل الدورة مجانية"/>
           </div>
+        </div>
 
-          <div className="pt-6 border-t border-white/5 flex gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => router.back()}
-              className="flex-1 border border-white/10"
-            >
-              إلغاء
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              className="flex-1"
-              isLoading={isSubmitting}
-            >
-              حفظ والمتابعة للإعدادات
-            </Button>
-          </div>
-        </form>
-      </div>
+        {/* Actions */}
+        <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}>
+          <Link href="/dashboard/teacher/courses">
+            <button type="button" className="btn btn-outline btn-lg" style={{textDecoration:'none'}}>إلغاء</button>
+          </Link>
+          <button type="submit" disabled={submitting} className="btn btn-primary btn-lg">
+            {submitting ? <><Loader2 size={16} className="spin"/>جاري الحفظ...</> : <><BookOpen size={16}/>إنشاء الدورة</>}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
