@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const file     = formData.get('file') as File | null
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash',
       safetySettings: SAFETY,
       systemInstruction: `أنت مساعد تعليمي طبي متخصص للمعلمين على منصة تعلّم الطبية. 
 مهمتك مساعدة المعلمين في:
