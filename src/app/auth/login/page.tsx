@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div style={{minHeight:'100vh',display:'flex',background:'var(--bg)'}}>
       {/* Decorative side */}
-      <div className="hero" style={{flex:1,display:'none',position:'relative'}} className="hidden lg:flex">
+      <div className="hero hidden lg:flex" style={{flex:1,position:'relative',alignItems:'center',justifyContent:'center'}}>
         <div style={{position:'relative',zIndex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',padding:48,textAlign:'center'}}>
           <div style={{width:60,height:60,borderRadius:16,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:22,boxShadow:'var(--st)'}}>
             <Stethoscope size={28} style={{color:'#fff'}}/>
