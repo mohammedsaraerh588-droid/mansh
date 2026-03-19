@@ -5,67 +5,102 @@ import { Star, Clock, BookOpen, Users, PlayCircle } from 'lucide-react'
 
 interface Props { course:Course; showProgress?:boolean; progress?:number }
 
+import { cn } from '@/lib/utils'
+
+interface Props { course:Course; showProgress?:boolean; progress?:number }
+
 export default function CourseCard({ course, showProgress, progress=0 }: Props) {
   return (
-    <Link href={`/courses/${course.slug}`} style={{textDecoration:'none',display:'block',height:'100%'}}>
-      <div className="card card-hover" style={{height:'100%',display:'flex',flexDirection:'column',overflow:'hidden',cursor:'pointer'}}>
-        {/* thumbnail */}
-        <div style={{position:'relative',height:185,overflow:'hidden',background:'var(--bg3)',flexShrink:0}}>
-          {course.thumbnail_url
-            ? <img src={course.thumbnail_url} alt={course.title} style={{width:'100%',height:'100%',objectFit:'cover',transition:'transform .45s ease'}}
-                onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.05)')}
-                onMouseLeave={e=>(e.currentTarget.style.transform='none')}/>
-            : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(135deg,#0d2137,#1e4976)'}}>
-                <PlayCircle size={42} style={{color:'rgba(144,205,244,.3)'}}/>
-              </div>}
-          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,33,55,.45),transparent 55%)'}}/>
-          <div style={{position:'absolute',top:10,right:10}}>
-            <span className="badge badge-navy" style={{fontSize:10,background:'rgba(13,33,55,.75)',color:'#bee3f8',border:'1px solid rgba(255,255,255,.15)',backdropFilter:'blur(6px)'}}>{getLevelLabel(course.level)}</span>
-          </div>
-          {course.price===0 && (
-            <div style={{position:'absolute',top:10,left:10}}>
-              <span className="badge badge-green" style={{fontSize:10,backdropFilter:'blur(6px)'}}>مجاني</span>
+    <Link href={`/courses/${course.slug}`} className="block h-full group">
+      <div className="card card-hover h-full flex flex-col overflow-hidden">
+        {/* Thumbnail */}
+        <div className="relative h-48 overflow-hidden bg-bg3 flex-shrink-0">
+          {course.thumbnail_url ? (
+            <img 
+              src={course.thumbnail_url} 
+              alt={course.title} 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-navy">
+              <PlayCircle size={48} className="text-white/20" />
             </div>
           )}
+          
+          {/* Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent opacity-60" />
+          
+          <div className="absolute top-3 right-3 flex gap-2">
+            <span className="px-2.5 py-1 rounded-lg bg-navy/80 backdrop-blur-md text-[10px] font-bold text-mint border border-white/10 shadow-lg">
+              {getLevelLabel(course.level)}
+            </span>
+            {course.price === 0 && (
+              <span className="px-2.5 py-1 rounded-lg bg-ok/90 backdrop-blur-md text-[10px] font-bold text-white shadow-lg">
+                مجاني
+              </span>
+            )}
+          </div>
+
           {course.category?.name_ar && (
-            <div style={{position:'absolute',bottom:10,right:10}}>
-              <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:99,background:'rgba(13,33,55,.65)',color:'rgba(255,255,255,.9)',backdropFilter:'blur(6px)'}}>{course.category.name_ar}</span>
+            <div className="absolute bottom-3 right-3">
+              <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20">
+                {course.category.name_ar}
+              </span>
             </div>
           )}
         </div>
 
-        {/* body */}
-        <div style={{padding:'16px',flex:1,display:'flex',flexDirection:'column'}}>
-          <h3 style={{fontWeight:800,fontSize:14.5,lineHeight:1.45,marginBottom:6,color:'var(--txt1)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+        {/* Content */}
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="text-sm md:text-base font-black text-navy leading-snug mb-3 line-clamp-2 transition-colors group-hover:text-navy2">
             {course.title}
           </h3>
+          
           {course.short_description && (
-            <p style={{fontSize:12.5,color:'var(--txt2)',lineHeight:1.6,marginBottom:10,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+            <p className="text-xs text-txt2 leading-relaxed mb-4 line-clamp-2 opacity-80">
               {course.short_description}
             </p>
           )}
-          <div style={{display:'flex',gap:12,fontSize:11.5,color:'var(--txt3)',marginTop:'auto',paddingTop:10,borderTop:'1px solid var(--border)'}}>
-            <span style={{display:'flex',alignItems:'center',gap:3}}><Clock size={11}/>{Math.round(course.duration_hours)}س</span>
-            <span style={{display:'flex',alignItems:'center',gap:3}}><BookOpen size={11}/>{course.total_lessons} درس</span>
-            <span style={{display:'flex',alignItems:'center',gap:3}}><Users size={11}/>{(course.total_students||0).toLocaleString()}</span>
-          </div>
-          {!showProgress && (
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)'}}>
-              <div style={{display:'flex',alignItems:'center',gap:4}}>
-                <Star size={13} style={{fill:'#f6ad55',color:'#f6ad55'}}/>
-                <span style={{fontSize:13,fontWeight:800,color:'var(--txt1)'}}>{course.avg_rating||'جديد'}</span>
-                {course.total_reviews>0&&<span style={{fontSize:11,color:'var(--txt3)'}}>({course.total_reviews})</span>}
-              </div>
-              <span style={{fontWeight:900,fontSize:15,color:course.price===0?'var(--ok)':'var(--navy)'}}>{formatPrice(course.price,course.currency)}</span>
+
+          <div className="mt-auto flex items-center justify-between pt-4 border-t border-border">
+            <div className="flex items-center gap-4 text-[11px] font-bold text-txt3">
+               <div className="flex items-center gap-1.5"><Clock size={12}/>{Math.round(course.duration_hours)}س</div>
+               <div className="flex items-center gap-1.5"><BookOpen size={12}/>{course.total_lessons}</div>
             </div>
-          )}
-          {showProgress && (
-            <div style={{marginTop:12}}>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:5}}>
-                <span style={{color:'var(--txt2)'}}>التقدم</span>
-                <span style={{fontWeight:800,color:'var(--navy)'}}>{progress}%</span>
+            
+            <div className="flex items-center gap-1 text-[11px] font-bold text-txt3">
+               <Users size={12}/>
+               <span>{(course.total_students||0).toLocaleString()}</span>
+            </div>
+          </div>
+
+          {!showProgress ? (
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5">
+                  <Star size={12} className="fill-gold text-gold" />
+                  <span className="text-xs font-black text-navy">{course.avg_rating || '5.0'}</span>
+                </div>
+                {course.total_reviews > 0 && (
+                  <span className="text-[10px] font-bold text-txt3">({course.total_reviews})</span>
+                )}
               </div>
-              <div className="prog"><div className="prog-fill" style={{width:`${progress}%`}}/></div>
+              <span className={cn(
+                'text-sm font-black tracking-tight',
+                course.price === 0 ? 'text-ok' : 'text-navy'
+              )}>
+                {formatPrice(course.price, course.currency)}
+              </span>
+            </div>
+          ) : (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-txt2 uppercase tracking-wider">التقدم</span>
+                <span className="text-[10px] font-black text-navy">{progress}%</span>
+              </div>
+              <div className="prog h-1.5">
+                <div className="prog-fill bg-mint" style={{ width: `${progress}%` }} />
+              </div>
             </div>
           )}
         </div>
@@ -73,3 +108,4 @@ export default function CourseCard({ course, showProgress, progress=0 }: Props) 
     </Link>
   )
 }
+

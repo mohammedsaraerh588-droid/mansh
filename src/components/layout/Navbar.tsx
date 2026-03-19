@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useTheme } from '@/components/ThemeProvider'
+import { cn } from '@/lib/utils'
 import { Home, BookOpen, LayoutDashboard, LogOut, Menu, X, Sun, Moon, Stethoscope } from 'lucide-react'
 
 export default function Navbar() {
@@ -48,144 +49,113 @@ export default function Navbar() {
     { label:'الدورات الطبية', href:'/courses', I:BookOpen },
   ]
 
-  // ألوان بناء على الخلفية
-  const tc = (active: boolean) => solid
-    ? (active ? 'var(--navy)'  : 'var(--txt2)')
-    : (active ? '#fff'         : 'rgba(255,255,255,.7)')
-
-  const navBg  = active => active && solid ? 'rgba(91,155,213,.09)' : 'transparent'
-
   return (
     <>
-    <nav style={{
-      position:'fixed', top:0, width:'100%', zIndex:100,
-      background:  solid ? 'var(--nav-bg)'     : 'transparent',
-      backdropFilter: solid ? 'blur(20px)'      : 'none',
-      borderBottom:   solid ? '1px solid var(--nav-border)' : 'none',
-      boxShadow:      solid ? 'var(--s1)'       : 'none',
-      transition:'all .3s ease',
-      padding: solid ? '9px 0' : '14px 0',
-    }}>
-      <div className="wrap" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16}}>
+    <nav className={cn(
+      'fixed top-0 w-full z-[100] transition-all duration-500 ease-in-out',
+      solid 
+        ? 'py-3 bg-nav-bg backdrop-blur-xl border-b border-nav-border shadow-lg shadow-navy/5' 
+        : 'py-6 bg-transparent'
+    )}>
+      <div className="wrap flex items-center justify-between gap-8">
 
         {/* ── Logo ── */}
-        <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',flexShrink:0}}>
-          <div style={{
-            width:36, height:36, borderRadius:9,
-            background: solid ? 'var(--navy)' : 'rgba(255,255,255,.15)',
-            border: solid ? 'none' : '1.5px solid rgba(255,255,255,.25)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            color:'#fff', boxShadow: solid ? 'var(--sn)' : 'none',
-            transition:'all .25s',
-          }}>
-            <Stethoscope size={17}/>
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg',
+            solid ? 'bg-navy text-white shadow-navy/20' : 'bg-white/10 backdrop-blur-md border border-white/20 text-white'
+          )}>
+            <Stethoscope size={20}/>
           </div>
-          <div style={{lineHeight:1.15}}>
-            <div style={{fontSize:14,fontWeight:900,color:solid?'var(--txt1)':'#fff',transition:'color .3s'}}>منصة تعلّم</div>
-            <div style={{fontSize:9,fontWeight:700,color:solid?'var(--txt3)':'rgba(255,255,255,.45)',letterSpacing:'.1em',textTransform:'uppercase'}}>Medical Education</div>
+          <div className="hidden sm:block leading-tight">
+            <div className={cn('text-lg font-black tracking-tight transition-colors duration-300', solid ? 'text-navy' : 'text-white')}>
+              منصة <span className={cn('italic font-serif transition-colors', solid ? 'text-navy3' : 'text-mint')}>تعلّم</span>
+            </div>
+            <div className={cn('text-[9px] font-bold tracking-[0.2em] uppercase opacity-50', solid ? 'text-navy' : 'text-white')}>
+              Medical Excellence
+            </div>
           </div>
         </Link>
 
-        {/* ── Desktop links ── */}
-        <div style={{display:'flex',alignItems:'center',gap:2,flex:1,justifyContent:'center'}} className="hidden md:flex">
+        {/* ── Desktop Nav ── */}
+        <div className="hidden md:flex items-center gap-1 flex-1 justify-center bg-navy/5 p-1 rounded-2xl border border-navy/5 backdrop-blur-sm"
+             style={{ background: !solid ? 'rgba(255,255,255,0.05)' : undefined }}>
           {links.map(({label,href,I})=>{
             const active = pathname===href
             return (
-              <Link key={href} href={href} style={{
-                display:'flex',alignItems:'center',gap:6,
-                padding:'7px 13px', borderRadius:8, textDecoration:'none',
-                fontSize:13.5, fontWeight: active ? 700 : 600,
-                color: tc(active), background: navBg(active),
-                borderBottom: active && solid ? '2px solid var(--ceil)' : '2px solid transparent',
-                transition:'all .18s',
-              }}
-              onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.color=solid?'var(--navy)':'#fff';el.style.background=solid?'rgba(91,155,213,.09)':'rgba(255,255,255,.08)'}}
-              onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.color=tc(active);el.style.background=navBg(active)}}>
-                <I size={14}/>{label}
+              <Link key={href} href={href} className={cn(
+                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300',
+                active 
+                  ? (solid ? 'bg-white text-navy shadow-sm' : 'bg-white/10 text-mint shadow-inner')
+                  : (solid ? 'text-navy/60 hover:text-navy hover:bg-white/50' : 'text-white/60 hover:text-white hover:bg-white/10')
+              )}>
+                <I size={14} className={cn(active && !solid && 'text-mint')} />
+                {label}
               </Link>
             )
           })}
         </div>
 
-        {/* ── Desktop Actions ── */}
-        <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}} className="hidden md:flex">
-
-          {/* Dark mode toggle */}
-          <button onClick={toggle} style={{
-            display:'flex',alignItems:'center',gap:5,
-            padding:'6px 11px', borderRadius:8, cursor:'pointer',
-            border:`1px solid ${solid?'var(--border2)':'rgba(255,255,255,.2)'}`,
-            background: solid?'var(--surface)':'rgba(255,255,255,.08)',
-            color: solid?'var(--txt2)':'rgba(255,255,255,.65)',
-            fontSize:12.5, fontWeight:600, transition:'all .2s',
-          }}
-          onMouseEnter={e=>{const el=e.currentTarget;el.style.borderColor='var(--ceil)';el.style.color=solid?'var(--ceil2)':'#fff'}}
-          onMouseLeave={e=>{const el=e.currentTarget;el.style.borderColor=solid?'var(--border2)':'rgba(255,255,255,.2)';el.style.color=solid?'var(--txt2)':'rgba(255,255,255,.65)'}}>
-            {dark?<Sun size={13}/>:<Moon size={13}/>}
-            {dark?'فاتح':'مظلم'}
+        {/* ── Actions ── */}
+        <div className="hidden md:flex items-center gap-4">
+          <button onClick={toggle} className={cn(
+            'p-2.5 rounded-xl border transition-all duration-300 hover:scale-105',
+            solid 
+              ? 'bg-white border-border text-navy shadow-sm' 
+              : 'bg-white/5 border-white/10 text-white/80'
+          )}>
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           {user ? (
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <Link href={dashLink} style={{
-                display:'flex',alignItems:'center',gap:5,
-                padding:'7px 13px', borderRadius:8, textDecoration:'none',
-                fontSize:13, fontWeight:700, color:tc(false), transition:'all .18s',
-              }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(91,155,213,.09)';(e.currentTarget as HTMLElement).style.color=solid?'var(--navy)':'#fff'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent';(e.currentTarget as HTMLElement).style.color=tc(false)}}>
-                <LayoutDashboard size={13}/>لوحة التحكم
+            <div className="flex items-center gap-3">
+              <Link href={dashLink} className={cn(
+                'hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+                solid ? 'text-navy hover:bg-navy/5' : 'text-white/80 hover:bg-white/10'
+              )}>
+                <LayoutDashboard size={14}/> لوحة التحكم
               </Link>
-              <Link href="/profile">
-                <div style={{
-                  width:34, height:34, borderRadius:'50%', overflow:'hidden', cursor:'pointer',
-                  border:'2.5px solid var(--ceil)', boxShadow:'var(--sc)', transition:'transform .2s',
-                }}
-                onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')}
-                onMouseLeave={e=>(e.currentTarget.style.transform='none')}>
+              <Link href="/profile" className="relative group">
+                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-mint p-0.5 shadow-lg group-hover:scale-105 transition-transform">
                   {profile?.avatar_url
-                    ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                    : <div style={{width:'100%',height:'100%',background:'var(--navy)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:13,color:'#fff'}}>
+                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-lg"/>
+                    : <div className="w-full h-full bg-navy flex items-center justify-center font-black text-white text-sm rounded-lg">
                         {profile?.full_name?.[0] ?? 'د'}
                       </div>}
                 </div>
               </Link>
             </div>
           ) : (
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <Link href="/auth/login" style={{
-                padding:'7px 13px', borderRadius:8, textDecoration:'none',
-                fontSize:13, fontWeight:700, color:tc(false), transition:'color .2s',
-              }}
-              onMouseEnter={e=>(e.currentTarget.style.color=solid?'var(--navy)':'#fff')}
-              onMouseLeave={e=>(e.currentTarget.style.color=tc(false))}>
+            <div className="flex items-center gap-3">
+              <Link href="/auth/login" className={cn(
+                'px-4 py-2 text-xs font-bold transition-colors',
+                solid ? 'text-navy/60 hover:text-navy' : 'text-white/60 hover:text-white'
+              )}>
                 تسجيل الدخول
               </Link>
-              <Link href="/auth/register"
-                className={`btn btn-md ${solid?'btn-primary':'btn-white'}`}
-                style={{textDecoration:'none'}}>
-                ابدأ مجاناً
+              <Link href="/auth/register" className={cn(
+                'btn btn-md shadow-lg',
+                solid ? 'btn-primary' : 'btn-white !text-navy'
+              )}>
+                ابدأ رحلتك مجاناً
               </Link>
             </div>
           )}
         </div>
 
-        {/* ── Mobile ── */}
-        <div style={{display:'flex',alignItems:'center',gap:8}} className="md:hidden">
-          <button onClick={toggle} style={{
-            width:32, height:32, borderRadius:8, cursor:'pointer',
-            border:`1px solid ${solid?'var(--border2)':'rgba(255,255,255,.2)'}`,
-            background:solid?'var(--surface)':'rgba(255,255,255,.08)',
-            color:solid?'var(--txt2)':'rgba(255,255,255,.7)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-          }}>
-            {dark?<Sun size={14}/>:<Moon size={14}/>}
+        {/* ── Mobile Trigger ── */}
+        <div className="flex md:hidden items-center gap-3">
+          <button onClick={toggle} className={cn(
+            'p-2 rounded-lg border',
+            solid ? 'bg-white border-border text-navy' : 'bg-white/5 border-white/10 text-white'
+          )}>
+            {dark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button onClick={()=>setOpen(!open)} style={{
-            background:'none', border:'none', cursor:'pointer',
-            color:solid?'var(--txt1)':'#fff', padding:4, display:'flex',
-          }}>
-            {open?<X size={21}/>:<Menu size={21}/>}
+          <button onClick={() => setOpen(!open)} className={cn(
+            'p-1 transition-colors',
+            solid ? 'text-navy' : 'text-white'
+          )}>
+            {open ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
@@ -193,48 +163,42 @@ export default function Navbar() {
 
     {/* ── Mobile Drawer ── */}
     {open && (
-      <div style={{position:'fixed',inset:0,zIndex:99}} onClick={()=>setOpen(false)}>
-        <div style={{
-          position:'absolute', top:56, left:0, right:0,
-          background:'var(--nav-bg)', backdropFilter:'blur(20px)',
-          borderBottom:'1px solid var(--nav-border)',
-          padding:'12px 16px 18px',
-          display:'flex', flexDirection:'column', gap:4,
-          boxShadow:'var(--s3)',
-        }} onClick={e=>e.stopPropagation()}>
-          {links.map(({label,href,I})=>(
-            <Link key={href} href={href}
-              className={`nav-link${pathname===href?' active':''}`}
-              onClick={()=>setOpen(false)}>
-              <I size={15}/>{label}
-            </Link>
-          ))}
-          <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
-          <button onClick={toggle} className="nav-link"
-            style={{background:'none',border:'none',fontFamily:'inherit',cursor:'pointer',textAlign:'right'}}>
-            {dark?<Sun size={14}/>:<Moon size={14}/>}
-            {dark?'الوضع الفاتح':'الوضع المظلم'}
-          </button>
-          <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
-          {user ? (<>
-            <Link href={dashLink} className="nav-link" onClick={()=>setOpen(false)}>
-              <LayoutDashboard size={14}/>لوحة التحكم
-            </Link>
-            <button className="nav-link danger"
-              style={{background:'none',border:'none',fontFamily:'inherit',cursor:'pointer',textAlign:'right'}}
-              onClick={async()=>{await supabase.auth.signOut();setOpen(false);window.location.href='/'}}>
-              <LogOut size={14}/>تسجيل الخروج
-            </button>
-          </>) : (
-            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:4}}>
-              <Link href="/auth/login"  className="nav-link" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
-              <Link href="/auth/register" className="btn btn-primary btn-md btn-full"
-                style={{textDecoration:'none'}} onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
-            </div>
-          )}
+      <div className="fixed inset-0 z-[99] bg-navy/20 backdrop-blur-md animate-in fade-in transition-all" onClick={()=>setOpen(false)}>
+        <div className="absolute top-[80px] left-4 right-4 bg-white dark:bg-navy rounded-3xl p-6 shadow-2xl border border-navy/5 animate-in slide-in-from-top-4 duration-300" 
+             onClick={e=>e.stopPropagation()}>
+          <div className="flex flex-col gap-2">
+            {links.map(({label,href,I})=>(
+              <Link key={href} href={href} 
+                className={cn(
+                  'flex items-center gap-4 p-4 rounded-2xl text-sm font-bold transition-all',
+                  pathname===href ? 'bg-navy/5 text-navy dark:bg-white/5 dark:text-mint' : 'text-txt2 hover:bg-navy/5'
+                )}
+                onClick={()=>setOpen(false)}>
+                <I size={18}/>{label}
+              </Link>
+            ))}
+            <div className="h-px bg-border my-2" />
+            {user ? (
+              <>
+                <Link href={dashLink} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-txt2 hover:bg-navy/5" onClick={()=>setOpen(false)}>
+                  <LayoutDashboard size={18}/> لوحة التحكم
+                </Link>
+                <button className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-err hover:bg-err/5 w-full text-right"
+                  onClick={async()=>{await supabase.auth.signOut();setOpen(false);window.location.href='/'}}>
+                  <LogOut size={18}/> تسجيل الخروج
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col gap-3 mt-2">
+                <Link href="/auth/login" className="btn btn-ghost btn-lg w-full" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
+                <Link href="/auth/register" className="btn btn-primary btn-lg w-full shadow-xl" onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     )}
     </>
   )
 }
+

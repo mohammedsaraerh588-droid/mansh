@@ -45,85 +45,228 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
   const hasDiscount = course.original_price && Number(course.original_price) > Number(course.price)
 
   return (
-    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+    <div className="min-h-screen bg-bg pb-20">
 
-      {/* ── Hero ──────────────────────────────── */}
-      <div className="hero" style={{padding:'48px 0 56px'}}>
-        <div className="wrap">
-          <div style={{display:'flex',gap:40,flexWrap:'wrap',alignItems:'flex-start'}}>
-
-            {/* Info */}
-            <div style={{flex:'1 1 380px'}}>
-              <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}}>
+      {/* ── Hero Section ── */}
+      <div className="bg-navy pt-32 pb-40 relative overflow-hidden">
+        {/* Decorative Mesh */}
+        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-mint/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full bg-gold/5 blur-[100px] pointer-events-none" />
+        
+        <div className="wrap relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Course Info */}
+            <div className="lg:col-span-7 space-y-8">
+              <div className="flex flex-wrap items-center gap-3">
                 {course.category?.name_ar && (
-                  <span className="badge badge-teal">{course.category.name_ar}</span>
+                  <span className="px-3 py-1 rounded-lg bg-mint/10 text-mint text-[10px] font-black uppercase tracking-widest border border-mint/20">
+                    {course.category.name_ar}
+                  </span>
                 )}
-                <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:99,fontSize:11,fontWeight:700,background:'rgba(255,255,255,.1)',color:'rgba(255,255,255,.8)'}}>{getLevelLabel(course.level)}</span>
+                <span className="px-3 py-1 rounded-lg bg-white/5 text-white/60 text-[10px] font-black uppercase tracking-widest border border-white/10">
+                  {getLevelLabel(course.level)}
+                </span>
               </div>
-              <h1 style={{fontSize:'clamp(22px,3.5vw,40px)',fontWeight:900,color:'#fff',marginBottom:12,lineHeight:1.2}}>
+              
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight md:leading-tight">
                 {course.title}
               </h1>
-              <p style={{fontSize:15,color:'rgba(255,255,255,.6)',marginBottom:18,lineHeight:1.75}}>
-                {course.description || course.short_description}
+              
+              <p className="text-white/40 text-lg md:text-xl leading-relaxed italic font-serif">
+                {course.short_description}
               </p>
-              <div style={{display:'flex',flexWrap:'wrap',gap:14,fontSize:13,color:'rgba(255,255,255,.5)',marginBottom:20}}>
-                <span style={{display:'flex',alignItems:'center',gap:5}}>
-                  <Star size={13} style={{fill:'#fbbf24',color:'#fbbf24'}}/>
-                  <b style={{color:'#fff'}}>{course.avg_rating||'جديد'}</b>
-                  {course.total_reviews>0 && <span>({course.total_reviews})</span>}
-                </span>
-                <span style={{display:'flex',alignItems:'center',gap:5}}><Users size={13}/>{course.total_students||0} طالب</span>
-                <span style={{display:'flex',alignItems:'center',gap:5}}><Clock size={13}/>{formatDuration(course.duration_hours)}</span>
-                <span style={{display:'flex',alignItems:'center',gap:5}}><BookOpen size={13}/>{course.total_lessons||0} درس</span>
+
+              <div className="flex flex-wrap items-center gap-6 text-white/60 text-sm font-bold">
+                <div className="flex items-center gap-2">
+                   <Star size={18} className="fill-gold text-gold" />
+                   <span className="text-white font-black">{course.avg_rating || '5.0'}</span>
+                   <span className="opacity-50 text-[11px]">({course.total_reviews || 0} تقييم)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <Users size={18} className="text-mint" />
+                   <span>{course.total_students || 0} طالب</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <Clock size={18} className="text-mint" />
+                   <span>{formatDuration(course.duration_hours)}</span>
+                </div>
               </div>
+
               {course.teacher?.full_name && (
-                <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:10,background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.1)'}}>
-                  <div style={{width:36,height:36,borderRadius:'50%',overflow:'hidden',background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:13,color:'#fff',flexShrink:0}}>
-                    {course.teacher.avatar_url
-                      ? <img src={course.teacher.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                      : course.teacher.full_name[0]}
-                  </div>
-                  <div>
-                    <div style={{fontSize:10,color:'rgba(255,255,255,.4)',marginBottom:1}}>مقدم الدورة</div>
-                    <div style={{fontWeight:700,fontSize:13,color:'#fff'}}>{course.teacher.full_name}</div>
-                  </div>
+                <div className="inline-flex items-center gap-4 p-2 pl-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                   <div className="w-12 h-12 rounded-xl bg-mint/20 overflow-hidden ring-4 ring-white/5">
+                      {course.teacher.avatar_url ? (
+                        <img src={course.teacher.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-black text-white">{course.teacher.full_name[0]}</div>
+                      )}
+                   </div>
+                   <div>
+                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-0.5">المحاضر</div>
+                      <div className="text-sm font-black text-white">{course.teacher.full_name}</div>
+                   </div>
                 </div>
               )}
             </div>
 
-            {/* Purchase card */}
-            <div style={{width:340,flexShrink:0,position:'sticky',top:90}}>
-              <div className="card" style={{overflow:'hidden',boxShadow:'var(--s3)'}}>
-                <div style={{position:'relative',aspectRatio:'16/9',background:'var(--bg3)',overflow:'hidden'}}>
-                  {course.thumbnail_url
-                    ? <img src={course.thumbnail_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                    : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(135deg,#042a30,#0a4a50)'}}>
-                        <Video size={40} style={{color:'rgba(20,184,166,.3)'}}/>
-                      </div>}
-                  <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <PlayCircle size={44} style={{color:'rgba(255,255,255,.8)'}}/>
+            {/* Sticky Card Container for Mobile (Hidden on Desktop, will use real sticky card) */}
+            <div className="lg:col-span-5 relative">
+              {/* Dynamic Floating Card - will be handled by sticky in desktop */}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content Section ── */}
+      <div className="wrap relative -mt-32 z-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* Main Body */}
+          <div className="lg:col-span-8 space-y-12">
+            
+            {/* Learning Outcomes */}
+            {learn.length > 0 && (
+              <div className="card p-8 md:p-12 shadow-2xl shadow-navy/5 border-0">
+                <div className="inline-flex items-center gap-3 mb-8">
+                   <div className="w-10 h-10 rounded-xl bg-mint/10 flex items-center justify-center">
+                      <GraduationCap className="text-mint" size={20} />
+                   </div>
+                   <h2 className="text-2xl font-black text-navy tracking-tight">ماذا ستتعلم في هذه الدورة؟</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {learn.map((item:string, i:number) => (
+                    <div key={i} className="flex gap-4 group">
+                      <div className="w-6 h-6 rounded-lg bg-bg2 flex items-center justify-center flex-shrink-0 group-hover:bg-mint/10 transition-colors">
+                        <CheckCircle size={14} className="text-navy/20 group-hover:text-mint" />
+                      </div>
+                      <span className="text-sm font-bold text-txt1/80 leading-relaxed">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Curriculum */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-black text-navy tracking-tight flex items-center gap-3">
+                    <div className="w-1.5 h-8 bg-mint rounded-full" />
+                    منهج الدورة
+                  </h2>
+                  <div className="text-[10px] font-black text-txt3 bg-white px-4 py-2 rounded-full border border-border shadow-sm uppercase tracking-widest">
+                    {course.modules?.length || 0} فصول · {course.total_lessons || 0} دروس
                   </div>
                 </div>
-                <div style={{padding:20}}>
-                  <div style={{marginBottom:14}}>
-                    <span style={{fontSize:26,fontWeight:900,color:'var(--teal)'}}>{formatPrice(course.price,course.currency)}</span>
+
+                <div className="space-y-4">
+                  {course.modules?.map((mod:any, i:number) => (
+                    <div key={mod.id} className="card overflow-hidden border-0 shadow-lg shadow-navy/5">
+                      <div className="px-6 py-5 bg-navy flex justify-between items-center text-white">
+                        <div className="flex items-center gap-4">
+                          <span className="w-8 h-8 rounded-lg bg-mint flex items-center justify-center text-navy font-black text-xs">
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
+                          <span className="font-black text-base">{mod.title}</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{mod.lessons?.length || 0} درس</span>
+                      </div>
+                      
+                      <div className="bg-white divide-y divide-border">
+                        {mod.lessons?.map((lesson:any) => (
+                          <div key={lesson.id} className="flex items-center justify-between px-6 py-4 hover:bg-bg2 transition-colors group cursor-pointer">
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 h-8 rounded-full bg-border/30 flex items-center justify-center group-hover:bg-navy transition-colors">
+                                <PlayCircle size={14} className="text-txt3 group-hover:text-mint" />
+                              </div>
+                              <span className="text-sm font-bold text-txt1 group-hover:text-navy transition-colors">{lesson.title}</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              {lesson.is_preview && (
+                                <span className="px-2 py-0.5 rounded-md bg-mint/10 text-mint text-[9px] font-black uppercase">عرض مجاني</span>
+                              )}
+                              {lesson.video_duration > 0 && (
+                                <span className="text-[10px] font-bold text-txt3">{Math.round(lesson.video_duration/60)} د</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-6 pt-8">
+               <h2 className="text-2xl font-black text-navy tracking-tight">وصف الدورة</h2>
+               <div className="text-txt2 text-base leading-loose font-medium opacity-90" dangerouslySetInnerHTML={{__html: course.description || ''}} />
+            </div>
+
+            {/* Requirements */}
+            {reqs.length > 0 && (
+              <div className="space-y-6 pt-8">
+                <h2 className="text-2xl font-black text-navy tracking-tight">المتطلبات الأساسية</h2>
+                <div className="space-y-3">
+                  {reqs.map((r:string, i:number) => (
+                    <div key={i} className="flex items-center gap-3 text-sm font-bold text-txt2 italic">
+                       <CheckCircle size={16} className="text-mint" />
+                       {r}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sticky Sidebar */}
+          <div className="lg:col-span-4 lg:relative lg:block">
+            <div className="sticky top-28 space-y-6">
+              <div className="card overflow-hidden border-0 shadow-[0_20px_50px_rgba(0,18,51,0.15)] bg-white ring-1 ring-black/5">
+                <div className="relative aspect-video group cursor-pointer overflow-hidden bg-navy">
+                  {course.thumbnail_url ? (
+                    <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-navy">
+                      <Video size={48} className="text-mint/20" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-navy/20 group-hover:bg-navy/40 transition-all">
+                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-2xl scale-100 group-hover:scale-110 transition-transform">
+                       <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-navy border-b-[10px] border-b-transparent mr-[-4px]" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-8 space-y-6">
+                  <div className="flex items-end gap-3 justify-center md:justify-start">
+                    <span className="text-4xl font-black text-navy tracking-tighter">
+                      {formatPrice(course.price, course.currency)}
+                    </span>
                     {hasDiscount && (
-                      <span style={{fontSize:13,color:'var(--txt3)',textDecoration:'line-through',marginRight:8}}>
-                        {formatPrice(course.original_price,course.currency)}
+                      <span className="text-lg text-txt3 font-bold line-through mb-1.5 opacity-50">
+                        {formatPrice(course.original_price, course.currency)}
                       </span>
                     )}
                   </div>
-                  <EnrollButton courseId={course.id} price={course.price||0} isEnrolled={isEnrolled} slug={course.slug}/>
-                  <div style={{paddingTop:14,borderTop:'1px solid var(--border)',display:'flex',flexDirection:'column',gap:9,marginTop:4}}>
-                    <p style={{fontWeight:800,fontSize:12,color:'var(--txt1)',marginBottom:2}}>تشمل هذه الدورة:</p>
+                  
+                  <div className="space-y-3">
+                    <EnrollButton courseId={course.id} price={course.price||0} isEnrolled={isEnrolled} slug={course.slug} />
+                    <p className="text-[10px] font-black text-txt3 text-center uppercase tracking-widest mt-2">ضمان استرجاع الأموال لمدة 30 يوماً</p>
+                  </div>
+
+                  <div className="space-y-4 pt-6 border-t border-border">
+                    <div className="text-xs font-black text-navy uppercase tracking-widest mb-2 px-1">محتويات الباقة الرسمية:</div>
                     {[
-                      [Video,      `${formatDuration(course.duration_hours)} من الفيديو`],
-                      [BookOpen,   `${course.total_lessons||0} دروس`],
-                      [GraduationCap, 'اختبارات تقييمية'],
-                      ...(course.certificate_enabled ? [[ShieldCheck,'شهادة إتمام']] : []),
-                    ].map(([Icon,text]:any,i)=>(
-                      <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'var(--txt2)'}}>
-                        <Icon size={14} style={{color:'var(--teal)',flexShrink:0}}/>{text}
+                      [Video, `${formatDuration(course.duration_hours)} من المحتوى الحصري`],
+                      [BookOpen, `${course.total_lessons || 0} فصول تدريبية`],
+                      [GraduationCap, 'اختبار نهائي وشهادة معتمدة'],
+                      ...(course.certificate_enabled ? [[ShieldCheck, 'شهادة إتمام طبية']] : []),
+                    ].map(([Icon, text]: any, i) => (
+                      <div key={i} className="flex items-center gap-3 text-xs font-bold text-txt2 opacity-80">
+                        <Icon size={16} className="text-mint flex-shrink-0" />
+                        {text}
                       </div>
                     ))}
                   </div>
@@ -131,73 +274,7 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── Body ──────────────────────────────── */}
-      <div className="wrap" style={{padding:'40px 20px'}}>
-        <div style={{maxWidth:740}}>
-
-          {learn.length>0 && (
-            <div className="card" style={{padding:26,marginBottom:22}}>
-              <h2 style={{fontSize:19,fontWeight:900,marginBottom:14,color:'var(--txt1)'}}>ماذا ستتعلم؟</h2>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))',gap:10}}>
-                {learn.map((item:string,i:number)=>(
-                  <div key={i} style={{display:'flex',alignItems:'flex-start',gap:8}}>
-                    <CheckCircle size={14} style={{color:'var(--teal)',flexShrink:0,marginTop:3}}/>
-                    <span style={{fontSize:13.5,color:'var(--txt2)',lineHeight:1.6}}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {reqs.length>0 && (
-            <div style={{marginBottom:22}}>
-              <h2 style={{fontSize:19,fontWeight:900,marginBottom:12,color:'var(--txt1)'}}>المتطلبات</h2>
-              <ul style={{display:'flex',flexDirection:'column',gap:8}}>
-                {reqs.map((r:string,i:number)=>(
-                  <li key={i} style={{display:'flex',alignItems:'flex-start',gap:8,fontSize:14,color:'var(--txt2)'}}>
-                    <span style={{width:6,height:6,borderRadius:'50%',background:'var(--teal)',flexShrink:0,marginTop:7}}/>
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Curriculum */}
-          <div>
-            <h2 style={{fontSize:19,fontWeight:900,marginBottom:4,color:'var(--txt1)'}}>محتوى الدورة</h2>
-            <p style={{fontSize:13,color:'var(--txt3)',marginBottom:16}}>
-              {course.modules?.length||0} فصول · {course.total_lessons||0} درس · {formatDuration(course.duration_hours)}
-            </p>
-            <div style={{display:'flex',flexDirection:'column',gap:10}}>
-              {course.modules?.map((mod:any,i:number)=>(
-                <div key={mod.id} className="card" style={{overflow:'hidden'}}>
-                  <div style={{padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',background:'var(--bg2)',borderBottom:'1px solid var(--border)'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      <span style={{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:900,background:'var(--teal-soft)',color:'var(--teal)',border:'1px solid rgba(13,148,136,.15)'}}>{i+1}</span>
-                      <span style={{fontWeight:700,fontSize:14,color:'var(--txt1)'}}>{mod.title}</span>
-                    </div>
-                    <span style={{fontSize:12,color:'var(--txt3)'}}>{mod.lessons?.length||0} دروس</span>
-                  </div>
-                  {mod.lessons?.map((lesson:any)=>(
-                    <div key={lesson.id} style={{padding:'11px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid var(--border)',background:'var(--surface)'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <PlayCircle size={13} style={{color:'var(--txt3)',flexShrink:0}}/>
-                        <span style={{fontSize:13.5,color:'var(--txt2)'}}>{lesson.title}</span>
-                      </div>
-                      <div style={{display:'flex',alignItems:'center',gap:10}}>
-                        {lesson.is_preview && <span className="badge badge-teal" style={{fontSize:10}}>مجاني</span>}
-                        {lesson.video_duration>0 && <span style={{fontSize:12,color:'var(--txt3)'}}>{Math.round(lesson.video_duration/60)} د</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
