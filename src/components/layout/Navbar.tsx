@@ -1,205 +1,202 @@
-
-import Image from 'next/legacy/image'
+'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { useTheme } from '@/components/ThemeProvider'
-import { cn } from '@/lib/utils'
-import { Home, BookOpen, LayoutDashboard, LogOut, Menu, X, Sun, Moon, Stethoscope } from 'lucide-react'
+import { 
+  Home, BookOpen, LayoutDashboard, LogOut, Menu, X, 
+  Stethoscope, GraduationCap, User
+} from 'lucide-react'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const [open,     setOpen]     = useState(false)
-  const [user,     setUser]     = useState<any>(null)
-  const [profile,  setProfile]  = useState<any>(null)
-  const pathname  = usePathname()
-  const supabase  = createSupabaseBrowserClient()
-  const { theme, toggle } = useTheme()
-  const dark    = theme === 'dark'
-  const isHero  = pathname === '/'
-  const solid   = scrolled || !isHero
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const pathname = usePathname()
+  const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) return
-      setUser(session.user)
-      supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => setProfile(data))
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setUser(session.user)
+        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+        setProfile(data)
+      }
+    }
+    getSession()
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => setProfile(data))
+      } else {
+        setProfile(null)
+      }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
-      setUser(s?.user ?? null)
-      if (s?.user) supabase.from('profiles').select('*').eq('id', s.user.id).single().then(({ data }) => setProfile(data))
-      else setProfile(null)
-    })
+    
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', fn); fn()
-    return () => window.removeEventListener('scroll', fn)
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const dashLink = !profile ? '/dashboard/student'
-    : profile.role==='admin'   ? '/dashboard/admin'
-    : profile.role==='teacher' ? '/dashboard/teacher'
+  const dashboardLink = !profile ? '/dashboard/student'
+    : profile.role === 'admin' ? '/dashboard/admin'
+    : profile.role === 'teacher' ? '/dashboard/teacher'
     : '/dashboard/student'
 
-  const links = [
-    { label:'الرئيسية',     href:'/',        I:Home },
-    { label:'الدورات الطبية', href:'/courses', I:BookOpen },
+  const navLinks = [
+    { label: 'الرئيسية', href: '/', icon: Home },
+    { label: 'الدورات', href: '/courses', icon: BookOpen },
+    ...(user ? [{ label: 'لوحة التحكم', href: dashboardLink, icon: LayoutDashboard }] : []),
   ]
 
   return (
-    <>
-    <nav className={cn(
-      'fixed top-0 w-full z-[100] transition-all duration-500 ease-in-out',
-      solid 
-        ? 'py-3 bg-nav-bg backdrop-blur-xl border-b border-nav-border shadow-lg shadow-navy/5' 
-        : 'py-6 bg-transparent'
-    )}>
-      <div className="wrap flex items-center justify-between gap-8">
-
-        {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className={cn(
-            'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg',
-            solid ? 'bg-navy text-white shadow-navy/20' : 'bg-white/10 backdrop-blur-md border border-white/20 text-white'
-          )}>
-            <Stethoscope size={20}/>
-          </div>
-          <div className="hidden sm:block leading-tight">
-            <div className={cn('text-lg font-black tracking-tight transition-colors duration-300', solid ? 'text-navy' : 'text-white')}>
-              منصة <span className={cn('italic font-serif transition-colors', solid ? 'text-navy3' : 'text-mint')}>تعلّم</span>
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-slate-900/80 backdrop-blur-xl border-b border-slate-800' : 'bg-transparent'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all">
+              <Stethoscope className="w-5 h-5 text-white" />
             </div>
-            <div className={cn('text-[9px] font-bold tracking-[0.2em] uppercase opacity-50', solid ? 'text-navy' : 'text-white')}>
-              Medical Excellence
-            </div>
-          </div>
-        </Link>
+            <span className="text-xl font-bold text-white hidden sm:block">
+              منصة <span className="text-cyan-400">تعلّم</span>
+            </span>
+          </Link>
 
-        {/* ── Desktop Nav ── */}
-        <div className="hidden md:flex items-center gap-1 flex-1 justify-center bg-navy/5 p-1 rounded-2xl border border-navy/5 backdrop-blur-sm"
-             style={{ background: !solid ? 'rgba(255,255,255,0.05)' : undefined }}>
-          {links.map(({label,href,I})=>{
-            const active = pathname===href
-            return (
-              <Link key={href} href={href} className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300',
-                active 
-                  ? (solid ? 'bg-white text-navy shadow-sm' : 'bg-white/10 text-mint shadow-inner')
-                  : (solid ? 'text-navy/60 hover:text-navy hover:bg-white/50' : 'text-white/60 hover:text-white hover:bg-white/10')
-              )}>
-                <I size={14} className={cn(active && !solid && 'text-mint')} />
-                {label}
-              </Link>
-            )
-          })}
-        </div>
-
-        {/* ── Actions ── */}
-        <div className="hidden md:flex items-center gap-4">
-          <button onClick={toggle} className={cn(
-            'p-2.5 rounded-xl border transition-all duration-300 hover:scale-105',
-            solid 
-              ? 'bg-white border-border text-navy shadow-sm' 
-              : 'bg-white/5 border-white/10 text-white/80'
-          )}>
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
-          {user ? (
-            <div className="flex items-center gap-3">
-              <Link href={dashLink} className={cn(
-                'hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
-                solid ? 'text-navy hover:bg-navy/5' : 'text-white/80 hover:bg-white/10'
-              )}>
-                <LayoutDashboard size={14}/> لوحة التحكم
-              </Link>
-              <Link href="/profile" className="relative group">
-                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-mint p-0.5 shadow-lg group-hover:scale-105 transition-transform">
-{profile?.avatar_url
-                    ? <Image src={profile.avatar_url} alt="Avatar" width={40} height={40} className="w-full h-full object-cover rounded-lg"/>
-                    : <div className="w-full h-full bg-navy flex items-center justify-center font-black text-white text-sm rounded-lg">
-                        {profile?.full_name?.[0] ?? 'د'}
-                      </div>}
-                </div>
-              </Link>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link href="/auth/login" className={cn(
-                'px-4 py-2 text-xs font-bold transition-colors',
-                solid ? 'text-navy/60 hover:text-navy' : 'text-white/60 hover:text-white'
-              )}>
-                تسجيل الدخول
-              </Link>
-              <Link href="/auth/register" className={cn(
-                'btn btn-md shadow-lg',
-                solid ? 'btn-primary' : 'btn-white !text-navy'
-              )}>
-                ابدأ رحلتك مجاناً
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ── Mobile Trigger ── */}
-        <div className="flex md:hidden items-center gap-3">
-          <button onClick={toggle} className={cn(
-            'p-2 rounded-lg border',
-            solid ? 'bg-white border-border text-navy' : 'bg-white/5 border-white/10 text-white'
-          )}>
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button onClick={() => setOpen(!open)} className={cn(
-            'p-1 transition-colors',
-            solid ? 'text-navy' : 'text-white'
-          )}>
-            {open ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    {/* ── Mobile Drawer ── */}
-    {open && (
-      <div className="fixed inset-0 z-[99] bg-navy/20 backdrop-blur-md animate-in fade-in transition-all" onClick={()=>setOpen(false)}>
-        <div className="absolute top-[80px] left-4 right-4 bg-white dark:bg-navy rounded-3xl p-6 shadow-2xl border border-navy/5 animate-in slide-in-from-top-4 duration-300" 
-             onClick={e=>e.stopPropagation()}>
-          <div className="flex flex-col gap-2">
-            {links.map(({label,href,I})=>(
-              <Link key={href} href={href} 
-                className={cn(
-                  'flex items-center gap-4 p-4 rounded-2xl text-sm font-bold transition-all',
-                  pathname===href ? 'bg-navy/5 text-navy dark:bg-white/5 dark:text-mint' : 'text-txt2 hover:bg-navy/5'
-                )}
-                onClick={()=>setOpen(false)}>
-                <I size={18}/>{label}
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  pathname === link.href
+                    ? 'bg-cyan-500/10 text-cyan-400'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                {link.label}
               </Link>
             ))}
-            <div className="h-px bg-border my-2" />
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <>
-                <Link href={dashLink} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-txt2 hover:bg-navy/5" onClick={()=>setOpen(false)}>
-                  <LayoutDashboard size={18}/> لوحة التحكم
-                </Link>
-                <button className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-err hover:bg-err/5 w-full text-right"
-                  onClick={async()=>{await supabase.auth.signOut();setOpen(false);window.location.href='/'}}>
-                  <LogOut size={18}/> تسجيل الخروج
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-400">{profile?.full_name || user.email}</span>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all"
+                >
+                  <LogOut className="w-5 h-5" />
                 </button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-3 mt-2">
-                <Link href="/auth/login" className="btn btn-ghost btn-lg w-full" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
-                <Link href="/auth/register" className="btn btn-primary btn-lg w-full shadow-xl" onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
               </div>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-all"
+                >
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-sm font-medium text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105"
+                >
+                  سجّل مجاناً
+                </Link>
+              </>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </div>
-    )}
-    </>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-slate-900/95 backdrop-blur-xl border-t border-slate-800"
+          >
+            <div className="px-4 py-4 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                    pathname === link.href
+                      ? 'bg-cyan-500/10 text-cyan-400'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                >
+                  <link.icon className="w-5 h-5" />
+                  {link.label}
+                </Link>
+              ))}
+              
+              <div className="pt-4 border-t border-slate-800">
+                {user ? (
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    تسجيل الخروج
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"
+                    >
+                      <User className="w-5 h-5" />
+                      تسجيل الدخول
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-lg transition-all"
+                    >
+                      <GraduationCap className="w-5 h-5" />
+                      سجّل مجاناً
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   )
 }
-
