@@ -2,7 +2,7 @@ import Stripe from 'stripe'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return new NextResponse('Webhook Error: Missing metadata', { status: 400 })
     }
 
-const supabase = createSupabaseAdminClient()
+    const supabase = createSupabaseAdminClient()
 
     // Create the enrollment
     await supabase.from('enrollments').insert({

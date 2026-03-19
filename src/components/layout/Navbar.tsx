@@ -1,4 +1,4 @@
-'use client'
+
 import Image from 'next/legacy/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Users, Search, Loader2, Trash2, ShieldCheck } from 'lucide-react'
+import { Users, Search, Loader2, Trash2 } from 'lucide-react'
 
 export default function AdminUsersPage() {
   const [users,    setUsers]    = useState<any[]>([])
@@ -22,7 +22,11 @@ export default function AdminUsersPage() {
     if (data) setUsers(data)
     setLoading(false)
   }
-  useEffect(()=>{ fetchUsers() },[])
+  useEffect(() => {
+    void (async () => {
+      await fetchUsers()
+    })()
+  }, [])
 
   const changeRole = async (id:string, role:string) => {
     if (!confirm(`تغيير الصلاحية إلى "${roleLabel(role)}"؟`)) return

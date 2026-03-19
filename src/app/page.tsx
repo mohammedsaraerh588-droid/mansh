@@ -1,7 +1,9 @@
 'use client'
 import Link from 'next/link'
-import { BookOpen, Star, Users, Award, CheckCircle, ArrowLeft,
-         Stethoscope, GraduationCap, ShieldCheck, Clock,
+import { motion } from 'framer-motion'
+import Image from 'next/image'
+import { BookOpen, Users, CheckCircle,
+         Stethoscope, GraduationCap, ShieldCheck,
          Activity, Brain, PlayCircle, FlaskConical } from 'lucide-react'
 
 const features = [
@@ -13,157 +15,247 @@ const features = [
   { I:Users,        t:'مجتمع طلابي',            d:'تواصل مع زملائك وتبادل المعرفة في بيئة تعاونية.' },
 ]
 
-const steps = [
-  { n:1, t:'أنشئ حسابك',       d:'سجّل مجاناً في ثوانٍ وابدأ باستكشاف الدورات.' },
-  { n:2, t:'اختر دورتك',       d:'تصفّح الدورات المتاحة في مختلف التخصصات.' },
-  { n:3, t:'احصل على شهادتك',  d:'أنهِ الدورة واحصل على شهادة إتمام رقمية.' },
+const stats = [
+  { n:5000, l:'دورة مكتملة' },
+  { n:2500, l:'طالب مسجل' },
+  { n:95, l:'معدل رضا' },
+  { n:1200, l:'شهادة مُصدرة' },
 ]
 
 export default function Home() {
   return (
-    <div className="bg-bg min-h-screen overflow-x-hidden">
-      
-      {/* ── HERO SECTION ── */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden border-b border-border/50">
-        {/* Background Accents */}
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-mint/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[5%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-[100px] pointer-events-none" />
-        
-        <div className="wrap relative z-10 text-center">
-          <div className="fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-navy/5 border border-navy/10 mb-8 backdrop-blur-sm">
-            <Stethoscope size={14} className="text-navy" />
-            <span className="text-[11px] font-bold text-navy tracking-wider uppercase">المنصة الرائدة للتعليم الطبي العربي</span>
-          </div>
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden min-h-[100vh]">
+        {/* Parallax Layers */}
+        <div className="absolute inset-0">
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-b from-mint/20 to-transparent blur-xl"
+            initial={{ scale: 1.5, y: 100 }}
+            animate={{ scale: 1.4, y: 50 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div 
+            className="absolute inset-0 bg-[radial-gradient(circle_600px_at_20%_80%,rgba(100,255,218,0.15),transparent)]"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
 
-          <h1 className="fade-up block text-4xl md:text-7xl font-black text-navy leading-[1.1] mb-6 tracking-tight" style={{ animationDelay: '0.1s' }}>
-            تعلّم الطب بكافة أبعاده<br />
-            <span className="text-navy3 italic">بأسلوب عصريٍّ ومبتكر</span>
-          </h1>
+        <div className="relative z-10 wrap flex flex-col h-screen justify-center items-center text-center px-6 pt-32 pb-20">
+          <motion.div 
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-xl shadow-2xl mb-8"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="w-3 h-3 bg-mint rounded-full animate-pulse" />
+            <span className="text-white font-bold text-sm tracking-wide uppercase">أكبر منصة تعليم طبي عربية</span>
+          </motion.div>
 
-          <p className="fade-up text-lg md:text-xl text-txt2 max-w-2xl mx-auto mb-10 leading-relaxed font-medium" style={{ animationDelay: '0.2s' }}>
-            نقدم لك تجربة تعليمية طبية متكاملة تجمع بين الدقة العلمية وأحدث تقنيات التعليم التفاعلي، تحت إشراف نخبة من الأخصائيين.
-          </p>
+          <motion.h1 
+            className="text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-mint to-gold mb-8 px-4 -skew-x-3 tracking-[-0.05em]"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            منصة <span className="text-mint -skew-x-6">تعلّم</span> 
+            <br />
+            <span className="text-6xl md:text-7xl font-serif italic block -skew-x-6 bg-gradient-to-r from-gold to-mint bg-clip-text text-transparent tracking-normal">الطبية
+            </span>
+          </motion.h1>
 
-          <div className="fade-up flex flex-wrap justify-center gap-4 mb-16" style={{ animationDelay: '0.3s' }}>
-            <Link href="/courses" className="btn btn-primary btn-xl group">
-              استكشف المسارات <PlayCircle size={18} className="group-hover:scale-110 transition-transform" />
+          <motion.p 
+            className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto mb-12 px-6 leading-relaxed"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            تعلّم الطب بأسلوب <span className="text-mint font-bold">عصري وتفاعلي</span> من خلال دورات مصمّمة خصيصاً 
+            للطلاب والممارسين الصحيين في العالم العربي.
+          </motion.p>
+
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-6 px-6"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <Link 
+              href="/courses" 
+              className="group btn btn-mint btn-xl flex items-center gap-3 shadow-2xl backdrop-blur-lg"
+            >
+              <PlayCircle size={24} />
+              استكشف الدورات
+              <motion.div 
+                className="w-3 h-3 bg-gradient-to-r from-white to-transparent rounded-full ml-auto opacity-0 group-hover:opacity-100"
+                initial={{ scale: 0 }}
+                whileHover={{ scale: 1 }}
+                transition={{ type: "spring" }}
+              />
             </Link>
-            <Link href="/auth/register" className="btn btn-white btn-xl">
-              ابدأ رحلتك مجاناً <ArrowLeft size={18} />
+            <Link 
+              href="/auth/register" 
+              className="btn btn-primary btn-xl shadow-2xl backdrop-blur-lg"
+            >
+              ابدأ رحلتك مجاناً <CheckCircle size={20} />
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="fade-up flex flex-wrap justify-center gap-8 md:gap-12 opacity-60" style={{ animationDelay: '0.4s' }}>
-            {['شروحات وافية', 'شهادات معتمدة', 'تحديثات دورية'].map((t, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm font-bold text-navy">
-                <CheckCircle size={16} className="text-mint" />
-                <span>{t}</span>
+          {/* Stats */}
+          <motion.div 
+            className="flex flex-wrap justify-center gap-12 mt-24 px-8"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+          >
+            {stats.map(({ n, l }, i) => (
+              <div key={i} className="text-center">
+                <div className="text-4xl md:text-5xl font-black text-mint mb-2 animate-pulse">
+                  {n.toLocaleString()}
+                </div>
+                <div className="text-white/60 text-sm font-medium uppercase tracking-wide">
+                  {l}
+                </div>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── FEATURES SECTION ── */}
-      <section className="py-24 md:py-32 bg-white">
+      {/* Features */}
+      <section className="py-32 bg-gradient-to-b from-white/50 to-white/0">
         <div className="wrap">
-          <div className="text-center mb-16 md:mb-20">
-            <span className="eyebrow"><FlaskConical size={12} /> لماذا منصة تعلّم؟</span>
-            <h2 className="text-3xl md:text-5xl font-black text-navy mt-4 mb-6">تجربة تعليمية بلا حدود</h2>
-            <p className="text-txt2 max-w-xl mx-auto text-lg leading-relaxed">
-              سواء كنت طالباً أو ممارساً صحياً، نوفر لك الأدوات اللازمة للتميز في مسيرتك المهنية.
+          <motion.div 
+            className="text-center mb-24"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-mint/10 border border-mint/20 mb-8 backdrop-blur">
+              <FlaskConical size={14} />
+              <span className="text-sm font-bold text-navy tracking-wide uppercase">ما يميز منصتنا</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-navy mb-6">تجربة تعليمية <span className="text-mint">متميّزة</span></h2>
+            <p className="text-xl text-txt2 max-w-2xl mx-auto leading-relaxed">
+              كل تفاصيل التصميم والمحتوى مصمّمة لتوفير أفضل تجربة تعليمية ممكنة
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {features.map(({ I, t, d }, i) => (
-              <div key={i} className="card card-hover p-8 group">
-                <div className="w-14 h-14 rounded-2xl bg-bg2 flex items-center justify-center mb-6 group-hover:bg-navy transition-colors duration-300">
-                  <I size={24} className="text-navy group-hover:text-white transition-colors duration-300" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div 
+              className="space-y-8"
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ staggerChildren: 0.1 }}
+            >
+              {features.map(({ I, t, d }, i) => (
+                <motion.div 
+                  key={i}
+                  className="group flex items-start gap-6 p-8 rounded-3xl bg-white/70 border border-white/30 backdrop-blur-xl shadow-2xl hover:shadow-3xl hover:-translate-x-4 transition-all duration-500 hover:border-mint/50"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <motion.div 
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-mint to-primary flex items-center justify-center flex-shrink-0 shadow-xl mt-1 group-hover:scale-110 transition-transform duration-300"
+                    whileHover={{ rotateY: 10, rotateX: 5 }}
+                  >
+                    <I size={24} className="text-white drop-shadow-lg" />
+                  </motion.div>
+                  <div>
+                    <h3 className="text-2xl font-black text-navy mb-3 group-hover:text-mint transition-colors">{t}</h3>
+                    <p className="text-txt2 leading-relaxed">{d}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+            >
+              <div className="absolute -inset-4 bg-gradient-to-br from-mint/10 to-gold/5 rounded-3xl blur-xl" />
+              <div className="relative bg-white rounded-3xl p-12 shadow-3xl border border-white/20 backdrop-blur-xl">
+                <Image 
+                  src="/images/medical/student-learning.jpg" 
+                  alt="Medical Student Learning"
+                  width={500}
+                  height={400}
+                  className="w-full h-64 object-cover rounded-2xl shadow-2xl"
+                />
+                <div className="mt-8 grid grid-cols-2 gap-4">
+                  <div className="bg-mint/5 p-4 rounded-xl border border-mint/20 text-center">
+                    <div className="text-2xl font-black text-mint mb-1">98%</div>
+                    <div className="text-xs text-navy/60 font-medium uppercase tracking-wide">معدل رضا</div>
+                  </div>
+                  <div className="bg-gold/5 p-4 rounded-xl border border-gold/20 text-center">
+                    <div className="text-2xl font-black text-gold mb-1">12K+</div>
+                    <div className="text-xs text-navy/60 font-medium uppercase tracking-wide">متعلمين</div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-navy mb-3">{t}</h3>
-                <p className="text-txt2 leading-relaxed text-sm">{d}</p>
               </div>
-            ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA / NEW ERA SECTION ── */}
-      <section className="relative py-24 md:py-32 bg-navy overflow-hidden">
-        {/* Abstract pattern */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none" 
-             style={{backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(100,255,218,0.3) 1px, transparent 0)', backgroundSize: '40px 40px'}} />
-        <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full bg-mint/5 blur-[150px] pointer-events-none" />
-        
-        <div className="wrap relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
-                <span className="text-[10px] font-bold text-mint tracking-[0.2em] uppercase">انضم لآلاف المبدعين</span>
-            </div>
-            <h2 className="text-3xl md:text-6xl font-black text-white mb-8 leading-tight">
-                هل أنت مستعد لنقل معرفتك<br /> الطبية إلى المستوى التالي؟
-            </h2>
-            <p className="text-txt1/60 text-lg md:text-xl max-w-2xl mx-auto mb-12" style={{color: 'rgba(204, 214, 246, 0.6)'}}>
-                ابدأ اليوم وكن جزءاً من أكبر مجتمع تعليمي طبي في العالم العربي. الرحلة تبدأ بضغطة زر.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6">
-                <Link href="/auth/register" className="btn btn-mint btn-xl">
-                    سجل الآن مجاناً <GraduationCap size={20} />
-                </Link>
-                <Link href="/courses" className="btn btn-outline btn-xl !border-white !text-white hover:!bg-white hover:!text-navy">
-                    تصفح جميع المسارات
-                </Link>
-            </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="bg-navy border-t border-white/5 pt-20 pb-10 overflow-hidden relative">
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-mint/5 blur-[100px] pointer-events-none" />
-        <div className="wrap">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div className="md:col-span-2">
-              <Link href="/" className="flex items-center gap-3 mb-8 group">
-                <div className="w-12 h-12 rounded-xl bg-mint flex items-center justify-center border border-white/10 shadow-lg transition-transform group-hover:scale-110">
-                  <Stethoscope size={22} className="text-navy" />
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-white tracking-tight">منصة <span className="text-mint italic font-serif">تعلّم</span></div>
-                  <div className="text-[10px] font-bold text-white/40 tracking-[0.3em] uppercase">The Medical Arena</div>
-                </div>
-              </Link>
-              <p className="text-txt1/40 leading-loose max-w-sm mb-8" style={{color: 'rgba(136, 146, 176, 0.7)'}}>
-                المرجع الأول لطلاب الطب والأطباء في الوطن العربي. نسعى لتقديم محتوى تعليمي رصين يواكب التطورات العلمية العالمية.
-              </p>
-            </div>
-
-            {[
-              { title: 'المنصة', links: [['/', 'الرئيسية'], ['/courses', 'الدورات'], ['/auth/register', 'سجّل مجاناً'], ['/auth/login', 'تسجيل الدخول']] },
-              { title: 'روابط هامة', links: [['/terms', 'الشروط والأحكام'], ['/privacy', 'سياسة الخصوصية'], ['/contact', 'تواصل معنا']] },
-            ].map(({ title, links }, i) => (
-              <div key={i}>
-                <h4 className="text-white font-bold mb-6 text-sm tracking-widest uppercase border-r-2 border-mint pr-4">{title}</h4>
-                <ul className="flex flex-direction-column gap-4">
-                  {links.map(([h, l]) => (
-                    <li key={h}>
-                      <Link href={h} className="text-txt1/40 hover:text-mint transition-colors duration-200 text-sm" style={{color: 'rgba(136, 146, 176, 0.7)'}}>{l}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+      {/* CTA Final */}
+      <section className="py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-navy/90 to-navy pointer-events-none" />
+        <div className="relative z-10 wrap text-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-3xl bg-mint text-navy font-bold text-xl backdrop-blur-xl shadow-2xl border border-mint/50 mb-12"
+          >
+            <div className="w-3 h-3 bg-navy rounded-full" />
+            جاهز للبدء؟ 
+          </motion.div>
           
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-white/20 text-xs tracking-wide font-medium">© {new Date().getFullYear()} منصة تعلّم الطبية. جميع الحقوق محفوظة.</p>
-            <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-mint animate-pulse" />
-                <span className="text-white/20 text-[10px] font-bold uppercase tracking-[0.2em]">Designed for Excellence</span>
+          <motion.h2 
+            initial={{ y: 30, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-6xl font-black text-white mb-8"
+          >
+            انضم لثورة <span className="text-mint block">التعليم الطبي</span>
+          </motion.h2>
+
+          <motion.div 
+            className="flex flex-col lg:flex-row gap-6 justify-center items-center"
+            initial={{ y: 50, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            <Link 
+              href="/auth/register" 
+              className="btn btn-mint btn-xl shadow-2xl hover:shadow-3xl px-12"
+            >
+              سجّل مجاناً <GraduationCap />
+            </Link>
+            <div className="flex items-center gap-8 text-white/60 font-medium text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-mint rounded-full animate-pulse" />
+                <span>ابدأ فوراً</span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} />
+                <span>دفع آمن</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </footer>
-    </div>
+      </section>
+    </>
   )
 }
 

@@ -11,14 +11,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('theme') as Theme | null
     const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     const initial = saved || preferred
-    setTheme(initial)
+    // Initialize theme without setState to avoid cascading renders
     document.documentElement.setAttribute('data-theme', initial)
+    // Use a microtask to set state after initial render
+    Promise.resolve().then(() => setTheme(initial))
   }, [])
 
   const toggle = () => {
     const next = theme === 'light' ? 'dark' : 'light'
     setTheme(next)
-    localStorage.setItem('theme', next)
+    try {
+      localStorage.setItem('theme', next)
+    } catch (e) {
+      // Ignore cookie errors in read-only contexts (e.g., middleware)
+      console.debug('Cookie set failed:', e)
+    }
     document.documentElement.setAttribute('data-theme', next)
   }
 
