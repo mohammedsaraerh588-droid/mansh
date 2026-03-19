@@ -75,7 +75,7 @@ const itemVariants = {
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
@@ -108,34 +108,31 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-400 text-sm font-medium">أكبر منصة تعليم طبي عربية</span>
+            <Sparkles className="w-4 h-4 text-cyan-600" />
+            <span className="text-cyan-600 text-sm font-medium">المنصة الرائدة للتعليم الطبي العربي</span>
           </motion.div>
 
           {/* Main Title */}
           <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight text-slate-900"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
           >
-            <span className="text-white">منصة</span>{' '}
-            <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
-              تعلّم
-            </span>
+            تعلّم الطب بكافة أبعاده
             <br />
-            <span className="text-slate-400 font-light">الطبية</span>
+            <span className="text-slate-800">بأسلوب عصريّ ومبتكر</span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p 
-            className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            تعلّم الطب بأسلوب عصري وتفاعلي من خلال دورات مصمّمة خصيصاً 
-            للطلاب والممارسين الصحيين في العالم العربي
+            نقدم لك تجربة تعليمية طبية متكاملة تجمع بين الدقة العلمية وأحدث تقنيات التعليم التفاعلي، 
+            تحت إشراف نخبة من الأخصائيين.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -147,18 +144,18 @@ export default function Home() {
           >
             <Link 
               href="/courses" 
-              className="group relative px-8 py-4 bg-gradient-to-r from-cyan-600 to-teal-600 rounded-xl font-semibold text-white overflow-hidden transition-all hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-105"
+              className="group relative px-8 py-4 bg-slate-900 rounded-xl font-semibold text-white overflow-hidden transition-all hover:shadow-lg hover:shadow-slate-500/25 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
-                استكشف الدورات
+                استكشف المسارات
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
             </Link>
             <Link 
               href="/auth/register" 
-              className="px-8 py-4 border border-slate-700 rounded-xl font-semibold text-slate-300 hover:bg-slate-800/50 hover:border-slate-600 transition-all"
+              className="px-8 py-4 border border-slate-300 rounded-xl font-semibold text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition-all"
             >
-              سجّل مجاناً
+              ← ابدأ رحلتك مجاناً
             </Link>
           </motion.div>
 
@@ -175,7 +172,7 @@ export default function Home() {
                 className="text-center"
                 variants={itemVariants}
               >
-                <div className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">{stat.value}</div>
                 <div className="text-sm text-slate-500">{stat.label}</div>
               </motion.div>
             ))}
@@ -184,7 +181,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="relative py-24 px-4">
+      <section className="relative py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <motion.div 
@@ -194,11 +191,11 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              لماذا تختار <span className="text-gradient-cyan">منصتنا</span>؟
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4">
+              تجربة تعليمية <span className="text-gradient-cyan">بلا حدود</span>
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              نقدم لك تجربة تعليمية فريدة تجمع بين الجودة العالية والتصميم العصري
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              سواء كنت طالباً أو ممارساً صحياً، نوفر لك الأدوات اللازمة للتميز في مسيرتك المهنية
             </p>
           </motion.div>
 
@@ -215,7 +212,7 @@ export default function Home() {
               return (
                 <motion.div 
                   key={index}
-                  className="group relative p-6 rounded-2xl bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1"
+                  className="group relative p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                   variants={itemVariants}
                 >
                   {/* Icon */}
@@ -224,11 +221,8 @@ export default function Home() {
                   </div>
                   
                   {/* Content */}
-                  <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-slate-400 leading-relaxed">{feature.description}</p>
-                  
-                  {/* Hover Glow */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/0 to-teal-500/0 group-hover:from-cyan-500/5 group-hover:to-teal-500/5 transition-all duration-500 -z-10" />
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{feature.description}</p>
                 </motion.div>
               )
             })}
@@ -237,25 +231,21 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-24 px-4">
+      <section className="relative py-24 px-4 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <motion.div 
-            className="relative rounded-3xl overflow-hidden"
+            className="relative rounded-3xl overflow-hidden bg-white shadow-xl"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            {/* Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-teal-600/20" />
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-xl" />
-            
             {/* Content */}
             <div className="relative p-8 md:p-12 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
                 ابدأ رحلتك التعليمية الآن
               </h2>
-              <p className="text-slate-400 mb-8 max-w-xl mx-auto">
+              <p className="text-slate-600 mb-8 max-w-xl mx-auto">
                 انضم إلى آلاف الطلاب والممارسين الصحيين الذين يطورون مهاراتهم معنا
               </p>
               <Link 
