@@ -28,7 +28,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
       </head>
-      <body className="bg-bg-primary text-text-primary overflow-x-hidden dark">
+      <body className="bg-slate-900 text-white overflow-x-hidden">
         <ThemeProvider>
           <AnimatedLayout>
             {children}

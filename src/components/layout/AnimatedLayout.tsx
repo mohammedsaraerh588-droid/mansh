@@ -7,7 +7,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
 
   return (
-    <div className="min-h-screen bg-gradient-dark relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
