@@ -11,19 +11,22 @@ export default function ResetPasswordPage() {
   const [loading,   setLoading]   = useState(false)
   const [done,      setDone]      = useState(false)
   const [err,       setErr]       = useState('')
-  const [ready,     setReady]     = useState(false)
   const router  = useRouter()
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    // Supabase sets the session from the URL hash automatically
+    let mounted = true
     supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
+      if (event === 'PASSWORD_RECOVERY' && mounted) {
+        // session ready for password reset
+      }
     })
-    // Also check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
+      if (session && mounted) {
+        // session exists
+      }
     })
+    return () => { mounted = false }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

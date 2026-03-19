@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Input } from '@/components/ui/Input'
 import { ArrowRight, Plus, Video, FileText, Trash2, Edit2, Loader2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function CurriculumManager() {
@@ -22,8 +21,6 @@ export default function CurriculumManager() {
   const [savingLes,       setSavingLes]      = useState(false)
   const [collapsed,       setCollapsed]      = useState<Record<string,boolean>>({})
 
-  useEffect(() => { fetchData() }, [id])
-
   const fetchData = async () => {
     setLoading(true)
     const { data:{ session } } = await supabase.auth.getSession()
@@ -38,6 +35,12 @@ export default function CurriculumManager() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    void (async () => {
+      await fetchData()
+    })()
+  }, [id])
 
   const addModule = async () => {
     if (!newModTitle.trim()) return
@@ -139,7 +142,7 @@ export default function CurriculumManager() {
               {mod.lessons?.length===0 && addingLessonTo!==mod.id && (
                 <p style={{fontSize:13,color:'var(--txt3)',textAlign:'center',padding:'12px 0',fontStyle:'italic'}}>لا توجد دروس — أضف درساً الآن</p>
               )}
-              {mod.lessons?.map((les:any, lIdx:number)=>(
+              {mod.lessons?.map((les:any)=>(
                 <div key={les.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',transition:'background .12s'}}
                   onMouseEnter={e=>(e.currentTarget.style.background='var(--bg2)')}
                   onMouseLeave={e=>(e.currentTarget.style.background='var(--surface)')}>

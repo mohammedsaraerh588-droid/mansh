@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
 import { ArrowRight, Save, Loader2, CheckCircle, AlertCircle, Upload, X } from 'lucide-react'
@@ -153,7 +154,7 @@ export default function EditCoursePage() {
           <div style={{display:'flex',gap:16,alignItems:'flex-start',flexWrap:'wrap'}}>
             {form.thumbnail_url ? (
               <div style={{position:'relative',flexShrink:0}}>
-                <img src={form.thumbnail_url} alt="" style={{width:180,height:110,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}}/>
+                <Image src={form.thumbnail_url} alt="" width={180} height={110} style={{objectFit:'cover',borderRadius:10,border:'1px solid var(--border)'}}/>
                 <button type="button" onClick={()=>setForm(p=>({...p,thumbnail_url:''}))}
                   style={{position:'absolute',top:-8,left:-8,width:22,height:22,borderRadius:'50%',background:'var(--err)',border:'none',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <X size={12}/>

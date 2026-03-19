@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
-import './globals.css'
-import Navbar from '@/components/layout/Navbar'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import AnimatedLayout from '@/components/layout/AnimatedLayout'
 
 export const metadata: Metadata = {
   title: { default:'منصة تعلّم الطبية', template:'%s | منصة تعلّم الطبية' },
@@ -9,7 +8,7 @@ export const metadata: Metadata = {
   keywords: ['تعليم طبي','دورات طبية','طب','صيدلة','تمريض','تشريح','فسيولوجيا','باثولوجيا'],
   openGraph: {
     title:       'منصة تعلّم الطبية',
-    description: 'دورات طبية متخصصة بأسلوب واضح وعلمي دقيق',
+    description:   'دورات طبية متخصصة بأسلوب واضح وعلمي دقيق',
     locale:      'ar_SA',
     type:        'website',
     siteName:    'منصة تعلّم الطبية',
@@ -18,21 +17,25 @@ export const metadata: Metadata = {
   authors: [{ name:'منصة تعلّم الطبية' }],
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className="scroll-smooth antialiased">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
       </head>
-      <body>
+      <body className="bg-slate-900 text-white overflow-x-hidden">
         <ThemeProvider>
-          <Navbar />
-          <main style={{ minHeight: '100vh', paddingTop: 56 }}>
+          <AnimatedLayout>
             {children}
-          </main>
+          </AnimatedLayout>
         </ThemeProvider>
       </body>
     </html>
   )
 }
+

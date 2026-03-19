@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { Stethoscope, Home, BookOpen, ArrowRight } from 'lucide-react'
+import { Stethoscope, Home, BookOpen } from 'lucide-react'
 
 export default function NotFound() {
   return (
