@@ -1,9 +1,10 @@
 'use client'
+// Updated design - Light theme
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
-  BookOpen, Users, CheckCircle, Stethoscope, GraduationCap, 
-  ShieldCheck, Activity, Brain, PlayCircle,
+  BookOpen, Users, Stethoscope, 
+  ShieldCheck, Activity, Brain,
   ArrowRight, Sparkles, Zap, Award, Star
 } from 'lucide-react'
 

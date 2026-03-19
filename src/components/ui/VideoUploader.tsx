@@ -3,7 +3,7 @@ import { useState, useRef } from 'react'
 import { UploadCloud, CheckCircle, AlertCircle, Video, RefreshCw } from 'lucide-react'
 
 interface Props {
-  onSuccess: (videoUrl: string, publicId: string) => void
+  onSuccess: (_videoUrl: string, _publicId: string) => void
   currentVideoUrl?: string | null
   className?: string
 }

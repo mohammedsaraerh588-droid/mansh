@@ -142,7 +142,7 @@ export default function CurriculumManager() {
               {mod.lessons?.length===0 && addingLessonTo!==mod.id && (
                 <p style={{fontSize:13,color:'var(--txt3)',textAlign:'center',padding:'12px 0',fontStyle:'italic'}}>لا توجد دروس — أضف درساً الآن</p>
               )}
-              {mod.lessons?.map((les:any, _lIdx:number)=>(
+              {mod.lessons?.map((les:any)=>(
                 <div key={les.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',transition:'background .12s'}}
                   onMouseEnter={e=>(e.currentTarget.style.background='var(--bg2)')}
                   onMouseLeave={e=>(e.currentTarget.style.background='var(--surface)')}>
