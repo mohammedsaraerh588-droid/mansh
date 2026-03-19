@@ -7,17 +7,13 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
 
   return (
-    <div className="min-h-[100dvh] relative">
-      {/* Parallax Background */}
-      <motion.div 
-        className="fixed inset-0 -z-10 opacity-20 pointer-events-none"
-        initial={{ scale: 1.2 }}
-        animate={{ scale: 1.1 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-mint-soft to-gold-soft" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_30%_20%,var(--primary,theme(colors.sky.400)),transparent),radial-gradient(ellipse_30%_30%_at_80%_80%,var(--mint-soft),transparent)]" />
-      </motion.div>
+    <div className="min-h-screen bg-gradient-dark relative">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
 
       {/* Navbar */}
       <motion.div 
@@ -29,7 +25,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
         <Navbar />
       </motion.div>
 
-      {/* Glass Viewport */}
+      {/* Main Content */}
       <motion.main 
         className="relative pt-20 pb-12 min-h-[calc(100dvh-80px)]"
         initial="initial"
