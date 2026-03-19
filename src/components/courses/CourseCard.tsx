@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/legacy/image'
 import { Course } from '@/types'
 import { formatPrice, getLevelLabel } from '@/lib/utils'
 import { Star, Clock, BookOpen, Users, PlayCircle } from 'lucide-react'
@@ -16,10 +17,14 @@ export default function CourseCard({ course, showProgress, progress=0 }: Props) 
         {/* Thumbnail */}
         <div className="relative h-48 overflow-hidden bg-bg3 flex-shrink-0">
           {course.thumbnail_url ? (
-            <img 
+            <Image 
               src={course.thumbnail_url} 
               alt={course.title} 
+              width={400}
+              height={240}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              priority={true}
+              sizes="(max-width: 768px) 100vw, 400px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-navy">

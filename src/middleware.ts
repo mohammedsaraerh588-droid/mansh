@@ -21,21 +21,48 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+const { data: { user }, error } = await supabase.auth.getUser()
+  if (error) return NextResponse.next({ request })
 
-  // Protected routes
-  const protectedRoutes = ['/dashboard', '/profile']
-  const teacherRoutes = ['/dashboard/teacher']
-  const adminRoutes = ['/dashboard/admin']
-
-  const isProtected = protectedRoutes.some(r => request.nextUrl.pathname.startsWith(r))
+  // Get user role from profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id ?? '')
+    .single()
+    .then(({ data, error }) => ({ data, error }))
   
-  if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  const role = profile?.role as 'student' | 'teacher' | 'admin' | null
+
+  // Protected routes by role
+  const isStudent = role === 'student'
+  const isTeacher = role === 'teacher' 
+  const isAdmin = role === 'admin'
+
+  // Route protection
+  const pathname = request.nextUrl.pathname
+
+  // Any login required
+  if (pathname.startsWith('/dashboard') || pathname === '/profile') {
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth/login', request.url))
+    }
   }
 
-  if (user && (request.nextUrl.pathname === '/auth/login' || request.nextUrl.pathname === '/auth/register')) {
+  // Role-specific
+  if (pathname.startsWith('/dashboard/teacher') && !isTeacher && !isAdmin) {
     return NextResponse.redirect(new URL('/dashboard/student', request.url))
+  }
+  
+  if (pathname.startsWith('/dashboard/admin') && !isAdmin) {
+    return NextResponse.redirect(new URL('/dashboard/student', request.url))
+  }
+
+  // Auth pages redirect to dashboard
+  if (user && ['/auth/login', '/auth/register'].includes(pathname)) {
+    const target = isAdmin ? '/dashboard/admin' : 
+                  isTeacher ? '/dashboard/teacher' : '/dashboard/student'
+    return NextResponse.redirect(new URL(target, request.url))
   }
 
   return supabaseResponse

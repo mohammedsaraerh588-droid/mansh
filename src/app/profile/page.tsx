@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/legacy/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -62,8 +63,8 @@ export default function ProfilePage() {
           {/* Avatar Section */}
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-16 md:-mt-20 mb-10 text-center md:text-right">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-8 border-white bg-navy shadow-2xl flex items-center justify-center text-4xl font-black text-white relative group">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+{profile?.avatar_url ? (
+                <Image src={profile.avatar_url} alt="Profile avatar" width={160} height={160} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                    <span className="text-mint/40 italic font-serif opacity-0 group-hover:opacity-100 transition-opacity absolute top-4">Dr.</span>

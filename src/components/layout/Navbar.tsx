@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/legacy/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -117,8 +118,8 @@ export default function Navbar() {
               </Link>
               <Link href="/profile" className="relative group">
                 <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-mint p-0.5 shadow-lg group-hover:scale-105 transition-transform">
-                  {profile?.avatar_url
-                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-lg"/>
+{profile?.avatar_url
+                    ? <Image src={profile.avatar_url} alt="Avatar" width={40} height={40} className="w-full h-full object-cover rounded-lg"/>
                     : <div className="w-full h-full bg-navy flex items-center justify-center font-black text-white text-sm rounded-lg">
                         {profile?.full_name?.[0] ?? 'د'}
                       </div>}

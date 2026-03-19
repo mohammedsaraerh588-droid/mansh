@@ -1,3 +1,4 @@
+import Image from 'next/legacy/image'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatPrice, formatDuration, getLevelLabel } from '@/lib/utils'
@@ -97,7 +98,7 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
                 <div className="inline-flex items-center gap-4 p-2 pl-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
                    <div className="w-12 h-12 rounded-xl bg-mint/20 overflow-hidden ring-4 ring-white/5">
                       {course.teacher.avatar_url ? (
-                        <img src={course.teacher.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <Image src={course.teacher.avatar_url} alt={course.teacher.full_name} width={48} height={48} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center font-black text-white">{course.teacher.full_name[0]}</div>
                       )}
@@ -226,7 +227,7 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
               <div className="card overflow-hidden border-0 shadow-[0_20px_50px_rgba(0,18,51,0.15)] bg-white ring-1 ring-black/5">
                 <div className="relative aspect-video group cursor-pointer overflow-hidden bg-navy">
                   {course.thumbnail_url ? (
-                    <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" />
+                    <Image src={course.thumbnail_url} alt={course.title} width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" priority sizes="(max-width: 768px) 100vw, 800px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-navy">
                       <Video size={48} className="text-mint/20" />
