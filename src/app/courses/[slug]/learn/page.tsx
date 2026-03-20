@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { VideoPlayer } from '@/components/ui/VideoPlayer'
 import QuizComponent from '@/components/ui/QuizComponent'
-import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList } from 'lucide-react'
+import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList, Award } from 'lucide-react'
 
 export default function CourseLearnPage() {
   const { slug }   = useParams()
@@ -17,7 +17,7 @@ export default function CourseLearnPage() {
   const [progress,     setProgress]     = useState<any[]>([])
   const [loading,      setLoading]      = useState(true)
   const [sidebar,      setSidebar]      = useState(true)
-  const [showQuiz,     setShowQuiz]     = useState(false)
+  const [certReady, setCertReady] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -59,6 +59,15 @@ export default function CourseLearnPage() {
     const p2 = totalLessons>0 ? Math.round((newDone/totalLessons)*100) : 0
     await supabase.from('enrollments').update({ progress_percentage:p2 })
       .eq('student_id',session.user.id).eq('course_id',course.id)
+    // 🏆 عند إكمال 100% — توليد الشهادة تلقائياً
+    if (p2 >= 100) {
+      setCertReady(true)
+      fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: course.id }),
+      }).catch(() => {})
+    }
   }
 
   const nextLesson = () => {
@@ -179,6 +188,29 @@ export default function CourseLearnPage() {
           </div>
         )}
       </div>
+
+      {/* 🏆 Certificate Popup — يظهر تلقائياً عند 100% */}
+      {certReady && (
+        <div style={{position:'fixed',inset:0,zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.65)',backdropFilter:'blur(6px)'}}>
+          <div style={{background:'var(--surface)',borderRadius:20,padding:'40px 48px',textAlign:'center',maxWidth:460,width:'90%',boxShadow:'var(--sh4)',border:'1px solid var(--brd)'}}>
+            <div style={{width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#635BFF,#0EA5E9)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:'0 8px 32px rgba(99,91,255,.4)'}}>
+              <Award size={32} style={{color:'#fff'}}/>
+            </div>
+            <h2 style={{fontSize:24,fontWeight:900,color:'var(--tx1)',marginBottom:8,letterSpacing:'-.02em'}}>🎉 مبروك! أتممت الدورة</h2>
+            <p style={{fontSize:15,color:'var(--tx3)',marginBottom:24,lineHeight:1.7}}>
+              لقد أتممت الدورة بنجاح! تم إصدار شهادتك تلقائياً ويمكنك تحميلها الآن.
+            </p>
+            <div style={{display:'flex',gap:12,justifyContent:'center'}}>
+              <Link href="/dashboard/student/certificates" className="btn btn-primary btn-lg" style={{textDecoration:'none'}}>
+                <Award size={16}/>عرض الشهادة
+              </Link>
+              <button onClick={()=>setCertReady(false)} className="btn btn-outline btn-lg">
+                متابعة التعلم
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quiz Modal */}
       {showQuiz && activeLesson && (
