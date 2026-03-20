@@ -1,0 +1,10 @@
+[00:00:01.530] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.843] Server  LOG     ✓ Ready in 1465ms
+[00:00:05.667] Server  WARN    ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:00:05.700] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:08.914] Server  ERROR   ⨯ "The requested resource isn't a valid image for" "/images/medical/student-learning.jpg" "received" null
+[00:13:03.400] Server  LOG     ✓ Compiled in 513ms
+[00:18:04.316] Server  LOG     ✓ Compiled in 1886ms
+[00:20:24.638] Server  LOG     ✓ Compiled in 121ms
+[00:25:15.271] Server  LOG     ✓ Compiled in 23ms
