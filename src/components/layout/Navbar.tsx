@@ -1,11 +1,9 @@
 'use client'
-import Image from 'next/legacy/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useTheme } from '@/components/ThemeProvider'
-import { cn } from '@/lib/utils'
 import { Home, BookOpen, LayoutDashboard, LogOut, Menu, X, Sun, Moon, Stethoscope } from 'lucide-react'
 
 export default function Navbar() {
@@ -13,12 +11,10 @@ export default function Navbar() {
   const [open,     setOpen]     = useState(false)
   const [user,     setUser]     = useState<any>(null)
   const [profile,  setProfile]  = useState<any>(null)
-  const pathname  = usePathname()
-  const supabase  = createSupabaseBrowserClient()
+  const pathname = usePathname()
+  const supabase = createSupabaseBrowserClient()
   const { theme, toggle } = useTheme()
-  const dark    = theme === 'dark'
-  const isHero  = pathname === '/'
-  const solid   = scrolled || !isHero
+  const dark = theme === 'dark'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,166 +36,121 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const dashLink = !profile ? '/dashboard/student'
-    : profile.role==='admin'   ? '/dashboard/admin'
-    : profile.role==='teacher' ? '/dashboard/teacher'
-    : '/dashboard/student'
-
-  const links = [
-    { label:'الرئيسية',     href:'/',        I:Home },
-    { label:'الدورات الطبية', href:'/courses', I:BookOpen },
-  ]
+  const isHero   = pathname === '/'
+  const solid    = scrolled || !isHero
+  const dashLink = !profile ? '/dashboard/student' : profile.role==='admin' ? '/dashboard/admin' : profile.role==='teacher' ? '/dashboard/teacher' : '/dashboard/student'
+  const links    = [{ label:'الرئيسية', href:'/', I:Home }, { label:'الدورات الطبية', href:'/courses', I:BookOpen }]
+  const lc       = (a:boolean) => solid ? (a?'var(--teal)':'var(--txt2)') : (a?'#fff':'rgba(255,255,255,.65)')
 
   return (
     <>
-    <nav className={cn(
-      'fixed top-0 w-full z-[100] transition-all duration-500 ease-in-out',
-      solid 
-        ? 'py-3 bg-nav-bg backdrop-blur-xl border-b border-nav-border shadow-lg shadow-navy/5' 
-        : 'py-6 bg-transparent'
-    )}>
-      <div className="wrap flex items-center justify-between gap-8">
-
-        {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className={cn(
-            'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg',
-            solid ? 'bg-navy text-white shadow-navy/20' : 'bg-white/10 backdrop-blur-md border border-white/20 text-white'
-          )}>
-            <Stethoscope size={20}/>
+    <nav style={{position:'fixed',top:0,width:'100%',zIndex:100,background:solid?'var(--nav-bg)':'transparent',backdropFilter:solid?'blur(18px) saturate(180%)':'none',borderBottom:solid?'1px solid var(--nav-border)':'none',boxShadow:solid?'var(--s1)':'none',transition:'all .32s ease',padding:solid?'10px 0':'17px 0'}}>
+      <div className="wrap" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Logo */}
+        <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none'}}>
+          <div style={{width:36,height:36,borderRadius:10,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',boxShadow:'var(--st)',transition:'transform .22s'}}
+            onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')}
+            onMouseLeave={e=>(e.currentTarget.style.transform='none')}>
+            <Stethoscope size={18}/>
           </div>
-          <div className="hidden sm:block leading-tight">
-            <div className={cn('text-lg font-black tracking-tight transition-colors duration-300', solid ? 'text-navy' : 'text-white')}>
-              منصة <span className={cn('italic font-serif transition-colors', solid ? 'text-navy3' : 'text-mint')}>تعلّم</span>
-            </div>
-            <div className={cn('text-[9px] font-bold tracking-[0.2em] uppercase opacity-50', solid ? 'text-navy' : 'text-white')}>
-              Medical Excellence
-            </div>
+          <div style={{lineHeight:1.1}}>
+            <span style={{fontSize:15,fontWeight:900,color:solid?'var(--txt1)':'#fff',transition:'color .3s',display:'block'}}>منصة تعلّم</span>
+            <span style={{fontSize:10,fontWeight:600,color:'var(--teal)',letterSpacing:'.06em',textTransform:'uppercase'}}>Medical Education</span>
           </div>
         </Link>
 
-        {/* ── Desktop Nav ── */}
-        <div className="hidden md:flex items-center gap-1 flex-1 justify-center bg-navy/5 p-1 rounded-2xl border border-navy/5 backdrop-blur-sm"
-             style={{ background: !solid ? 'rgba(255,255,255,0.05)' : undefined }}>
-          {links.map(({label,href,I})=>{
-            const active = pathname===href
-            return (
-              <Link key={href} href={href} className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300',
-                active 
-                  ? (solid ? 'bg-white text-navy shadow-sm' : 'bg-white/10 text-mint shadow-inner')
-                  : (solid ? 'text-navy/60 hover:text-navy hover:bg-white/50' : 'text-white/60 hover:text-white hover:bg-white/10')
-              )}>
-                <I size={14} className={cn(active && !solid && 'text-mint')} />
-                {label}
-              </Link>
-            )
-          })}
+        {/* Desktop links */}
+        <div style={{display:'flex',alignItems:'center',gap:2}} className="hidden md:flex">
+          {links.map(({label,href,I})=>(
+            <Link key={href} href={href} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:9,textDecoration:'none',fontSize:14,fontWeight:600,transition:'all .16s',color:lc(pathname===href),background:pathname===href&&solid?'var(--teal-soft)':'transparent'}}>
+              <I size={14}/>{label}
+            </Link>
+          ))}
         </div>
 
-        {/* ── Actions ── */}
-        <div className="hidden md:flex items-center gap-4">
-          <button onClick={toggle} className={cn(
-            'p-2.5 rounded-xl border transition-all duration-300 hover:scale-105',
-            solid 
-              ? 'bg-white border-border text-navy shadow-sm' 
-              : 'bg-white/5 border-white/10 text-white/80'
-          )}>
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
+        {/* Actions */}
+        <div style={{display:'flex',alignItems:'center',gap:8}} className="hidden md:flex">
+          <button onClick={toggle}
+            title={dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
+            style={{
+              display:'flex', alignItems:'center', gap:7,
+              padding:'7px 13px', borderRadius:9, cursor:'pointer',
+              border:'1.5px solid var(--border2)',
+              background:'var(--bg2)',
+              color:'var(--txt1)',
+              fontSize:13, fontWeight:700, transition:'all .2s',
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--teal)';(e.currentTarget as HTMLElement).style.color='var(--teal)';(e.currentTarget as HTMLElement).style.background='var(--teal-soft)'}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--border2)';(e.currentTarget as HTMLElement).style.color='var(--txt1)';(e.currentTarget as HTMLElement).style.background='var(--bg2)'}}>
+            {dark ? <Sun size={15}/> : <Moon size={15}/>}
+            {dark ? 'فاتح' : 'مظلم'}
           </button>
-
           {user ? (
-            <div className="flex items-center gap-3">
-              <Link href={dashLink} className={cn(
-                'hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
-                solid ? 'text-navy hover:bg-navy/5' : 'text-white/80 hover:bg-white/10'
-              )}>
-                <LayoutDashboard size={14}/> لوحة التحكم
+            <>
+              <Link href={dashLink} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:9,textDecoration:'none',fontSize:13.5,fontWeight:700,color:lc(false),transition:'all .16s'}}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='var(--teal-soft)';(e.currentTarget as HTMLElement).style.color='var(--teal)'}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent';(e.currentTarget as HTMLElement).style.color=lc(false)}}>
+                <LayoutDashboard size={14}/>لوحة التحكم
               </Link>
-              <Link href="/profile" className="relative group">
-                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-mint p-0.5 shadow-lg group-hover:scale-105 transition-transform">
-{profile?.avatar_url
-                    ? <Image src={profile.avatar_url} alt="Avatar" width={40} height={40} className="w-full h-full object-cover rounded-lg"/>
-                    : <div className="w-full h-full bg-navy flex items-center justify-center font-black text-white text-sm rounded-lg">
-                        {profile?.full_name?.[0] ?? 'د'}
-                      </div>}
+              <Link href="/profile">
+                <div style={{width:34,height:34,borderRadius:'50%',overflow:'hidden',border:'2px solid var(--teal)',cursor:'pointer',transition:'transform .2s'}}
+                  onMouseEnter={e=>(e.currentTarget.style.transform='scale(1.08)')}
+                  onMouseLeave={e=>(e.currentTarget.style.transform='none')}>
+                  {profile?.avatar_url ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/> :
+                    <div style={{width:'100%',height:'100%',background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:13,color:'#fff'}}>{profile?.full_name?.[0]??'د'}</div>}
                 </div>
               </Link>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center gap-3">
-              <Link href="/auth/login" className={cn(
-                'px-4 py-2 text-xs font-bold transition-colors',
-                solid ? 'text-navy/60 hover:text-navy' : 'text-white/60 hover:text-white'
-              )}>
-                تسجيل الدخول
-              </Link>
-              <Link href="/auth/register" className={cn(
-                'btn btn-md shadow-lg',
-                solid ? 'btn-primary' : 'btn-white !text-navy'
-              )}>
-                ابدأ رحلتك مجاناً
-              </Link>
-            </div>
+            <>
+              <Link href="/auth/login" style={{padding:'7px 14px',borderRadius:9,textDecoration:'none',fontSize:13.5,fontWeight:700,color:lc(false),transition:'color .2s'}}
+                onMouseEnter={e=>(e.currentTarget.style.color='var(--teal)')}
+                onMouseLeave={e=>(e.currentTarget.style.color=lc(false))}>تسجيل الدخول</Link>
+              <Link href="/auth/register" className="btn btn-primary btn-md" style={{textDecoration:'none'}}>ابدأ مجاناً</Link>
+            </>
           )}
         </div>
 
-        {/* ── Mobile Trigger ── */}
-        <div className="flex md:hidden items-center gap-3">
-          <button onClick={toggle} className={cn(
-            'p-2 rounded-lg border',
-            solid ? 'bg-white border-border text-navy' : 'bg-white/5 border-white/10 text-white'
-          )}>
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button onClick={() => setOpen(!open)} className={cn(
-            'p-1 transition-colors',
-            solid ? 'text-navy' : 'text-white'
-          )}>
-            {open ? <X size={28} /> : <Menu size={28} />}
+        {/* Mobile */}
+        <div style={{display:'flex',alignItems:'center',gap:8}} className="md:hidden">
+          <button onClick={()=>setOpen(!open)} style={{background:'none',border:'none',cursor:'pointer',color:solid?'var(--txt1)':'#fff',padding:4,display:'flex'}}>
+            {open?<X size={22}/>:<Menu size={22}/>}
           </button>
         </div>
       </div>
     </nav>
 
-    {/* ── Mobile Drawer ── */}
     {open && (
-      <div className="fixed inset-0 z-[99] bg-navy/20 backdrop-blur-md animate-in fade-in transition-all" onClick={()=>setOpen(false)}>
-        <div className="absolute top-[80px] left-4 right-4 bg-white dark:bg-navy rounded-3xl p-6 shadow-2xl border border-navy/5 animate-in slide-in-from-top-4 duration-300" 
-             onClick={e=>e.stopPropagation()}>
-          <div className="flex flex-col gap-2">
-            {links.map(({label,href,I})=>(
-              <Link key={href} href={href} 
-                className={cn(
-                  'flex items-center gap-4 p-4 rounded-2xl text-sm font-bold transition-all',
-                  pathname===href ? 'bg-navy/5 text-navy dark:bg-white/5 dark:text-mint' : 'text-txt2 hover:bg-navy/5'
-                )}
-                onClick={()=>setOpen(false)}>
-                <I size={18}/>{label}
-              </Link>
-            ))}
-            <div className="h-px bg-border my-2" />
-            {user ? (
-              <>
-                <Link href={dashLink} className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-txt2 hover:bg-navy/5" onClick={()=>setOpen(false)}>
-                  <LayoutDashboard size={18}/> لوحة التحكم
-                </Link>
-                <button className="flex items-center gap-4 p-4 rounded-2xl text-sm font-bold text-err hover:bg-err/5 w-full text-right"
-                  onClick={async()=>{await supabase.auth.signOut();setOpen(false);window.location.href='/'}}>
-                  <LogOut size={18}/> تسجيل الخروج
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-3 mt-2">
-                <Link href="/auth/login" className="btn btn-ghost btn-lg w-full" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
-                <Link href="/auth/register" className="btn btn-primary btn-lg w-full shadow-xl" onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
-              </div>
-            )}
-          </div>
+      <div style={{position:'fixed',inset:0,zIndex:99}} onClick={()=>setOpen(false)}>
+        <div style={{position:'absolute',top:54,left:0,right:0,background:'var(--nav-bg)',backdropFilter:'blur(18px)',borderBottom:'1px solid var(--nav-border)',padding:'10px 14px 16px',display:'flex',flexDirection:'column',gap:3,boxShadow:'var(--s3)'}}
+          onClick={e=>e.stopPropagation()}>
+          {links.map(({label,href,I})=>(
+            <Link key={href} href={href} className={`nav-link${pathname===href?' active':''}`} onClick={()=>setOpen(false)}>
+              <I size={15}/>{label}
+            </Link>
+          ))}
+          <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
+          <button onClick={toggle} className="nav-link" style={{background:'none',border:'none',width:'100%',textAlign:'right',fontFamily:'inherit'}}>
+            {dark ? <Sun size={15}/> : <Moon size={15}/>}
+            {dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
+          </button>
+          <div style={{height:1,background:'var(--border)',margin:'6px 4px'}}/>
+          {user ? (
+            <>
+              <Link href={dashLink} className="nav-link" onClick={()=>setOpen(false)}><LayoutDashboard size={15}/>لوحة التحكم</Link>
+              <button className="nav-link danger" onClick={async()=>{await supabase.auth.signOut();setOpen(false);window.location.href='/'}}>
+                <LogOut size={15}/>تسجيل الخروج
+              </button>
+            </>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:4}}>
+              <Link href="/auth/login" className="nav-link" onClick={()=>setOpen(false)}>تسجيل الدخول</Link>
+              <Link href="/auth/register" className="btn btn-primary btn-md btn-full" style={{textDecoration:'none'}} onClick={()=>setOpen(false)}>ابدأ مجاناً</Link>
+            </div>
+          )}
         </div>
       </div>
     )}
     </>
   )
 }
-

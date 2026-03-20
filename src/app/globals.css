@@ -295,3 +295,16 @@ button, input, select, textarea { font-family: inherit }
 ::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 99px }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand) }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px }
+
+/* ── Extra aliases for old pages ────────── */
+:root {
+  --navy3:     #4F46E5;
+  --mint:      var(--brand-light);
+  --mint2:     var(--brand-mid);
+  --mint-soft: var(--brand-light);
+  --gold-soft: var(--brand-light);
+  --blue-soft: var(--brand-light);
+  --blue3:     var(--brand-2);
+  --warn:      #D97706;
+  --ok:        #16A34A;
+}

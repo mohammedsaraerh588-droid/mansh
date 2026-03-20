@@ -1,169 +1,180 @@
 'use client'
 import Link from 'next/link'
-import { BookOpen, Star, Users, Award, CheckCircle, ArrowLeft,
-         Stethoscope, GraduationCap, ShieldCheck, Clock,
-         Activity, Brain, PlayCircle, FlaskConical } from 'lucide-react'
+import { BookOpen, CheckCircle, ArrowLeft, Stethoscope, GraduationCap,
+         ShieldCheck, Activity, Brain, PlayCircle, Users } from 'lucide-react'
 
 const features = [
-  { I:Stethoscope,  t:'محتوى طبي متخصص',     d:'دورات في مختلف التخصصات الطبية مقدَّمة بأسلوب علمي واضح.' },
-  { I:ShieldCheck,  t:'شهادات إتمام رقمية',    d:'احصل على شهادة إتمام بعد إنهاء كل دورة بنجاح.' },
-  { I:Brain,        t:'اختبارات تفاعلية',       d:'اختبر معلوماتك بعد كل وحدة مع تغذية راجعة فورية.' },
-  { I:Activity,     t:'حالات سريرية',           d:'تعلّم من خلال حالات واقعية تربط النظرية بالتطبيق.' },
-  { I:BookOpen,     t:'محتوى نصي وفيديو',       d:'دروس بشروحات نصية ومقاطع فيديو لتناسب أسلوبك.' },
-  { I:Users,        t:'مجتمع طلابي',            d:'تواصل مع زملائك وتبادل المعرفة في بيئة تعاونية.' },
+  { I:Stethoscope, t:'محتوى طبي متخصص',      d:'دورات في مختلف التخصصات الطبية مقدَّمة بأسلوب علمي واضح وسهل الفهم.' },
+  { I:ShieldCheck,  t:'شهادات إتمام',          d:'احصل على شهادة إتمام رقمية عند إنهاء كل دورة بنجاح.' },
+  { I:Brain,        t:'اختبارات تفاعلية',       d:'اختبر معلوماتك بعد كل وحدة عبر أسئلة تفاعلية مع تغذية راجعة فورية.' },
+  { I:Activity,     t:'حالات سريرية',          d:'تعلّم من خلال حالات سريرية واقعية تساعدك على ربط النظرية بالتطبيق.' },
+  { I:BookOpen,     t:'محتوى نصي وفيديو',      d:'دروس مدعومة بشروحات نصية ومقاطع فيديو لتناسب أسلوب تعلّمك.' },
+  { I:Users,        t:'مجتمع طلابي',           d:'تواصل مع زملائك وتبادل المعرفة في بيئة تعليمية تعاونية.' },
 ]
 
 const steps = [
-  { n:1, t:'أنشئ حسابك',       d:'سجّل مجاناً في ثوانٍ وابدأ باستكشاف الدورات.' },
-  { n:2, t:'اختر دورتك',       d:'تصفّح الدورات المتاحة في مختلف التخصصات.' },
-  { n:3, t:'احصل على شهادتك',  d:'أنهِ الدورة واحصل على شهادة إتمام رقمية.' },
+  { n:1, t:'أنشئ حسابك',      d:'سجّل مجاناً في ثوانٍ وابدأ باستكشاف الدورات المتاحة.' },
+  { n:2, t:'اختر دورتك',      d:'تصفّح الدورات المتاحة في مختلف التخصصات وابدأ التعلم فوراً.' },
+  { n:3, t:'احصل على شهادتك', d:'أنهِ الدورة بنجاح واحصل على شهادة إتمام رقمية.' },
 ]
 
 export default function Home() {
   return (
-    <div className="bg-bg min-h-screen overflow-x-hidden">
-      
-      {/* ── HERO SECTION ── */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden border-b border-border/50">
-        {/* Background Accents */}
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-mint/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[5%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-[100px] pointer-events-none" />
-        
-        <div className="wrap relative z-10 text-center">
-          <div className="fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-navy/5 border border-navy/10 mb-8 backdrop-blur-sm">
-            <Stethoscope size={14} className="text-navy" />
-            <span className="text-[11px] font-bold text-navy tracking-wider uppercase">المنصة الرائدة للتعليم الطبي العربي</span>
+    <div style={{background:'var(--bg)'}}>
+
+    {/* ══ HERO ══════════════════════════════ */}
+    <section className="hero" style={{minHeight:'88vh',display:'flex',alignItems:'center',paddingTop:76}}>
+      <div style={{position:'absolute',width:500,height:500,borderRadius:'50%',background:'radial-gradient(circle,rgba(13,148,136,.16),transparent 70%)',top:'-8%',right:'-6%',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',width:380,height:380,borderRadius:'50%',background:'radial-gradient(circle,rgba(20,184,166,.08),transparent 70%)',bottom:'-5%',left:'-4%',pointerEvents:'none'}}/>
+
+      <div className="wrap" style={{position:'relative',zIndex:1,width:'100%',padding:'80px 20px'}}>
+        <div style={{maxWidth:680,margin:'0 auto',textAlign:'center'}}>
+
+          <div className="fade-up" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',borderRadius:99,background:'rgba(20,184,166,.12)',border:'1px solid rgba(20,184,166,.28)',marginBottom:24}}>
+            <Stethoscope size={13} style={{color:'#5eead4'}}/>
+            <span style={{fontSize:12,fontWeight:700,color:'#99f6e4',letterSpacing:'.04em'}}>منصة التعليم الطبي العربي</span>
           </div>
 
-          <h1 className="fade-up block text-4xl md:text-7xl font-black text-navy leading-[1.1] mb-6 tracking-tight" style={{ animationDelay: '0.1s' }}>
-            تعلّم الطب بكافة أبعاده<br />
-            <span className="text-navy3 italic">بأسلوب عصريٍّ ومبتكر</span>
+          <h1 className="fade-up" style={{fontSize:'clamp(34px,5vw,64px)',fontWeight:900,color:'#fff',lineHeight:1.07,marginBottom:18,letterSpacing:'-.02em',animationDelay:'.08s'}}>
+            تعلّم الطب.<br/>
+            <span style={{color:'#2dd4bf'}}>بأسلوب مختلف.</span>
           </h1>
 
-          <p className="fade-up text-lg md:text-xl text-txt2 max-w-2xl mx-auto mb-10 leading-relaxed font-medium" style={{ animationDelay: '0.2s' }}>
-            نقدم لك تجربة تعليمية طبية متكاملة تجمع بين الدقة العلمية وأحدث تقنيات التعليم التفاعلي، تحت إشراف نخبة من الأخصائيين.
+          <p className="fade-up" style={{fontSize:17,color:'rgba(255,255,255,.58)',maxWidth:500,margin:'0 auto 32px',lineHeight:1.85,animationDelay:'.16s'}}>
+            منصة تعليمية طبية متخصصة تقدّم دورات في مختلف التخصصات الطبية لطلاب الطب والمتخصصين الصحيين — بمحتوى علمي دقيق وأسلوب واضح.
           </p>
 
-          <div className="fade-up flex flex-wrap justify-center gap-4 mb-16" style={{ animationDelay: '0.3s' }}>
-            <Link href="/courses" className="btn btn-primary btn-xl group">
-              استكشف المسارات <PlayCircle size={18} className="group-hover:scale-110 transition-transform" />
+          <div className="fade-up" style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap',animationDelay:'.22s'}}>
+            <Link href="/courses" className="btn btn-primary btn-xl" style={{textDecoration:'none'}}>
+              <PlayCircle size={17}/>استعرض الدورات
             </Link>
-            <Link href="/auth/register" className="btn btn-white btn-xl">
-              ابدأ رحلتك مجاناً <ArrowLeft size={18} />
+            <Link href="/auth/register" className="btn btn-lg" style={{textDecoration:'none',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',border:'1px solid rgba(255,255,255,.18)'}}>
+              سجّل مجاناً<ArrowLeft size={15}/>
             </Link>
           </div>
 
-          <div className="fade-up flex flex-wrap justify-center gap-8 md:gap-12 opacity-60" style={{ animationDelay: '0.4s' }}>
-            {['شروحات وافية', 'شهادات معتمدة', 'تحديثات دورية'].map((t, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm font-bold text-navy">
-                <CheckCircle size={16} className="text-mint" />
-                <span>{t}</span>
-              </div>
+          <div className="fade-up" style={{display:'flex',gap:18,marginTop:28,justifyContent:'center',flexWrap:'wrap',animationDelay:'.28s'}}>
+            {['تسجيل مجاني','شهادات إتمام رقمية','محتوى علمي محدَّث'].map((t,i)=>(
+              <span key={i} style={{display:'flex',alignItems:'center',gap:5,fontSize:13,color:'rgba(255,255,255,.38)'}}>
+                <CheckCircle size={13} style={{color:'#2dd4bf'}}/>{t}
+              </span>
             ))}
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      {/* ── FEATURES SECTION ── */}
-      <section className="py-24 md:py-32 bg-white">
-        <div className="wrap">
-          <div className="text-center mb-16 md:mb-20">
-            <span className="eyebrow"><FlaskConical size={12} /> لماذا منصة تعلّم؟</span>
-            <h2 className="text-3xl md:text-5xl font-black text-navy mt-4 mb-6">تجربة تعليمية بلا حدود</h2>
-            <p className="text-txt2 max-w-xl mx-auto text-lg leading-relaxed">
-              سواء كنت طالباً أو ممارساً صحياً، نوفر لك الأدوات اللازمة للتميز في مسيرتك المهنية.
+    {/* ══ FEATURES ══════════════════════════ */}
+    <section style={{padding:'96px 0',background:'var(--bg)'}}>
+      <div className="wrap">
+        <div style={{textAlign:'center',marginBottom:58}}>
+          <div className="eyebrow">⭐ ما تجده في المنصة</div>
+          <h2 className="sec-title">تعليم طبي بمنهج واضح</h2>
+          <p className="sec-sub">صمّمنا المنصة لتمنح طالب الطب والمتخصص الصحي تجربة تعليمية متكاملة وفعّالة.</p>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(310px,1fr))',gap:18}}>
+          {features.map(({I,t,d},i)=>(
+            <div key={i} className="card card-hover" style={{padding:'26px 22px',display:'flex',gap:16,alignItems:'flex-start'}}>
+              <div style={{width:46,height:46,borderRadius:12,background:'var(--teal-soft)',border:'1px solid rgba(13,148,136,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <I size={20} style={{color:'var(--teal)'}}/>
+              </div>
+              <div>
+                <h3 style={{fontWeight:800,fontSize:15,marginBottom:6,color:'var(--txt1)'}}>{t}</h3>
+                <p style={{fontSize:13.5,color:'var(--txt2)',lineHeight:1.7}}>{d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ══ STEPS ══════════════════════════════ */}
+    <section style={{padding:'96px 0',background:'var(--surface)',borderTop:'1px solid var(--border)'}}>
+      <div className="wrap">
+        <div style={{textAlign:'center',marginBottom:58}}>
+          <div className="eyebrow">🎯 ابدأ رحلتك</div>
+          <h2 className="sec-title">ثلاث خطوات فقط</h2>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:40,maxWidth:860,margin:'0 auto'}}>
+          {steps.map(({n,t,d},i)=>(
+            <div key={i} style={{textAlign:'center'}}>
+              <div style={{width:60,height:60,borderRadius:16,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',fontSize:22,fontWeight:900,color:'#fff',boxShadow:'var(--st)'}}>
+                {String(n).padStart(2,'0')}
+              </div>
+              <h3 style={{fontWeight:800,fontSize:16,marginBottom:8,color:'var(--txt1)'}}>{t}</h3>
+              <p style={{fontSize:14,color:'var(--txt2)',lineHeight:1.7}}>{d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ══ CTA ════════════════════════════════ */}
+    <section className="hero" style={{padding:'96px 0',position:'relative'}}>
+      <div style={{position:'absolute',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle,rgba(13,148,136,.16),transparent 70%)',top:'10%',right:'12%',pointerEvents:'none'}}/>
+      <div className="wrap-sm" style={{textAlign:'center',position:'relative',zIndex:1}}>
+        <div className="eyebrow" style={{background:'rgba(20,184,166,.15)',borderColor:'rgba(20,184,166,.3)',color:'#99f6e4'}}>🩺 انضم إلى المنصة</div>
+        <h2 style={{fontSize:'clamp(26px,4.5vw,50px)',fontWeight:900,color:'#fff',lineHeight:1.1,marginBottom:14}}>
+          ابدأ التعلم الطبي<br/>الآن مجاناً
+        </h2>
+        <p style={{color:'rgba(255,255,255,.5)',fontSize:16,margin:'0 auto 34px',lineHeight:1.85}}>
+          سجّل حسابك مجاناً واستكشف الدورات الطبية المتاحة — بدون أي التزامات.
+        </p>
+        <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap',marginBottom:26}}>
+          <Link href="/auth/register" className="btn btn-white btn-xl" style={{textDecoration:'none'}}>
+            <GraduationCap size={17}/>سجّل مجاناً الآن
+          </Link>
+          <Link href="/courses" className="btn btn-lg" style={{textDecoration:'none',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.78)',border:'1px solid rgba(255,255,255,.18)'}}>
+            استعرض الدورات<ArrowLeft size={15}/>
+          </Link>
+        </div>
+        <div style={{display:'flex',gap:22,justifyContent:'center',flexWrap:'wrap'}}>
+          {['تسجيل مجاني بالكامل','شهادات إتمام رقمية','محتوى علمي موثوق'].map((t,i)=>(
+            <span key={i} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'rgba(255,255,255,.36)'}}>
+              <CheckCircle size={13} style={{color:'#2dd4bf'}}/>{t}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ══ FOOTER ═════════════════════════════ */}
+    <footer style={{background:'#021a1e',padding:'48px 20px 28px',borderTop:'1px solid rgba(255,255,255,.06)'}}>
+      <div className="wrap">
+        <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:40,marginBottom:40}}>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+              <div style={{width:34,height:34,borderRadius:10,background:'var(--teal)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>
+                <Stethoscope size={18}/>
+              </div>
+              <span style={{fontWeight:900,fontSize:17,color:'#fff'}}>منصة تعلّم <span style={{color:'#2dd4bf'}}>الطبية</span></span>
+            </div>
+            <p style={{fontSize:13.5,color:'rgba(255,255,255,.32)',lineHeight:1.75,maxWidth:280}}>
+              منصة تعليمية طبية متخصصة لطلاب الطب والمتخصصين الصحيين — محتوى علمي واضح ودقيق.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {features.map(({ I, t, d }, i) => (
-              <div key={i} className="card card-hover p-8 group">
-                <div className="w-14 h-14 rounded-2xl bg-bg2 flex items-center justify-center mb-6 group-hover:bg-navy transition-colors duration-300">
-                  <I size={24} className="text-navy group-hover:text-white transition-colors duration-300" />
-                </div>
-                <h3 className="text-xl font-bold text-navy mb-3">{t}</h3>
-                <p className="text-txt2 leading-relaxed text-sm">{d}</p>
+          {[
+            { title:'المنصة',    links:[['/', 'الرئيسية'],['/courses','الدورات'],['/auth/register','سجّل مجاناً'],['/auth/login','تسجيل الدخول']] },
+            { title:'المعلومات', links:[['/terms','الشروط والأحكام'],['/privacy','سياسة الخصوصية'],['/contact','تواصل معنا']] },
+          ].map(({title,links},i)=>(
+            <div key={i}>
+              <h4 style={{fontWeight:700,fontSize:12,color:'rgba(255,255,255,.5)',marginBottom:14,letterSpacing:'.07em',textTransform:'uppercase'}}>{title}</h4>
+              <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                {links.map(([h,l])=>(
+                  <Link key={h} href={h} style={{fontSize:13.5,color:'rgba(255,255,255,.32)',textDecoration:'none',transition:'color .2s'}}
+                    onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,255,255,.75)')}
+                    onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.32)')}>{l}</Link>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </section>
-
-      {/* ── CTA / NEW ERA SECTION ── */}
-      <section className="relative py-24 md:py-32 bg-navy overflow-hidden">
-        {/* Abstract pattern */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none" 
-             style={{backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(100,255,218,0.3) 1px, transparent 0)', backgroundSize: '40px 40px'}} />
-        <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full bg-mint/5 blur-[150px] pointer-events-none" />
-        
-        <div className="wrap relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
-                <span className="text-[10px] font-bold text-mint tracking-[0.2em] uppercase">انضم لآلاف المبدعين</span>
-            </div>
-            <h2 className="text-3xl md:text-6xl font-black text-white mb-8 leading-tight">
-                هل أنت مستعد لنقل معرفتك<br /> الطبية إلى المستوى التالي؟
-            </h2>
-            <p className="text-txt1/60 text-lg md:text-xl max-w-2xl mx-auto mb-12" style={{color: 'rgba(204, 214, 246, 0.6)'}}>
-                ابدأ اليوم وكن جزءاً من أكبر مجتمع تعليمي طبي في العالم العربي. الرحلة تبدأ بضغطة زر.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6">
-                <Link href="/auth/register" className="btn btn-mint btn-xl">
-                    سجل الآن مجاناً <GraduationCap size={20} />
-                </Link>
-                <Link href="/courses" className="btn btn-outline btn-xl !border-white !text-white hover:!bg-white hover:!text-navy">
-                    تصفح جميع المسارات
-                </Link>
-            </div>
+        <div style={{borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+          <p style={{fontSize:12,color:'rgba(255,255,255,.2)'}}>© {new Date().getFullYear()} منصة تعلّم الطبية — جميع الحقوق محفوظة</p>
+          <p style={{fontSize:12,color:'rgba(255,255,255,.15)'}}>صُنع بـ ❤️ لخدمة الطب العربي</p>
         </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="bg-navy border-t border-white/5 pt-20 pb-10 overflow-hidden relative">
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-mint/5 blur-[100px] pointer-events-none" />
-        <div className="wrap">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div className="md:col-span-2">
-              <Link href="/" className="flex items-center gap-3 mb-8 group">
-                <div className="w-12 h-12 rounded-xl bg-mint flex items-center justify-center border border-white/10 shadow-lg transition-transform group-hover:scale-110">
-                  <Stethoscope size={22} className="text-navy" />
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-white tracking-tight">منصة <span className="text-mint italic font-serif">تعلّم</span></div>
-                  <div className="text-[10px] font-bold text-white/40 tracking-[0.3em] uppercase">The Medical Arena</div>
-                </div>
-              </Link>
-              <p className="text-txt1/40 leading-loose max-w-sm mb-8" style={{color: 'rgba(136, 146, 176, 0.7)'}}>
-                المرجع الأول لطلاب الطب والأطباء في الوطن العربي. نسعى لتقديم محتوى تعليمي رصين يواكب التطورات العلمية العالمية.
-              </p>
-            </div>
-
-            {[
-              { title: 'المنصة', links: [['/', 'الرئيسية'], ['/courses', 'الدورات'], ['/auth/register', 'سجّل مجاناً'], ['/auth/login', 'تسجيل الدخول']] },
-              { title: 'روابط هامة', links: [['/terms', 'الشروط والأحكام'], ['/privacy', 'سياسة الخصوصية'], ['/contact', 'تواصل معنا']] },
-            ].map(({ title, links }, i) => (
-              <div key={i}>
-                <h4 className="text-white font-bold mb-6 text-sm tracking-widest uppercase border-r-2 border-mint pr-4">{title}</h4>
-                <ul className="flex flex-direction-column gap-4">
-                  {links.map(([h, l]) => (
-                    <li key={h}>
-                      <Link href={h} className="text-txt1/40 hover:text-mint transition-colors duration-200 text-sm" style={{color: 'rgba(136, 146, 176, 0.7)'}}>{l}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-white/20 text-xs tracking-wide font-medium">© {new Date().getFullYear()} منصة تعلّم الطبية. جميع الحقوق محفوظة.</p>
-            <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-mint animate-pulse" />
-                <span className="text-white/20 text-[10px] font-bold uppercase tracking-[0.2em]">Designed for Excellence</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      </div>
+    </footer>
     </div>
   )
 }
-

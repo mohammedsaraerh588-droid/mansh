@@ -17,6 +17,7 @@ export default function CoursesPage() {
       const { data: cats } = await supabase.from('categories').select('*').order('name_ar')
       if (cats) setCategories(cats)
 
+      // نعرض كل الدورات المنشورة + المسودات حتى تظهر للطلاب
       const { data: crs, error } = await supabase
         .from('courses')
         .select('*, category:categories(id,name,name_ar), teacher:profiles(full_name)')
@@ -38,49 +39,45 @@ export default function CoursesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-bg pt-32 pb-20">
+    <div style={{minHeight:'100vh',background:'var(--bg)',paddingTop:32,paddingBottom:60}}>
       <div className="wrap">
 
-        {/* Header Section */}
-        <div className="relative mb-12 p-10 md:p-16 rounded-[2.5rem] bg-navy overflow-hidden shadow-2xl border border-white/5">
-          {/* Decorative Elements */}
-          <div className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] rounded-full bg-mint/5 blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-[-20%] left-[-10%] w-[350px] h-[350px] rounded-full bg-gold/5 blur-[80px] pointer-events-none" />
-          
-          <div className="relative z-10 text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm">
-                <Stethoscope size={14} className="text-mint" />
-                <span className="text-[10px] font-bold text-white/60 tracking-[0.2em] uppercase">المسارات التعليمية</span>
+        {/* Hero header */}
+        <div className="hero" style={{borderRadius:16,padding:'40px 32px',marginBottom:28,textAlign:'center',overflow:'hidden',position:'relative'}}>
+          <div style={{position:'absolute',width:300,height:300,borderRadius:'50%',background:'radial-gradient(circle,rgba(13,148,136,.2),transparent 70%)',top:'-20%',right:'-5%',pointerEvents:'none'}}/>
+          <div style={{position:'relative',zIndex:1}}>
+            <div className="eyebrow" style={{background:'rgba(20,184,166,.15)',borderColor:'rgba(20,184,166,.3)',color:'#99f6e4'}}>
+              <Stethoscope size={11}/>الدورات الطبية
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
-              استكشف آفاقك <span className="text-mint italic font-serif">الطبية</span>
+            <h1 style={{fontSize:'clamp(22px,3.5vw,38px)',fontWeight:900,color:'#fff',marginBottom:8,lineHeight:1.2}}>
+              استكشف الدورات المتاحة
             </h1>
-            <p className="text-white/40 text-lg mb-10 leading-relaxed font-medium">
-              اختر تخصصك وابدأ رحلتك التعليمية مع أفضل المحاضرين والخبراء في المجال الصحي.
+            <p style={{color:'rgba(255,255,255,.55)',marginBottom:28,fontSize:15}}>
+              دورات طبية متخصصة في مختلف التخصصات
             </p>
-
-            {/* Premium Search Bar */}
-            <div className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto">
-              <div className="relative flex-1 group">
-                <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-mint transition-colors" />
-                <input 
-                  type="text"
+            {/* Search + filter */}
+            <div style={{maxWidth:620,margin:'0 auto',display:'flex',gap:12,flexWrap:'wrap'}}>
+              <div style={{flex:1,minWidth:200,position:'relative'}}>
+                <span style={{position:'absolute',right:13,top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,.4)',display:'flex',pointerEvents:'none'}}>
+                  <Search size={15}/>
+                </span>
+                <input
+                  style={{width:'100%',padding:'11px 44px 11px 16px',borderRadius:10,border:'1.5px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'#fff',fontSize:14,outline:'none',fontFamily:'inherit'}}
                   placeholder="ابحث عن دورة..."
-                  className="w-full h-14 pr-12 pl-6 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-mint/50 focus:bg-white/10 transition-all font-bold text-sm"
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
+                  onChange={e=>setSearch(e.target.value)}/>
               </div>
-              <div className="relative w-full md:w-56 group">
-                <SlidersHorizontal size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-mint transition-colors" />
-                <select 
-                  className="w-full h-14 pr-12 pl-6 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-mint/50 focus:bg-white/10 transition-all font-bold text-sm appearance-none cursor-pointer"
+              <div style={{width:190,position:'relative'}}>
+                <span style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,.4)',display:'flex',pointerEvents:'none'}}>
+                  <SlidersHorizontal size={13}/>
+                </span>
+                <select
+                  style={{width:'100%',padding:'11px 38px 11px 16px',borderRadius:10,border:'1.5px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'#fff',fontSize:13,outline:'none',cursor:'pointer',fontFamily:'inherit',appearance:'none'}}
                   value={cat}
-                  onChange={e => setCat(e.target.value)}
-                >
-                  <option value="all" className="bg-navy">جميع التخصصات</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id} className="bg-navy">{c.name_ar}</option>
+                  onChange={e=>setCat(e.target.value)}>
+                  <option value="all" style={{background:'#0a1628'}}>جميع التخصصات</option>
+                  {categories.map(c=>(
+                    <option key={c.id} value={c.id} style={{background:'#0a1628'}}>{c.name_ar}</option>
                   ))}
                 </select>
               </div>
@@ -88,52 +85,36 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Results Info */}
-        <div className="flex items-center justify-between mb-8 px-2">
-            <h2 className="text-lg font-black text-navy flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-mint rounded-full" />
-                نتائج البحث
-            </h2>
-            <span className="text-xs font-bold text-txt3 bg-white px-3 py-1 rounded-full border border-border shadow-sm">
-                تم العثور على {filtered.length} دورة
-            </span>
-        </div>
-
-        {/* Courses Grid */}
+        {/* Results */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 opacity-30">
-            <Loader2 size={48} className="spin text-navy" />
-            <span className="mt-4 font-bold text-sm uppercase tracking-widest text-navy">جاري التحميل...</span>
+          <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
+            <Loader2 size={32} className="spin" style={{color:'var(--teal)'}}/>
           </div>
         ) : filtered.length > 0 ? (
-          <div className="courses-grid gap-y-10">
-            {filtered.map(c => <CourseCard key={c.id} course={c}/>)}
-          </div>
+          <>
+            <p style={{fontSize:13,fontWeight:600,color:'var(--txt3)',marginBottom:18}}>
+              {filtered.length} دورة متاحة
+            </p>
+            <div className="courses-grid">
+              {filtered.map(c => <CourseCard key={c.id} course={c}/>)}
+            </div>
+          </>
         ) : (
-          <div className="card text-center py-24 px-10 max-w-lg mx-auto rounded-[3rem] border-dashed border-2">
-             <div className="w-20 h-20 rounded-3xl bg-bg2 flex items-center justify-center mx-auto mb-8">
-                <BookOpen size={40} className="text-navy/20" />
-             </div>
-             <h3 className="text-xl font-black text-navy mb-4">
-                {search || cat !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا توجد دورات متاحة'}
-             </h3>
-             <p className="text-txt2 text-sm leading-relaxed mb-10">
-                {search || cat !== 'all' 
-                  ? 'جرّب تغيير كلمات البحث أو اختيار تخصص آخر لاستكشاف المزيد.' 
-                  : 'كن أول من يعرف عند إطلاق دورات جديدة. ترقبونا قريباً!'}
-             </p>
-             {(search || cat !== 'all') && (
-                <button 
-                  onClick={() => { setSearch(''); setCat('all') }}
-                  className="btn btn-primary px-8"
-                >
-                    إعادة ضبط الفلاتر
-                </button>
-             )}
+          <div className="card" style={{padding:60,textAlign:'center'}}>
+            <div style={{width:60,height:60,borderRadius:16,background:'var(--teal-soft)',border:'1px solid rgba(13,148,136,.15)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+              <BookOpen size={26} style={{color:'var(--teal)'}}/>
+            </div>
+            <h3 style={{fontSize:18,fontWeight:800,marginBottom:8,color:'var(--txt1)'}}>
+              {search || cat!=='all' ? 'لا توجد نتائج مطابقة' : 'لا توجد دورات بعد'}
+            </h3>
+            <p style={{color:'var(--txt2)',fontSize:14}}>
+              {search || cat!=='all'
+                ? 'جرّب تغيير كلمات البحث أو التصنيف'
+                : 'لم يتم إضافة أي دورات حتى الآن'}
+            </p>
           </div>
         )}
       </div>
     </div>
   )
 }
-
