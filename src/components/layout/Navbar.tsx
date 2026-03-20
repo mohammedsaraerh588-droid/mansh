@@ -6,7 +6,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useTheme } from '@/components/ThemeProvider'
 import { 
   Home, BookOpen, LayoutDashboard, LogOut, Menu, X, 
-  Sun, Moon, Stethoscope, ChevronDown, User
+  Sun, Moon, Stethoscope, ChevronDown, User, Users, MessageCircle
 } from 'lucide-react'
 
 export default function Navbar() {
@@ -63,10 +63,18 @@ export default function Navbar() {
         ? '/dashboard/teacher' 
         : '/dashboard/student'
 
-  const links = [
-    { label: 'الرئيسية', href: '/', I: Home },
-    { label: 'الدورات الطبية', href: '/courses', I: BookOpen }
-  ]
+  const links = pathname === '/'
+    ? [
+        { label: 'الرئيسية', href: '/', I: Home },
+        { label: 'التخصصات', href: '/#stages', I: BookOpen },
+        { label: 'المعلمون', href: '/#instructors', I: Users },
+        { label: 'الأسئلة الشائعة', href: '/#faq', I: MessageCircle },
+        { label: 'الدورات الطبية', href: '/courses', I: BookOpen },
+      ]
+    : [
+        { label: 'الرئيسية', href: '/', I: Home },
+        { label: 'الدورات الطبية', href: '/courses', I: BookOpen },
+      ]
 
   const lc = (a: boolean) => solid 
     ? (a ? 'var(--brand)' : 'var(--tx2)') 
