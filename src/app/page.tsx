@@ -2,29 +2,42 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Stethoscope, BookOpen, PlayCircle, Award, ChevronLeft,
-         Brain, CheckCircle, Users, Clock, ArrowLeft, Sparkles } from 'lucide-react'
+import { Stethoscope, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const SUBJECTS = [
-  { icon:'🫀', name:'أمراض القلب',        color:'rgba(239,68,68,.12)',    tc:'#F87171' },
-  { icon:'🧠', name:'طب الأعصاب',         color:'rgba(167,139,250,.12)',  tc:'#A78BFA' },
-  { icon:'🦷', name:'طب الأسنان',         color:'rgba(52,211,153,.12)',   tc:'#34D399' },
-  { icon:'💊', name:'الصيدلة السريرية',   color:'rgba(96,165,250,.12)',   tc:'#60A5FA' },
-  { icon:'🧬', name:'علم الأحياء الجزيئي',color:'rgba(249,115,22,.12)',  tc:'#FB923C' },
-  { icon:'🫁', name:'أمراض الصدر',        color:'rgba(34,211,238,.12)',   tc:'#22D3EE' },
-  { icon:'🩺', name:'طب الطوارئ',         color:'rgba(251,191,36,.12)',   tc:'#FBB324' },
-  { icon:'🔬', name:'علم الأمراض',        color:'rgba(236,72,153,.12)',   tc:'#EC4899' },
+  { icon:'🫀', name:'أمراض القلب',         color:'#FFEBEE', tc:'#C62828' },
+  { icon:'🧠', name:'طب الأعصاب',          color:'#EDE7F6', tc:'#4527A0' },
+  { icon:'🦷', name:'طب الأسنان',          color:'#E8F5E9', tc:'#2E7D32' },
+  { icon:'💊', name:'الصيدلة السريرية',    color:'#E3F2FD', tc:'#1565C0' },
+  { icon:'🧬', name:'علم الأحياء الجزيئي', color:'#FFF3E0', tc:'#E65100' },
+  { icon:'🫁', name:'أمراض الصدر',         color:'#E0F7FA', tc:'#006064' },
+  { icon:'🩺', name:'طب الطوارئ',          color:'#FFF8E1', tc:'#F57F17' },
+  { icon:'🔬', name:'علم الأمراض',         color:'#FCE4EC', tc:'#AD1457' },
+  { icon:'🦴', name:'جراحة العظام',        color:'#F3E5F5', tc:'#6A1B9A' },
+  { icon:'👁️', name:'طب العيون',           color:'#E8EAF6', tc:'#283593' },
+  { icon:'🫄', name:'طب النساء والتوليد',  color:'#FCE4EC', tc:'#880E4F' },
+  { icon:'🧪', name:'علم المختبرات',       color:'#E8F5E9', tc:'#1B5E20' },
 ]
 
-const WHY = [
-  { icon:'📚', t:'محتوى أكاديمي دقيق',   d:'كل مادة مُعدّة وفق المناهج الطبية المعتمدة.' },
-  { icon:'🎬', t:'شرح بالفيديو',          d:'دروس مرئية واضحة قابلة للمراجعة في أي وقت.' },
-  { icon:'✅', t:'اختبارات تفاعلية',      d:'أسئلة MCQ بعد كل درس لقياس الفهم فوراً.' },
-  { icon:'🏆', t:'شهادة إتمام',           d:'تُصدر تلقائياً عند إكمال الدورة بنجاح.' },
+const FAQS = [
+  { q:'كيف يمكنني إنشاء حساب على المنصة؟', a:'اضغط على "إنشاء حساب" وأدخل بياناتك الصحيحة. بعد التسجيل يمكنك الوصول للدورات المجانية مباشرةً.' },
+  { q:'كيفية الاشتراك بدورة من الدورات التعليمية؟', a:'تصفّح الدورات واضغط على الدورة التي تريدها، ثم اضغط "تسجيل" وأكمل عملية الدفع إن كانت مدفوعة.' },
+  { q:'هل يمكنني مشاهدة الدروس من الهاتف؟', a:'نعم، المنصة متوافقة مع جميع الأجهزة — الهاتف والتابلت والحاسوب.' },
+  { q:'هل يمكنني الحصول على شهادة إتمام؟', a:'نعم، عند إكمالك 100% من الدورة تُصدر شهادة رقمية تلقائياً في لوحة التحكم.' },
+  { q:'كم عدد المرات المسموح بها لمشاهدة الدروس؟', a:'يمكنك مشاهدة الدروس بلا حدود في أي وقت طالما أنت مسجّل في الدورة.' },
 ]
 
 export default function Home() {
-  const [courses, setCourses] = useState<any[]>([])
+  const [courses, setCourses]       = useState<any[]>([])
+  const [openFaq, setOpenFaq]       = useState<number|null>(0)
+  const [carouselIdx, setCarouselIdx] = useState(0)
+
+  const carouselItems = [
+    { title: 'ابدأ رحلتك الطبية',   sub: 'تعلّم من أفضل المتخصصين الطبيين', bg: 'linear-gradient(135deg,#1B5E20,#2E7D32)' },
+    { title: 'دورات طبية متخصصة',   sub: 'محتوى علمي دقيق مراجَع من متخصصين', bg: 'linear-gradient(135deg,#0D47A1,#1565C0)' },
+    { title: 'اختبارات تفاعلية',     sub: 'قيّم فهمك بعد كل درس', bg: 'linear-gradient(135deg,#4A148C,#6A1B9A)' },
+    { title: 'شهادات إتمام رقمية',  sub: 'تُصدر تلقائياً عند إكمال الدورة', bg: 'linear-gradient(135deg,#BF360C,#D84315)' },
+  ]
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient()
@@ -36,62 +49,95 @@ export default function Home() {
       .then(({ data }) => { if (data) setCourses(data) })
   },[])
 
+  useEffect(() => {
+    const t = setInterval(() => setCarouselIdx(i => (i+1) % carouselItems.length), 4000)
+    return () => clearInterval(t)
+  },[])
+
   return (
-    <div style={{background:'var(--bg)'}}>
+    <div>
 
-      {/* ════ HERO ════ */}
-      <section className="hero" style={{padding:'96px 0 80px',textAlign:'center'}}>
-        <div className="wrap" style={{position:'relative',zIndex:1}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:7,padding:'6px 14px',borderRadius:99,background:'rgba(124,58,237,.15)',border:'1px solid rgba(124,58,237,.3)',marginBottom:24}}>
-            <Sparkles size={12} style={{color:'#A78BFA'}}/>
-            <span style={{fontSize:12,fontWeight:700,color:'#A78BFA',letterSpacing:'.06em'}}>منصة التعليم الطبي المتخصصة</span>
-          </div>
-          <h1 style={{fontSize:'clamp(32px,5.5vw,64px)',fontWeight:900,color:'#fff',lineHeight:1.05,letterSpacing:'-.03em',marginBottom:20}}>
-            تعلّم الطب بأسلوب<br/>
-            <span className="g-text">أكاديمي احترافي</span>
-          </h1>
-          <p style={{fontSize:17,color:'rgba(255,255,255,.5)',maxWidth:500,margin:'0 auto 36px',lineHeight:1.85}}>
-            دورات طبية متخصصة بشرح مبسّط وتمارين تفاعلية ونظام اختبارات متطور
-            — صُمّمت خصيصاً لطلاب الطب والمتخصصين الصحيين.
-          </p>
-          <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
-            <Link href="/courses" className="btn btn-primary btn-xl" style={{textDecoration:'none'}}>
-              <PlayCircle size={18}/>ابدأ التعلم مجاناً
-            </Link>
-            <Link href="/about" className="btn btn-xl" style={{textDecoration:'none',background:'rgba(255,255,255,.07)',color:'rgba(255,255,255,.8)',border:'1.5px solid rgba(255,255,255,.15)'}}>
-              اعرف المزيد <ArrowLeft size={16}/>
-            </Link>
-          </div>
-
-          {/* mini stats */}
-          <div style={{display:'flex',gap:36,justifyContent:'center',marginTop:52,flexWrap:'wrap'}}>
-            {[['📚','دورات طبية'],['🎬','دروس مرئية'],['✅','اختبارات'],['🏆','شهادات']].map(([ic,lb],i)=>(
-              <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
-                <span style={{fontSize:20}}>{ic}</span>
-                <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,.5)'}}>{lb}</span>
+      {/* ════ HERO SECTION ════ */}
+      <section className="hero-section">
+        <div className="alpha-container">
+          <div style={{textAlign:'center', marginBottom:32}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:18}}>
+              <div style={{width:44,height:44,borderRadius:11,background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(76,175,80,.4)'}}>
+                <Stethoscope size={22} style={{color:'#fff'}}/>
               </div>
-            ))}
+              <span style={{fontSize:22,fontWeight:900,color:'var(--tx1)',letterSpacing:'-.02em'}}>
+                منصة تعلّم<span style={{color:'var(--alpha-green)'}}> الطبية</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Carousel */}
+          <div style={{position:'relative',borderRadius:18,overflow:'hidden',boxShadow:'var(--sh3)',maxWidth:960,margin:'0 auto'}}>
+            <div style={{background:carouselItems[carouselIdx].bg,minHeight:280,display:'flex',alignItems:'center',justifyContent:'center',padding:'48px 40px',textAlign:'center',transition:'background .6s ease'}}>
+              <div>
+                <div style={{fontSize:'clamp(26px,4vw,44px)',fontWeight:900,color:'#fff',marginBottom:12,letterSpacing:'-.02em'}}>
+                  {carouselItems[carouselIdx].title}
+                </div>
+                <div style={{fontSize:17,color:'rgba(255,255,255,.75)',marginBottom:28}}>
+                  {carouselItems[carouselIdx].sub}
+                </div>
+                <div style={{display:'flex',gap:12,justifyContent:'center'}}>
+                  <Link href="/courses" className="alpha-btn alpha-btn-tertiary" style={{textDecoration:'none',background:'#fff',color:'var(--tx1)',border:'none'}}>
+                    استكشف الدورات
+                  </Link>
+                  <Link href="/auth/register" className="alpha-btn" style={{textDecoration:'none',background:'rgba(255,255,255,.15)',color:'#fff',border:'1.5px solid rgba(255,255,255,.4)'}}>
+                    إنشاء حساب
+                  </Link>
+                </div>
+              </div>
+            </div>
+            {/* arrows */}
+            <button onClick={()=>setCarouselIdx(i=>(i-1+carouselItems.length)%carouselItems.length)} style={{position:'absolute',top:'50%',right:14,transform:'translateY(-50%)',width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,.85)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--sh1)'}}>
+              <ChevronRight size={18} style={{color:'var(--tx1)'}}/>
+            </button>
+            <button onClick={()=>setCarouselIdx(i=>(i+1)%carouselItems.length)} style={{position:'absolute',top:'50%',left:14,transform:'translateY(-50%)',width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,.85)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--sh1)'}}>
+              <ChevronLeft size={18} style={{color:'var(--tx1)'}}/>
+            </button>
+            {/* dots */}
+            <div style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',display:'flex',gap:7}}>
+              {carouselItems.map((_,i)=>(
+                <button key={i} onClick={()=>setCarouselIdx(i)} style={{width:i===carouselIdx?24:8,height:8,borderRadius:99,background:i===carouselIdx?'#fff':'rgba(255,255,255,.45)',border:'none',cursor:'pointer',transition:'all .2s',padding:0}}/>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ════ SUBJECTS ════ */}
-      <section style={{padding:'56px 0',borderBottom:'1px solid var(--brd)'}}>
-        <div className="wrap">
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,flexWrap:'wrap',gap:12}}>
-            <h2 style={{fontSize:20,fontWeight:800,color:'var(--tx1)',letterSpacing:'-.015em'}}>التخصصات الطبية</h2>
-            <Link href="/courses" style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:700,color:'var(--brand-2)',textDecoration:'none'}}>
-              عرض الكل <ChevronLeft size={15}/>
-            </Link>
+      {/* ════ SEARCH SECTION ════ */}
+      <section className="search-section">
+        <div className="alpha-container">
+          <div className="alpha-text-title-xl" style={{marginBottom:8}}>مستقبل طالب الطب يبدأ مع <span className="alpha-txt">منصة تعلّم الطبية</span></div>
+          <div className="search-section-description">
+            <div className="alpha-text-title-md">نحن روّاد التعليم الطبي الإلكتروني الذكي،</div>
+            <div className="alpha-text-title-md">نقدم لك الطريق الموثوق نحو التميز والنجاح وشعارنا دائماً "الفهم أولاً"</div>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10}}>
+          <div className="search-bar">
+            <form method="get" action="/search">
+              <input type="text" name="q" placeholder="ابحث عن دورة أو تخصص طبي..."/>
+              <button className="search-btn" type="submit">ابحث</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* ════ GRADES / SUBJECTS ════ */}
+      <section className="grades-section">
+        <div className="alpha-container">
+          <div style={{textAlign:'center'}}>
+            <div className="highlight">التخصصات الطبية</div>
+            <div className="alpha-text-title-xl alpha-primary-2">جميع التخصصات من الأساسية إلى المتقدمة</div>
+          </div>
+          <div className="grades-grid">
             {SUBJECTS.map((s,i)=>(
               <Link key={i} href="/courses" style={{textDecoration:'none'}}>
-                <div style={{background:s.color,border:`1px solid ${s.tc}33`,borderRadius:12,padding:'18px 14px',textAlign:'center',cursor:'pointer',transition:'all .18s'}}
-                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.borderColor=s.tc+'66'}}
-                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='none';el.style.borderColor=s.tc+'33'}}>
-                  <div style={{fontSize:26,marginBottom:8}}>{s.icon}</div>
-                  <div style={{fontSize:11.5,fontWeight:700,color:s.tc,lineHeight:1.3}}>{s.name}</div>
+                <div className="grade-card">
+                  <div style={{fontSize:28,marginBottom:10}}>{s.icon}</div>
+                  <div style={{fontSize:12.5,fontWeight:700,color:s.tc,lineHeight:1.3}}>{s.name}</div>
                 </div>
               </Link>
             ))}
@@ -99,34 +145,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════ COURSES ════ */}
+      {/* ════ COURSES SECTION ════ */}
       {courses.length > 0 && (
-        <section style={{padding:'56px 0',borderBottom:'1px solid var(--brd)'}}>
-          <div className="wrap">
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,flexWrap:'wrap',gap:12}}>
-              <h2 style={{fontSize:20,fontWeight:800,color:'var(--tx1)',letterSpacing:'-.015em'}}>الدورات المتاحة</h2>
-              <Link href="/courses" style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:700,color:'var(--brand-2)',textDecoration:'none'}}>
-                عرض الكل <ChevronLeft size={15}/>
-              </Link>
+        <section style={{padding:'60px 0', background:'var(--bg)'}}>
+          <div className="alpha-container">
+            <div style={{textAlign:'center',marginBottom:32}}>
+              <div className="highlight">الدورات المتاحة</div>
+              <div className="alpha-text-title-xl alpha-primary-2">استكشف الدورات الطبية المنشورة</div>
             </div>
             <div className="courses-grid">
               {courses.map((c:any)=>(
                 <Link key={c.id} href={`/courses/${c.slug}`} style={{textDecoration:'none'}}>
-                  <div className="card" style={{overflow:'hidden',transition:'all .2s'}}
-                    onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-3px)';el.style.borderColor='rgba(124,58,237,.3)';el.style.boxShadow='var(--sh3)'}}
-                    onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='none';el.style.borderColor='var(--brd)';el.style.boxShadow='var(--sh1)'}}>
-                    <div style={{height:155,background:c.thumbnail_url?`url(${c.thumbnail_url}) center/cover`:'linear-gradient(135deg,#1A0533,#2D1B69)',position:'relative',overflow:'hidden'}}>
-                      {!c.thumbnail_url && <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,opacity:.3}}>🎬</div>}
-                      {c.price===0 && <span style={{position:'absolute',top:10,right:10,background:'#10B981',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 8px',borderRadius:5}}>مجاني</span>}
+                  <div className="main-card">
+                    <div className="image-container" style={{height:165,background:c.thumbnail_url?undefined:'linear-gradient(135deg,#1B5E20,#388E3C)'}}>
+                      {c.thumbnail_url
+                        ? <img src={c.thumbnail_url} alt={c.title}/>
+                        : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40}}>📚</div>}
+                      {c.price===0 && <span style={{position:'absolute',top:10,right:10,background:'var(--alpha-green)',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:6}}>مجاني</span>}
                     </div>
-                    <div style={{padding:'14px 16px'}}>
-                      <div style={{fontSize:14,fontWeight:700,color:'var(--tx1)',marginBottom:5,lineHeight:1.4}}>{c.title}</div>
-                      <div style={{fontSize:12,color:'var(--tx3)',marginBottom:12}}>{c.profiles?.full_name||'معلم'}</div>
+                    <div className="info" style={{position:'relative'}}>
+                      <span className="title">{c.title}</span>
+                      <span style={{fontSize:12,color:'var(--tx3)',display:'block',marginBottom:10}}>{c.profiles?.full_name||'معلم'}</span>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                         <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'var(--tx3)'}}>
                           <BookOpen size={12}/>{c.total_lessons||0} درس
                         </span>
-                        <span style={{fontSize:15,fontWeight:800,color:c.price===0?'#10B981':'var(--brand-2)'}}>
+                        <span style={{fontSize:16,fontWeight:900,color:c.price===0?'var(--alpha-green)':'var(--alpha-green-2)'}}>
                           {c.price===0?'مجاني':`${c.price} ${c.currency||'USD'}`}
                         </span>
                       </div>
@@ -135,74 +179,101 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+            <div style={{textAlign:'center',marginTop:28}}>
+              <Link href="/courses" className="alpha-btn alpha-btn-primary alpha-text-body-bold" style={{textDecoration:'none'}}>
+                عرض جميع الدورات
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
-      {/* ════ WHY ════ */}
-      <section style={{padding:'56px 0',borderBottom:'1px solid var(--brd)'}}>
-        <div className="wrap">
-          <div style={{textAlign:'center',marginBottom:40}}>
-            <div className="eyebrow"><Brain size={11}/>لماذا نختارنا</div>
-            <h2 className="sec-title">مبنية للطالب الطبي</h2>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))',gap:18}}>
-            {WHY.map(({icon,t,d},i)=>(
-              <div key={i} style={{background:'var(--surface)',border:'1px solid var(--brd)',borderRadius:14,padding:'26px 22px',borderTop:`3px solid var(--brand)`,transition:'all .2s'}}
-                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform='translateY(-2px)';(e.currentTarget as HTMLElement).style.boxShadow='var(--sh2)'}}
-                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform='none';(e.currentTarget as HTMLElement).style.boxShadow='none'}}>
-                <div style={{fontSize:28,marginBottom:14}}>{icon}</div>
-                <h3 style={{fontSize:15,fontWeight:800,color:'var(--tx1)',marginBottom:8,letterSpacing:'-.01em'}}>{t}</h3>
-                <p style={{fontSize:13.5,color:'var(--tx3)',lineHeight:1.75}}>{d}</p>
+      {/* ════ STATS SECTION ════ */}
+      <section className="stats-section">
+        <div className="alpha-container">
+          <div className="wave-container"/>
+          <div className="highlight" style={{display:'inline-block'}}>إحصائيات</div>
+          <div className="alpha-text-title-xl alpha-primary-2" style={{marginBottom:4}}>منصة تعلّم الطبية بلغة الأرقام</div>
+          <div className="stats-grid">
+            {[
+              { n:'2024',         d:'تأسست عام' },
+              { n:'دورات طبية',  d:'في جميع التخصصات' },
+              { n:'معلم متخصص',  d:'مدرّس ذو خبرة عالية' },
+              { n:'4.8 / 5.0',   d:'معدل تقييم الطلاب لنا' },
+            ].map((s,i)=>(
+              <div key={i} className="stats-box alpha-flex-col alpha-justify-center alpha-items-center">
+                <span className="alpha-text-title-lg">{s.n}</span>
+                <span className="alpha-text-body-paragraph">{s.d}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ════ CTA ════ */}
-      <section style={{padding:'60px 0'}}>
-        <div className="wrap">
-          <div style={{background:'var(--surface)',border:'1px solid var(--brand-m)',borderRadius:20,padding:'52px 40px',textAlign:'center',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 60% 60% at 50% 0%,rgba(124,58,237,.12) 0%,transparent 70%)',pointerEvents:'none'}}/>
-            <div style={{position:'relative',zIndex:1}}>
-              <div style={{width:56,height:56,borderRadius:14,background:'var(--brand-l)',border:'1px solid var(--brand-m)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px'}}>
-                <Stethoscope size={26} style={{color:'var(--brand-2)'}}/>
+      {/* ════ FAQ SECTION ════ */}
+      <section className="faq-section">
+        <div className="alpha-container">
+          <div style={{textAlign:'center'}}>
+            <div className="alpha-text-title-xl alpha-primary-2">الأسئلة الشائعة</div>
+          </div>
+          <div id="faq-grid">
+            {FAQS.map((f,i)=>(
+              <div key={i} className={`alpha-accordion faq ${openFaq===i?'active':''}`}>
+                <div className="alpha-accordion-header" onClick={()=>setOpenFaq(openFaq===i?null:i)}>
+                  <span>{f.q}</span>
+                  <span style={{fontSize:20,color:openFaq===i?'var(--alpha-green)':'var(--tx3)',fontWeight:300,flexShrink:0}}>
+                    {openFaq===i?'−':'+'}
+                  </span>
+                </div>
+                {openFaq===i && (
+                  <div className="alpha-accordion-content">{f.a}</div>
+                )}
               </div>
-              <h2 style={{fontSize:'clamp(20px,3vw,34px)',fontWeight:900,color:'var(--tx1)',marginBottom:12,letterSpacing:'-.02em'}}>
-                ابدأ رحلتك الطبية الآن
-              </h2>
-              <p style={{fontSize:15,color:'var(--tx3)',marginBottom:28,maxWidth:400,margin:'0 auto 28px',lineHeight:1.8}}>
-                سجّل مجاناً وابدأ بالدورات الطبية المتاحة فوراً.
-              </p>
-              <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                <Link href="/auth/register" className="btn btn-primary btn-xl" style={{textDecoration:'none'}}>
-                  إنشاء حساب مجاني
-                </Link>
-                <Link href="/courses" className="btn btn-outline btn-xl" style={{textDecoration:'none'}}>
-                  <BookOpen size={16}/>الدورات
-                </Link>
-              </div>
+            ))}
+            <div className="show-more-faq">
+              <Link href="/faq" className="alpha-btn-nav">المزيد</Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* ════ FOOTER ════ */}
-      <footer style={{borderTop:'1px solid var(--brd)',padding:'28px 0'}}>
-        <div className="wrap" style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:14}}>
-          <div style={{display:'flex',alignItems:'center',gap:9}}>
-            <div style={{width:30,height:30,borderRadius:8,background:'var(--brand)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <Stethoscope size={15} style={{color:'#fff'}}/>
-            </div>
-            <span style={{fontSize:14,fontWeight:800,color:'var(--tx1)'}}>منصة تعلّم الطبية</span>
+      <footer>
+        <div className="footer-content">
+          <div className="alpha-flex-col">
+            <div className="alpha-text-title-page">روابط سريعة</div>
+            <ul className="alpha-text-body-sm">
+              <li><Link href="/">الرئيسية</Link></li>
+              <li><Link href="/courses">الدورات</Link></li>
+              <li><Link href="/about">من نحن</Link></li>
+            </ul>
           </div>
-          <nav style={{display:'flex',gap:20,fontSize:13,flexWrap:'wrap'}}>
-            {[['الدورات','/courses'],['من نحن','/about'],['الأسئلة الشائعة','/faq'],['تواصل','/contact'],['الشروط','/terms'],['الخصوصية','/privacy']].map(([l,h])=>(
-              <Link key={h} href={h} style={{color:'var(--tx3)'}}>{l}</Link>
-            ))}
-          </nav>
-          <span style={{fontSize:12,color:'var(--tx4)'}}>© 2026 منصة تعلّم الطبية</span>
+          <div className="alpha-flex-col">
+            <div className="alpha-text-title-page">الدعم الفني</div>
+            <ul className="alpha-text-body-sm">
+              <li><Link href="/contact">تواصل معنا</Link></li>
+              <li><Link href="/faq">الأسئلة الشائعة</Link></li>
+              <li><Link href="/privacy">سياسة الخصوصية</Link></li>
+              <li><Link href="/terms">الشروط والأحكام</Link></li>
+            </ul>
+          </div>
+          <div className="alpha-flex-col">
+            <div className="alpha-text-title-page">عن المنصة</div>
+            <ul className="alpha-text-body-sm">
+              <li><Link href="/about">من نحن</Link></li>
+              <li>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+                  <div style={{width:36,height:36,borderRadius:9,background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <Stethoscope size={18} style={{color:'#fff'}}/>
+                  </div>
+                  <span style={{fontSize:14,fontWeight:800,color:'rgba(255,255,255,.8)'}}>منصة تعلّم الطبية</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-of-footer">
+          جميع الحقوق محفوظة © 2026 منصة تعلّم الطبية
         </div>
       </footer>
     </div>
