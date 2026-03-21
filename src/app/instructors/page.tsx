@@ -94,15 +94,6 @@ export default function InstructorsPage() {
                   </Link>
                 ))}
               </div>}
-
-        {/* Apply CTA */}
-        <div style={{marginTop:48,background:'var(--alpha-green-l)',border:'1px solid var(--alpha-green-m)',borderRadius:14,padding:'32px 28px',textAlign:'center'}}>
-          <h3 style={{fontSize:18,fontWeight:800,color:'var(--tx1)',marginBottom:8}}>هل تريد التدريس على منصتنا؟</h3>
-          <p style={{fontSize:14,color:'var(--tx3)',marginBottom:18}}>سجّل طلبك الآن وانضم لفريق معلمينا المتميزين</p>
-          <Link href="/apply-teacher" className="btn-register" style={{textDecoration:'none',display:'inline-flex',padding:'10px 24px'}}>
-            تقديم طلب معلم
-          </Link>
-        </div>
       </div>
     </div>
   )
