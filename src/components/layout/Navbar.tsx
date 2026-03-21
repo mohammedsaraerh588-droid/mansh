@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Stethoscope, LayoutDashboard, LogOut, Menu, X, Sun, Moon } from 'lucide-react'
+import { Stethoscope, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 
 export default function Navbar() {
@@ -68,8 +68,14 @@ export default function Navbar() {
 
           {/* Action buttons */}
           <div className="action-buttons">
-            <button onClick={toggle} style={{width:34,height:34,borderRadius:8,cursor:'pointer',border:'1px solid var(--brd)',background:'var(--surface2)',color:'var(--tx3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              {dark ? <Sun size={15}/> : <Moon size={15}/>}
+            <button onClick={toggle} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center'}}>
+              <input
+                type="checkbox"
+                className="theme-checkbox"
+                checked={dark}
+                onChange={toggle}
+                title={dark?'الوضع الفاتح':'الوضع المظلم'}
+              />
             </button>
 
             {user ? (
@@ -87,8 +93,8 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/auth/login"    className="alpha-btn alpha-btn-primary"   style={{textDecoration:'none',fontSize:13,padding:'8px 16px'}}>دخول</Link>
-                <Link href="/auth/register" className="alpha-btn alpha-btn-tertiary"  style={{textDecoration:'none',fontSize:13,padding:'8px 16px'}}>إنشاء حساب</Link>
+                <Link href="/auth/login" className="alpha-btn alpha-btn-primary" style={{textDecoration:'none',fontSize:13,padding:'8px 16px'}}>دخول</Link>
+                <Link href="/auth/register" className="btn-register" style={{fontSize:13,padding:'8px 18px'}}>إنشاء حساب</Link>
               </>
             )}
 
