@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Stethoscope, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
-import { useTheme } from '@/components/ThemeProvider'
 
 export default function Navbar() {
   const [open,    setOpen]    = useState(false)
@@ -12,8 +11,6 @@ export default function Navbar() {
   const [profile, setProfile] = useState<any>(null)
   const pathname  = usePathname()
   const supabase  = createSupabaseBrowserClient()
-  const { theme, toggle } = useTheme()
-  const dark = theme === 'dark'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,15 +65,6 @@ export default function Navbar() {
 
           {/* Action buttons */}
           <div className="action-buttons">
-            <button onClick={toggle} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center'}}>
-              <input
-                type="checkbox"
-                className="theme-checkbox"
-                checked={dark}
-                onChange={toggle}
-                title={dark?'الوضع الفاتح':'الوضع المظلم'}
-              />
-            </button>
 
             {user ? (
               <>
