@@ -13,15 +13,6 @@ export default function CoursesPage() {
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    // Avoids Next.js prerender/Suspense requirements for useSearchParams().
-    const sp = new URLSearchParams(window.location.search)
-    const q = sp.get('q') || ''
-    const c = sp.get('cat') || 'all'
-    setSearch(q)
-    setCat(c)
-  }, [])
-
-  useEffect(() => {
     (async () => {
       const { data: cats } = await supabase.from('categories').select('*').order('name_ar')
       if (cats) setCategories(cats)
@@ -43,7 +34,7 @@ export default function CoursesPage() {
     const matchSearch = !search ||
       c.title?.toLowerCase().includes(search.toLowerCase()) ||
       c.description?.toLowerCase().includes(search.toLowerCase())
-    const matchCat = cat === 'all' || String(c.category_id) === String(cat)
+    const matchCat = cat === 'all' || c.category_id === cat
     return matchSearch && matchCat
   })
 
