@@ -29,10 +29,10 @@ export default function Navbar() {
   const dashLink = profile?.role==='admin' ? '/dashboard/admin' : profile?.role==='teacher' ? '/dashboard/teacher' : '/dashboard/student'
 
   const navItems = [
-    { label:'الرئيسية', href:'/' },
-    { label:'الدورات',  href:'/courses' },
-    { label:'المعلمون', href:'/about' },
-    { label:'الأخبار',  href:'/faq' },
+    { label:'الرئيسية',   href:'/' },
+    { label:'الدورات',    href:'/courses' },
+    { label:'المعلمون',   href:'/instructors' },
+    { label:'الأسئلة',    href:'/faq' },
   ]
 
   return (

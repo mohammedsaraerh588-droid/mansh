@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { LayoutDashboard, BookOpen, Award, Video, BarChart, FileText,
-         Settings, Users, LogOut, Loader2, Heart } from 'lucide-react'
+         Settings, Users, LogOut, Loader2, Heart, Tag, ShieldCheck } from 'lucide-react'
 import NotificationBell from '@/components/ui/NotificationBell'
 
 const NAV = {
@@ -21,9 +21,11 @@ const NAV = {
     { label:'الاختبارات',    href:'/dashboard/teacher/quizzes', Icon:FileText },
   ],
   admin: [
-    { label:'نظرة عامة',  href:'/dashboard/admin',         Icon:LayoutDashboard },
-    { label:'المستخدمون', href:'/dashboard/admin/users',   Icon:Users },
-    { label:'الإيرادات',  href:'/dashboard/admin/revenue', Icon:BarChart },
+    { label:'نظرة عامة',      href:'/dashboard/admin',         Icon:LayoutDashboard },
+    { label:'المستخدمون',     href:'/dashboard/admin/users',   Icon:Users },
+    { label:'الدورات',        href:'/dashboard/admin/courses', Icon:ShieldCheck },
+    { label:'الإيرادات',      href:'/dashboard/admin/revenue', Icon:BarChart },
+    { label:'كوبونات الخصم',  href:'/dashboard/admin/coupons', Icon:Tag },
   ],
 }
 

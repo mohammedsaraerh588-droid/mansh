@@ -1,0 +1,22 @@
+{
+  "name": "منصة تعلّم الطبية",
+  "short_name": "تعلّم طبي",
+  "description": "منصة تعليمية طبية متخصصة لطلاب الطب والمتخصصين الصحيين",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F6FA",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "الدورات",    "url": "/courses",           "description": "تصفح الدورات الطبية" },
+    { "name": "لوحتي",      "url": "/dashboard/student", "description": "لوحة التحكم" },
+    { "name": "بحث",        "url": "/search",            "description": "البحث في الدورات" }
+  ],
+  "categories": ["education", "medical", "health"]
+}

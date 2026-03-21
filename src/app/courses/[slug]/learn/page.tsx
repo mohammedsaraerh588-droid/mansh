@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import VideoPlayer from '@/components/ui/VideoPlayer'
 import QuizComponent from '@/components/ui/QuizComponent'
-import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList, Award } from 'lucide-react'
+import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList, Award, StickyNote, Plus, Trash2 } from 'lucide-react'
 
 export default function CourseLearnPage() {
   const { slug }   = useParams()
@@ -17,8 +17,12 @@ export default function CourseLearnPage() {
   const [progress,     setProgress]     = useState<any[]>([])
   const [loading,      setLoading]      = useState(true)
   const [sidebar,      setSidebar]      = useState(true)
-  const [certReady, setCertReady] = useState(false)
-  const [showQuiz,  setShowQuiz]  = useState(false)
+  const [certReady,    setCertReady]    = useState(false)
+  const [showQuiz,     setShowQuiz]     = useState(false)
+  const [showNotes,    setShowNotes]    = useState(false)
+  const [notes,        setNotes]        = useState<any[]>([])
+  const [noteText,     setNoteText]     = useState('')
+  const [savingNote,   setSavingNote]   = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -42,6 +46,31 @@ export default function CourseLearnPage() {
       setLoading(false)
     })()
   }, [slug])
+
+  // جلب الملاحظات عند تغيير الدرس
+  useEffect(() => {
+    if (!activeLesson) return
+    fetch(`/api/notes?lessonId=${activeLesson.id}`)
+      .then(r => r.json()).then(d => setNotes(d.notes || []))
+  }, [activeLesson?.id])
+
+  const saveNote = async () => {
+    if (!noteText.trim() || !activeLesson) return
+    setSavingNote(true)
+    const r = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lessonId: activeLesson.id, content: noteText }),
+    })
+    const d = await r.json()
+    if (d.note) setNotes(p => [d.note, ...p])
+    setNoteText(''); setSavingNote(false)
+  }
+
+  const deleteNote = async (id: string) => {
+    await fetch(`/api/notes?id=${id}`, { method: 'DELETE' })
+    setNotes(p => p.filter(n => n.id !== id))
+  }
 
   const isDone = (id:string) => progress.some(p=>p.lesson_id===id&&p.is_completed)
   const totalLessons = course?.modules?.reduce((s:number,m:any)=>s+(m.lessons?.length||0),0)||0
@@ -141,15 +170,50 @@ export default function CourseLearnPage() {
                   <button onClick={handleComplete} className={`btn btn-lg ${isDone(activeLesson.id)?'btn-outline':'btn-primary'}`}>
                     <CheckCircle size={15}/>{isDone(activeLesson.id)?'مكتمل ✓':'اكتمال والتالي'}
                   </button>
-                  {/* زر الاختبار */}
                   <button onClick={()=>setShowQuiz(true)} className="btn btn-outline btn-lg" style={{borderColor:'var(--teal)',color:'var(--teal)'}}>
-                    <ClipboardList size={15}/>اختبار الدرس
+                    <ClipboardList size={15}/>اختبار
+                  </button>
+                  <button onClick={()=>setShowNotes(!showNotes)} className={`btn btn-outline btn-lg ${showNotes?'btn-secondary':''}`} style={{borderColor:'var(--warn)',color:'var(--warn)'}}>
+                    <StickyNote size={15}/>ملاحظاتي
                   </button>
                 </div>
                 <button onClick={nextLesson} className="btn btn-ghost btn-md">
                   الدرس التالي<ChevronLeft size={13}/>
                 </button>
               </div>
+              {/* Notes Panel */}
+              {showNotes && (
+                <div style={{marginTop:16,background:'var(--surface)',border:'1px solid var(--brd)',borderRadius:12,overflow:'hidden'}}>
+                  <div style={{padding:'12px 16px',borderBottom:'1px solid var(--brd)',display:'flex',alignItems:'center',gap:8}}>
+                    <StickyNote size={15} style={{color:'var(--warn)'}}/>
+                    <span style={{fontWeight:700,fontSize:14,color:'var(--tx1)'}}>ملاحظاتي على هذا الدرس</span>
+                  </div>
+                  <div style={{padding:'14px 16px'}}>
+                    <div style={{display:'flex',gap:8,marginBottom:14}}>
+                      <textarea value={noteText} onChange={e=>setNoteText(e.target.value)}
+                        placeholder="اكتب ملاحظتك هنا..."
+                        rows={2}
+                        style={{flex:1,padding:'10px 12px',borderRadius:9,border:'1.5px solid var(--brd)',background:'var(--surface2)',color:'var(--tx1)',fontSize:13,fontFamily:'inherit',resize:'none',outline:'none'}}
+                        onKeyDown={e=>{if(e.key==='Enter'&&e.ctrlKey)saveNote()}}/>
+                      <button onClick={saveNote} disabled={savingNote||!noteText.trim()} className="btn-register" style={{padding:'0 16px',height:64,alignSelf:'stretch',borderRadius:9,fontSize:12}}>
+                        {savingNote?<Loader2 size={14} className="spin"/>:<Plus size={14}/>}
+                      </button>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:200,overflowY:'auto'}}>
+                      {notes.length===0
+                        ? <p style={{fontSize:13,color:'var(--tx4)',textAlign:'center',padding:'12px 0'}}>لا توجد ملاحظات بعد</p>
+                        : notes.map(n=>(
+                          <div key={n.id} style={{display:'flex',gap:8,padding:'10px 12px',borderRadius:9,background:'var(--surface2)',border:'1px solid var(--brd)'}}>
+                            <p style={{flex:1,fontSize:13,color:'var(--tx2)',lineHeight:1.6,margin:0}}>{n.content}</p>
+                            <button onClick={()=>deleteNote(n.id)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--tx4)',display:'flex',padding:2,flexShrink:0}}>
+                              <Trash2 size={13}/>
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--txt3)',fontSize:14}}>
