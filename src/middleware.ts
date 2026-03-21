@@ -3,7 +3,6 @@ import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
-  const pathname = request.nextUrl.pathname
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,48 +21,47 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+const { data: { user }, error } = await supabase.auth.getUser()
+  if (error) return NextResponse.next({ request })
 
-  // حماية الصفحات التي تتطلب تسجيل دخول
-  const requiresAuth =
-    pathname.startsWith('/dashboard') ||
-    pathname === '/profile' ||
-    pathname.includes('/learn')
+  // Get user role from profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id ?? '')
+    .single()
+    .then(({ data, error }) => ({ data, error }))
+  
+  const role = profile?.role as 'student' | 'teacher' | 'admin' | null
 
-  if (requiresAuth && !user) {
-    const loginUrl = new URL('/auth/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
+  // Protected routes by role
+  const isStudent = role === 'student'
+  const isTeacher = role === 'teacher' 
+  const isAdmin = role === 'admin'
 
-  // جلب دور المستخدم
-  let role: 'student' | 'teacher' | 'admin' | null = null
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', user.id).maybeSingle()
-    role = (profile?.role as typeof role) ?? 'student'
-  }
+  // Route protection
+  const pathname = request.nextUrl.pathname
 
-  // حماية صفحات المعلم
-  if (pathname.startsWith('/dashboard/teacher')) {
-    if (role !== 'teacher' && role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard/student', request.url))
+  // Any login required
+  if (pathname.startsWith('/dashboard') || pathname === '/profile') {
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth/login', request.url))
     }
   }
 
-  // حماية صفحات الأدمن
-  if (pathname.startsWith('/dashboard/admin')) {
-    if (role !== 'admin') {
-      const target = role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'
-      return NextResponse.redirect(new URL(target, request.url))
-    }
+  // Role-specific
+  if (pathname.startsWith('/dashboard/teacher') && !isTeacher && !isAdmin) {
+    return NextResponse.redirect(new URL('/dashboard/student', request.url))
+  }
+  
+  if (pathname.startsWith('/dashboard/admin') && !isAdmin) {
+    return NextResponse.redirect(new URL('/dashboard/student', request.url))
   }
 
-  // إعادة توجيه المسجّل دخوله بعيداً عن صفحات Auth
-  if (user && (pathname === '/auth/login' || pathname === '/auth/register')) {
-    const target =
-      role === 'admin'   ? '/dashboard/admin' :
-      role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'
+  // Auth pages redirect to dashboard
+  if (user && ['/auth/login', '/auth/register'].includes(pathname)) {
+    const target = isAdmin ? '/dashboard/admin' : 
+                  isTeacher ? '/dashboard/teacher' : '/dashboard/student'
     return NextResponse.redirect(new URL(target, request.url))
   }
 
@@ -71,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api|_next/data).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 }
