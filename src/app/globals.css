@@ -310,6 +310,7 @@ button, input, select, textarea { font-family: inherit }
 .fade-in      { animation:fadeIn .4s ease both }
 .animate-spin { animation:spin   .9s linear infinite }
 .pulse        { animation:pulse  2s ease infinite }
+@keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
 .loading-spinner { width:36px;height:36px;border:2.5px solid var(--surface3);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite }
 
 /* ─── Scrollbar ──────────────────────────── */

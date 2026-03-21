@@ -217,7 +217,7 @@ export default function Home() {
             <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--tx1)' }}>منصة تعلّم الطبية</span>
           </div>
           <nav style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--tx3)', flexWrap: 'wrap' }}>
-            {[['الدورات','/courses'],['من نحن','/about'],['تواصل معنا','/contact'],['الشروط','/terms'],['الخصوصية','/privacy']].map(([l,h]) => (
+            {[['الدورات','/courses'],['من نحن','/about'],['الأسئلة الشائعة','/faq'],['تواصل معنا','/contact'],['الشروط','/terms'],['الخصوصية','/privacy']].map(([l,h]) => (
               <Link key={h} href={h} style={{ color: 'var(--tx3)' }}>{l}</Link>
             ))}
           </nav>
