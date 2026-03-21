@@ -4,49 +4,83 @@ interface Props {
   publicId?: string
   url?: string
   title?: string
+  thumbnail?: string
   onEnded?: () => void
 }
 
-export function VideoPlayer({ publicId, url, title, onEnded }: Props) {
-
-  // YouTube
-  const isYouTube = url?.includes('youtube.com') || url?.includes('youtu.be')
-  if (isYouTube) {
-    const videoId = url?.includes('v=')
-      ? url.split('v=')[1]?.split('&')[0]
-      : url?.split('/').pop()
+export default function VideoPlayer({ publicId, url, title, thumbnail, onEnded }: Props) {
+  // Cloudinary video
+  if (publicId) {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    const src = `https://res.cloudinary.com/${cloudName}/video/upload/${publicId}`
     return (
-      <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:12,overflow:'hidden',background:'#000'}}>
-        <iframe style={{position:'absolute',inset:0,width:'100%',height:'100%'}}
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
-          title={title||'فيديو'} frameBorder="0" allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"/>
-      </div>
+      <video
+        controls
+        poster={thumbnail}
+        onEnded={onEnded}
+        style={{width:'100%',borderRadius:12,background:'#000',maxHeight:480}}
+        preload="metadata"
+      >
+        <source src={src} type="video/mp4"/>
+        متصفحك لا يدعم تشغيل الفيديو.
+      </video>
     )
   }
 
-  // Cloudinary أو رابط مباشر
-  const videoSrc = publicId
-    ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}`
-    : url
+  // YouTube / Vimeo embed
+  if (url) {
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
+    const vimeoMatch   = url.match(/vimeo\.com\/(\d+)/)
 
-  if (videoSrc) {
+    if (youtubeMatch) {
+      return (
+        <div style={{position:'relative',paddingTop:'56.25%',borderRadius:12,overflow:'hidden',background:'#000'}}>
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0`}
+            title={title || 'فيديو'}
+            frameBorder="0"
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            style={{position:'absolute',inset:0,width:'100%',height:'100%'}}
+          />
+        </div>
+      )
+    }
+
+    if (vimeoMatch) {
+      return (
+        <div style={{position:'relative',paddingTop:'56.25%',borderRadius:12,overflow:'hidden',background:'#000'}}>
+          <iframe
+            src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+            title={title || 'فيديو'}
+            frameBorder="0"
+            allowFullScreen
+            style={{position:'absolute',inset:0,width:'100%',height:'100%'}}
+          />
+        </div>
+      )
+    }
+
+    // رابط فيديو مباشر
     return (
-      <div style={{borderRadius:12,overflow:'hidden',background:'#000',boxShadow:'var(--s3)'}}>
-        <video src={videoSrc} controls style={{width:'100%',maxHeight:520,display:'block'}}
-          onEnded={onEnded} title={title}
-          controlsList="nodownload">
-          متصفحك لا يدعم تشغيل الفيديو.
-        </video>
-      </div>
+      <video
+        src={url}
+        controls
+        poster={thumbnail}
+        onEnded={onEnded}
+        style={{width:'100%',borderRadius:12,background:'#000',maxHeight:480}}
+        preload="metadata"
+      >
+        متصفحك لا يدعم تشغيل الفيديو.
+      </video>
     )
   }
 
-  // لا يوجد فيديو
+  // لا يوجد مصدر
   return (
-    <div style={{aspectRatio:'16/9',background:'var(--bg3)',borderRadius:12,border:'2px dashed var(--border2)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8}}>
-      <span style={{fontSize:32}}>🎬</span>
-      <p style={{fontSize:14,color:'var(--txt3)'}}>لم يتم رفع فيديو لهذا الدرس بعد</p>
+    <div style={{width:'100%',aspectRatio:'16/9',background:'var(--surface3)',borderRadius:12,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10}}>
+      <span style={{fontSize:36}}>🎬</span>
+      <p style={{fontSize:14,color:'var(--tx3)',fontWeight:600}}>لا يوجد فيديو لهذا الدرس</p>
     </div>
   )
 }

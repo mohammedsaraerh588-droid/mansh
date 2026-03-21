@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { VideoPlayer } from '@/components/ui/VideoPlayer'
+import VideoPlayer from '@/components/ui/VideoPlayer'
 import QuizComponent from '@/components/ui/QuizComponent'
 import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList, Award } from 'lucide-react'
 
@@ -18,6 +18,7 @@ export default function CourseLearnPage() {
   const [loading,      setLoading]      = useState(true)
   const [sidebar,      setSidebar]      = useState(true)
   const [certReady, setCertReady] = useState(false)
+  const [showQuiz,  setShowQuiz]  = useState(false)
 
   useEffect(() => {
     (async () => {
