@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Users, Search, Loader2, Trash2, ShieldCheck } from 'lucide-react'
+import { Users, Search, Loader2, Trash2, ShieldCheck, UserCheck } from 'lucide-react'
 
 export default function AdminUsersPage() {
   const [users,    setUsers]    = useState<any[]>([])
@@ -52,11 +52,17 @@ export default function AdminUsersPage() {
   return (
     <div style={{display:'flex',flexDirection:'column',gap:22}}>
       <div>
-        <p style={{fontSize:11,fontWeight:800,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--teal)',marginBottom:5}}>إدارة النظام</p>
-        <h1 style={{fontSize:24,fontWeight:900,color:'var(--txt1)',marginBottom:4,display:'flex',alignItems:'center',gap:10}}>
-          <Users size={22} style={{color:'var(--teal)'}}/>إدارة المستخدمين
+        <p style={{fontSize:11,fontWeight:700,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--alpha-green)',marginBottom:4}}>الإدارة</p>
+        <h1 style={{fontSize:24,fontWeight:900,color:'var(--tx1)',marginBottom:4,display:'flex',alignItems:'center',gap:10}}>
+          <Users size={20} style={{color:'var(--alpha-green)'}}/>إدارة المستخدمين
         </h1>
-        <p style={{fontSize:14,color:'var(--txt2)'}}>{users.length} مستخدم مسجّل</p>
+        <p style={{fontSize:14,color:'var(--tx3)'}}>{users.length} مستخدم — غيّر الصلاحية لأي مستخدم لتعيينه معلماً أو مديراً</p>
+      </div>
+
+      {/* Quick tip */}
+      <div style={{background:'var(--alpha-green-l)',border:'1px solid var(--alpha-green-m)',borderRadius:10,padding:'12px 16px',fontSize:13,color:'var(--alpha-green-2)',display:'flex',alignItems:'center',gap:8}}>
+        <UserCheck size={15}/>
+        <span>لتعيين معلم جديد: ابحث عنه → غيّر الصلاحية من القائمة المنسدلة إلى <strong>معلم</strong></span>
       </div>
 
       {/* Search */}
