@@ -4,21 +4,19 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useTheme } from '@/components/ThemeProvider'
-import { 
-  Home, BookOpen, LayoutDashboard, LogOut, Menu, X, 
-  Sun, Moon, Stethoscope, ChevronDown, User, Users, MessageCircle
-} from 'lucide-react'
+import { Stethoscope, BookOpen, LayoutDashboard, LogOut, Menu, X, Sun, Moon, Search } from 'lucide-react'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const pathname = usePathname()
-  const supabase = createSupabaseBrowserClient()
+  const [open,     setOpen]     = useState(false)
+  const [user,     setUser]     = useState<any>(null)
+  const [profile,  setProfile]  = useState<any>(null)
+  const pathname  = usePathname()
+  const supabase  = createSupabaseBrowserClient()
   const { theme, toggle } = useTheme()
-  const dark = theme === 'dark'
+  const dark   = theme === 'dark'
+  const isHero = pathname === '/'
+  const solid  = scrolled || !isHero
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,580 +26,150 @@ export default function Navbar() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
       setUser(s?.user ?? null)
-      if (s?.user) {
-        supabase.from('profiles').select('*').eq('id', s.user.id).single().then(({ data }) => setProfile(data))
-      } else {
-        setProfile(null)
-      }
+      if (s?.user) supabase.from('profiles').select('*').eq('id', s.user.id).single().then(({ data }) => setProfile(data))
+      else setProfile(null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', fn)
-    fn()
+    const fn = () => setScrolled(window.scrollY > 10)
+    window.addEventListener('scroll', fn); fn()
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  // Close profile menu when clicking outside
-  useEffect(() => {
-    const handleClick = () => setProfileOpen(false)
-    if (profileOpen) {
-      document.addEventListener('click', handleClick)
-      return () => document.removeEventListener('click', handleClick)
-    }
-  }, [profileOpen])
+  const dashLink = profile?.role === 'admin' ? '/dashboard/admin' : profile?.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'
 
-  const isHero = pathname === '/'
-  const solid = scrolled || !isHero
-  const dashLink = !profile 
-    ? '/dashboard/student' 
-    : profile.role === 'admin' 
-      ? '/dashboard/admin' 
-      : profile.role === 'teacher' 
-        ? '/dashboard/teacher' 
-        : '/dashboard/student'
+  const navLinks = [
+    { label: 'الدورات',  href: '/courses'  },
+    { label: 'من نحن',   href: '/about'    },
+    { label: 'تواصل',    href: '/contact'  },
+  ]
 
-  const links = pathname === '/'
-    ? [
-        { label: 'الرئيسية', href: '/', I: Home },
-        { label: 'التخصصات', href: '/#stages', I: BookOpen },
-        { label: 'المعلمون', href: '/#instructors', I: Users },
-        { label: 'الأسئلة الشائعة', href: '/#faq', I: MessageCircle },
-        { label: 'الدورات الطبية', href: '/courses', I: BookOpen },
-      ]
-    : [
-        { label: 'الرئيسية', href: '/', I: Home },
-        { label: 'الدورات الطبية', href: '/courses', I: BookOpen },
-      ]
-
-  const lc = (a: boolean) => solid 
-    ? (a ? 'var(--brand)' : 'var(--tx2)') 
-    : (a ? '#fff' : 'rgba(255,255,255,0.7)')
+  const solidBg   = 'var(--nav-bg)'
+  const transBg   = 'transparent'
+  const solidTxt  = 'var(--tx2)'
+  const transTxt  = 'rgba(255,255,255,.8)'
+  const activeTxt = solid ? 'var(--brand)' : '#fff'
 
   return (
     <>
       <nav style={{
-        position: 'fixed',
-        top: 0,
-        width: '100%',
-        zIndex: 100,
-        background: solid ? 'var(--nav-bg)' : 'transparent',
+        position: 'fixed', top: 0, width: '100%', zIndex: 100,
+        background:   solid ? solidBg   : transBg,
         backdropFilter: solid ? 'blur(20px) saturate(180%)' : 'none',
-        WebkitBackdropFilter: solid ? 'blur(20px) saturate(180%)' : 'none',
         borderBottom: solid ? '1px solid var(--nav-border)' : 'none',
-        boxShadow: solid ? 'var(--nav-shadow)' : 'none',
-        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-        padding: solid ? '0' : '0'
+        boxShadow:    solid ? 'var(--sh1)' : 'none',
+        transition:   'all .3s ease',
+        padding:      solid ? '10px 0' : '16px 0',
       }}>
-        <div className="wrap" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: solid ? 64 : 72,
-          transition: 'height 0.35s ease'
-        }}>
-          
+        <div className="wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+
           {/* Logo */}
-          <Link href="/" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none'
-          }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: 'var(--gradient)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              boxShadow: 'var(--sh-brand)',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1.08) rotate(-3deg)'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1) rotate(0deg)'
-            }}>
-              <Stethoscope size={20}/>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', flexShrink: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Stethoscope size={17} style={{ color: '#fff' }} />
             </div>
-            <div style={{lineHeight: 1.1}}>
-              <span style={{
-                fontSize: 16,
-                fontWeight: 900,
-                color: solid ? 'var(--tx1)' : '#fff',
-                transition: 'color 0.3s ease',
-                display: 'block'
-              }}>
-                منصة تعلّم
-              </span>
-              <span style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: 'var(--brand)',
-                letterSpacing: '.06em',
-                textTransform: 'uppercase'
-              }}>
-                Medical Education
-              </span>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: solid ? 'var(--tx1)' : '#fff', letterSpacing: '-.01em' }}>منصة تعلّم</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, color: solid ? 'var(--tx4)' : 'rgba(255,255,255,.45)', letterSpacing: '.08em', textTransform: 'uppercase' }}>Medical Education</div>
             </div>
           </Link>
 
-          {/* Desktop Links */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4
-          }} className="hidden md:flex">
-            {links.map(({label, href, I}) => (
-              <Link 
-                key={href} 
-                href={href} 
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '10px 16px',
-                  borderRadius: 10,
-                  textDecoration: 'none',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  transition: 'all 0.2s ease',
-                  color: lc(pathname === href),
-                  background: pathname === href && solid 
-                    ? 'var(--brand-light)' 
-                    : 'transparent'
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.background = solid 
-                    ? 'var(--surface-2)' 
-                    : 'rgba(255,255,255,0.1)'
-                  ;(e.currentTarget as HTMLElement).style.color = solid 
-                    ? 'var(--tx1)' 
-                    : '#fff'
-                }}
-                onMouseLeave={e => {
-                  if (pathname !== href) {
-                    (e.currentTarget as HTMLElement).style.background = pathname === href && solid 
-                      ? 'var(--brand-light)' 
-                      : 'transparent'
-                    ;(e.currentTarget as HTMLElement).style.color = lc(pathname === href)
-                  }
-                }}
-              >
-                <I size={15}/>
-                {label}
-              </Link>
-            ))}
+          {/* Desktop Nav */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }} className="hidden md:flex">
+            {navLinks.map(({ label, href }) => {
+              const active = pathname === href || (href !== '/' && pathname.startsWith(href))
+              return (
+                <Link key={href} href={href} style={{
+                  padding: '7px 13px', borderRadius: 7, fontSize: 13.5, fontWeight: active ? 700 : 500,
+                  color: active ? activeTxt : solid ? solidTxt : transTxt,
+                  background: active && solid ? 'var(--brand-l)' : 'transparent',
+                  textDecoration: 'none', transition: 'all .15s', display: 'flex', alignItems: 'center'
+                }}>
+                  {label}
+                </Link>
+              )
+            })}
           </div>
 
           {/* Actions */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12
-          }} className="hidden md:flex">
-            
-            {/* Theme Toggle */}
-            <button 
-              onClick={toggle}
-              title={dark ? 'الوضع الفاتح' : 'الوضع المظلم'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                borderRadius: 10,
-                cursor: 'pointer',
-                border: '1.5px solid var(--brd)',
-                background: solid ? 'var(--surface)' : 'rgba(255,255,255,0.1)',
-                color: solid ? 'var(--tx1)' : '#fff',
-                fontSize: 13,
-                fontWeight: 700,
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(10px)'
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--brand)'
-                ;(e.currentTarget as HTMLElement).style.color = 'var(--brand)'
-                ;(e.currentTarget as HTMLElement).style.background = 'var(--brand-light)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--brd)'
-                ;(e.currentTarget as HTMLElement).style.color = solid ? 'var(--tx1)' : '#fff'
-                ;(e.currentTarget as HTMLElement).style.background = solid ? 'var(--surface)' : 'rgba(255,255,255,0.1)'
-              }}
-            >
-              {dark ? <Sun size={16}/> : <Moon size={16}/>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }} className="hidden md:flex">
+            <Link href="/search" style={{
+              width: 34, height: 34, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `1px solid ${solid ? 'var(--brd)' : 'rgba(255,255,255,.2)'}`,
+              background: solid ? 'var(--surface2)' : 'rgba(255,255,255,.08)',
+              color: solid ? 'var(--tx3)' : 'rgba(255,255,255,.7)', cursor: 'pointer', textDecoration: 'none'
+            }}>
+              <Search size={15} />
+            </Link>
+            <button onClick={toggle} style={{
+              width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `1px solid ${solid ? 'var(--brd)' : 'rgba(255,255,255,.2)'}`,
+              background: solid ? 'var(--surface2)' : 'rgba(255,255,255,.08)',
+              color: solid ? 'var(--tx3)' : 'rgba(255,255,255,.7)'
+            }}>
+              {dark ? <Sun size={15}/> : <Moon size={15}/>}
             </button>
 
             {user ? (
-              <>
-                <Link 
-                  href={dashLink} 
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '10px 16px',
-                    borderRadius: 10,
-                    textDecoration: 'none',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    transition: 'all 0.2s ease',
-                    color: lc(false),
-                    background: solid ? 'transparent' : 'rgba(255,255,255,0.1)'
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--brand-light)'
-                    ;(e.currentTarget as HTMLElement).style.color = 'var(--brand)'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = solid ? 'transparent' : 'rgba(255,255,255,0.1)'
-                    ;(e.currentTarget as HTMLElement).style.color = lc(false)
-                  }}
-                >
-                  <LayoutDashboard size={15}/>
-                  لوحة التحكم
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Link href={dashLink} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', borderRadius: 8, fontSize: 13.5, fontWeight: 700, color: solid ? 'var(--tx2)' : 'rgba(255,255,255,.8)', textDecoration: 'none', transition: 'all .15s' }}>
+                  <LayoutDashboard size={14}/>لوحتي
                 </Link>
-
-                {/* Profile Dropdown */}
-                <div style={{position: 'relative'}}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setProfileOpen(!profileOpen)
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '6px 12px 6px 6px',
-                      borderRadius: 12,
-                      cursor: 'pointer',
-                      border: '1.5px solid var(--brd)',
-                      background: 'var(--surface)',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--brand)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow = 'var(--sh-brand)'
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--brd)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-                    }}
-                  >
-                    <div style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      border: '2px solid var(--brand)'
-                    }}>
-                      {profile?.avatar_url ? (
-                        <img 
-                          src={profile.avatar_url} 
-                          alt="" 
-                          style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                        />
-                      ) : (
-                        <div style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'var(--gradient)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 900,
-                          fontSize: 13,
-                          color: '#fff'
-                        }}>
-                          {profile?.full_name?.[0] ?? 'د'}
-                        </div>
-                      )}
-                    </div>
-                    <span style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: 'var(--tx1)'
-                    }}>
-                      {profile?.full_name?.split(' ')[0] || 'حسابي'}
-                    </span>
-                    <ChevronDown 
-                      size={14} 
-                      style={{
-                        color: 'var(--tx3)',
-                        transition: 'transform 0.2s ease',
-                        transform: profileOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                      }}
-                    />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {profileOpen && (
-                    <div style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 8px)',
-                      right: 0,
-                      minWidth: 200,
-                      background: 'var(--surface)',
-                      border: '1px solid var(--brd)',
-                      borderRadius: 16,
-                      boxShadow: 'var(--sh4)',
-                      padding: 8,
-                      zIndex: 1000
-                    }}>
-                      <Link 
-                        href="/profile" 
-                        className="nav-link"
-                        onClick={() => setProfileOpen(false)}
-                      >
-                        <User size={15}/>
-                        الملف الشخصي
-                      </Link>
-                      <div style={{height: 1, background: 'var(--brd)', margin: '6px 8px'}}/>
-                      <button 
-                        className="nav-link danger"
-                        onClick={async () => {
-                          await supabase.auth.signOut()
-                          setProfileOpen(false)
-                          window.location.href = '/'
-                        }}
-                        style={{
-                          width: '100%',
-                          textAlign: 'right',
-                          fontFamily: 'inherit'
-                        }}
-                      >
-                        <LogOut size={15}/>
-                        تسجيل الخروج
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
+                <Link href="/profile">
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--brand)', cursor: 'pointer', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff' }}>
+                    {profile?.avatar_url
+                      ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                      : (profile?.full_name?.[0] || 'ط')}
+                  </div>
+                </Link>
+              </div>
             ) : (
-              <>
-                <Link 
-                  href="/auth/login" 
-                  style={{
-                    padding: '10px 18px',
-                    borderRadius: 10,
-                    textDecoration: 'none',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    transition: 'color 0.2s ease',
-                    color: lc(false)
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--brand)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = lc(false))}
-                >
-                  تسجيل الدخول
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Link href="/auth/login" style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, color: solid ? 'var(--tx2)' : 'rgba(255,255,255,.8)', textDecoration: 'none' }}>
+                  دخول
                 </Link>
-                <Link 
-                  href="/auth/register" 
-                  className="btn btn-primary btn-md"
-                  style={{textDecoration: 'none'}}
-                >
-                  ابدأ مجاناً
+                <Link href="/auth/register" className="btn btn-primary btn-md" style={{ textDecoration: 'none' }}>
+                  سجّل مجاناً
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }} className="md:hidden">
-            <button 
-              onClick={toggle}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: solid ? 'var(--tx1)' : '#fff',
-                padding: 8,
-                display: 'flex'
-              }}
-            >
-              {dark ? <Sun size={20}/> : <Moon size={20}/>}
+          {/* Mobile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="md:hidden">
+            <button onClick={toggle} style={{ width: 32, height: 32, borderRadius: 7, cursor: 'pointer', border: `1px solid ${solid ? 'var(--brd)' : 'rgba(255,255,255,.2)'}`, background: solid ? 'var(--surface2)' : 'rgba(255,255,255,.1)', color: solid ? 'var(--tx3)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {dark ? <Sun size={14}/> : <Moon size={14}/>}
             </button>
-            <button 
-              onClick={() => setOpen(!open)} 
-              style={{
-                background: solid ? 'var(--surface-2)' : 'rgba(255,255,255,0.1)',
-                border: 'none',
-                cursor: 'pointer',
-                color: solid ? 'var(--tx1)' : '#fff',
-                padding: 10,
-                display: 'flex',
-                borderRadius: 10,
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              {open ? <X size={22}/> : <Menu size={22}/>}
+            <button onClick={() => setOpen(!open)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: solid ? 'var(--tx1)' : '#fff', display: 'flex', padding: 4 }}>
+              {open ? <X size={21}/> : <Menu size={21}/>}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Drawer */}
       {open && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 99,
-          background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)'
-        }} onClick={() => setOpen(false)}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderBottom: '1px solid var(--nav-border)',
-            padding: '20px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            boxShadow: 'var(--sh4)'
-          }}
-          onClick={e => e.stopPropagation()}>
-            
-            {/* Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 12
-            }}>
-              <Link href="/" style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                textDecoration: 'none'
-              }} onClick={() => setOpen(false)}>
-                <div style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: 'var(--gradient)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff'
-                }}>
-                  <Stethoscope size={18}/>
-                </div>
-                <span style={{
-                  fontSize: 15,
-                  fontWeight: 900,
-                  color: 'var(--tx1)'
-                }}>
-                  منصة تعلّم
-                </span>
-              </Link>
-              <button 
-                onClick={() => setOpen(false)}
-                style={{
-                  background: 'var(--surface-2)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--tx1)',
-                  padding: 8,
-                  display: 'flex',
-                  borderRadius: 8
-                }}
-              >
-                <X size={20}/>
-              </button>
-            </div>
-
-            {/* Links */}
-            {links.map(({label, href, I}) => (
-              <Link 
-                key={href} 
-                href={href} 
-                className={`nav-link ${pathname === href ? 'active' : ''}`}
-                onClick={() => setOpen(false)}
-              >
-                <I size={18}/>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setOpen(false)}>
+          <div style={{ position: 'absolute', top: 56, left: 0, right: 0, background: 'var(--nav-bg)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--nav-border)', padding: '12px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: 'var(--sh3)' }} onClick={e => e.stopPropagation()}>
+            {navLinks.map(({ label, href }) => (
+              <Link key={href} href={href} className={`nav-link${pathname===href?' active':''}`} onClick={() => setOpen(false)}>
                 {label}
               </Link>
             ))}
-
-            <div style={{height: 1, background: 'var(--brd)', margin: '8px 0'}}/>
-
-            {user ? (
-              <>
-                <Link 
-                  href={dashLink} 
-                  className="nav-link"
-                  onClick={() => setOpen(false)}
-                >
-                  <LayoutDashboard size={18}/>
-                  لوحة التحكم
-                </Link>
-                <Link 
-                  href="/profile" 
-                  className="nav-link"
-                  onClick={() => setOpen(false)}
-                >
-                  <User size={18}/>
-                  الملف الشخصي
-                </Link>
-                <button 
-                  className="nav-link danger"
-                  onClick={async () => {
-                    await supabase.auth.signOut()
-                    setOpen(false)
-                    window.location.href = '/'
-                  }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'right',
-                    fontFamily: 'inherit'
-                  }}
-                >
-                  <LogOut size={18}/>
-                  تسجيل الخروج
-                </button>
-              </>
-            ) : (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                marginTop: 4
-              }}>
-                <Link 
-                  href="/auth/login" 
-                  className="nav-link"
-                  onClick={() => setOpen(false)}
-                >
-                  تسجيل الدخول
-                </Link>
-                <Link 
-                  href="/auth/register" 
-                  className="btn btn-primary btn-full"
-                  style={{textDecoration: 'none'}}
-                  onClick={() => setOpen(false)}
-                >
-                  ابدأ مجاناً
-                </Link>
-              </div>
-            )}
+            <Link href="/search" className="nav-link" onClick={() => setOpen(false)}><Search size={14}/>بحث</Link>
+            <div style={{ height: 1, background: 'var(--brd)', margin: '6px 0' }}/>
+            {user ? (<>
+              <Link href={dashLink} className="nav-link" onClick={() => setOpen(false)}><LayoutDashboard size={14}/>لوحتي</Link>
+              <button className="nav-link danger" style={{ background: 'none', border: 'none', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'right' }}
+                onClick={async () => { await supabase.auth.signOut(); setOpen(false); window.location.href = '/' }}>
+                <LogOut size={14}/>خروج
+              </button>
+            </>) : (<>
+              <Link href="/auth/login"    className="nav-link" onClick={() => setOpen(false)}>تسجيل دخول</Link>
+              <Link href="/auth/register" className="btn btn-primary btn-md btn-full" style={{ textDecoration: 'none', marginTop: 6 }} onClick={() => setOpen(false)}>سجّل مجاناً</Link>
+            </>)}
           </div>
         </div>
       )}
