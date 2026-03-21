@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-/* GET /api/quiz?lessonId=xxx */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const lessonId = searchParams.get('lessonId')
@@ -11,14 +10,12 @@ export async function GET(req: Request) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // الأسئلة — بدون الإجابة الصحيحة للطالب
   const { data: questions } = await supabase
     .from('quiz_questions')
     .select('id,question,option_a,option_b,option_c,option_d,points,position,order_num')
     .eq('lesson_id', lessonId)
     .order('position', { ascending: true })
 
-  // محاولة سابقة — لا نرمي خطأ إذا لم توجد
   const { data: attempt } = await supabase
     .from('quiz_attempts')
     .select('id,score,total_points,passed,completed_at')
@@ -28,7 +25,6 @@ export async function GET(req: Request) {
     .limit(1)
     .maybeSingle()
 
-  // لوحة الصدارة
   const { data: leaderboard } = await supabase
     .from('quiz_attempts')
     .select('score,total_points,profiles(full_name)')
@@ -37,37 +33,24 @@ export async function GET(req: Request) {
     .order('score', { ascending: false })
     .limit(10)
 
-  return NextResponse.json({
-    questions:      questions || [],
-    previousAttempt: attempt  || null,
-    leaderboard:    leaderboard || [],
-  })
+  return NextResponse.json({ questions: questions||[], previousAttempt: attempt||null, leaderboard: leaderboard||[] })
 }
 
-/* POST /api/quiz — تسليم الإجابات */
 export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { lessonId, answers } = await req.json()
-  // answers = { questionId: 'a' | 'b' | 'c' | 'd' }
-
-  // جلب الإجابات الصحيحة
   const { data: questions } = await supabase
-    .from('quiz_questions')
-    .select('id,correct_option,points')
-    .eq('lesson_id', lessonId)
+    .from('quiz_questions').select('id,correct_option,points').eq('lesson_id', lessonId)
 
   if (!questions?.length) return NextResponse.json({ error: 'No questions' }, { status: 404 })
 
-  let score = 0
-  let totalPoints = 0
+  let score = 0, totalPoints = 0
   const result: Record<string, boolean> = {}
-
   questions.forEach(q => {
     totalPoints += q.points || 1
-    // correct_option مخزّن كـ 'option_a' — نستخرج الحرف الأخير للمقارنة
     const correctLetter = (q.correct_option || 'option_a').replace('option_', '')
     const isCorrect = answers[q.id] === correctLetter
     if (isCorrect) score += q.points || 1
@@ -75,20 +58,11 @@ export async function POST(req: Request) {
   })
 
   const passed = totalPoints > 0 ? (score / totalPoints) >= 0.5 : false
-
-  const { data: attempt, error: attemptErr } = await supabase
-    .from('quiz_attempts')
-    .insert({
-      student_id:   session.user.id,
-      lesson_id:    lessonId,
-      score,
-      total_points: totalPoints,
-      passed,
-      answers,
-      completed_at: new Date().toISOString(),
-    }).select().single()
-
-  if (attemptErr) console.error('[QUIZ_ATTEMPT]', attemptErr)
+  const { data: attempt } = await supabase.from('quiz_attempts').insert({
+    student_id: session.user.id, lesson_id: lessonId,
+    score, total_points: totalPoints, passed, answers,
+    completed_at: new Date().toISOString(),
+  }).select().single()
 
   return NextResponse.json({ score, totalPoints, passed, result, attemptId: attempt?.id })
 }

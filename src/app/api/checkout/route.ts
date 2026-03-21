@@ -6,7 +6,6 @@ export async function POST(req: Request) {
   try {
     const { courseId } = await req.json()
     const supabase = await createSupabaseServerClient()
-
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
@@ -15,7 +14,7 @@ export async function POST(req: Request) {
       .eq('id', courseId).single()
     if (!course) return new NextResponse('Course not found', { status: 404 })
 
-    // ── مجاني: سجّل مباشرة بدون Stripe ──────────────────
+    // تسجيل مجاني
     if (!course.price || course.price === 0) {
       const { error } = await supabase.from('enrollments').upsert({
         student_id:     session.user.id,
@@ -24,33 +23,24 @@ export async function POST(req: Request) {
         enrolled_at:    new Date().toISOString(),
         progress_percentage: 0,
       }, { onConflict: 'student_id,course_id' })
-
-      if (error) {
-        console.error('[FREE_ENROLL]', error)
-        return new NextResponse('Enrollment failed', { status: 500 })
-      }
-      // Update total_students count
-      await supabase.rpc('increment_course_students', { course_id: courseId }).catch(()=>{})
+      if (error) { console.error('[FREE_ENROLL]', error); return new NextResponse('Enrollment failed', { status: 500 }) }
+      await supabase.rpc('increment_course_students', { course_id: courseId }).catch(() => {})
       return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.slug}/learn` })
     }
 
-    // ── مدفوع: إنشاء جلسة Stripe ─────────────────────────
+    // دفع عبر Stripe
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: session.user.email,
-      line_items: [{
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          product_data: { name: course.title },
-          unit_amount: Math.round(course.price * 100),
-        }
-      }],
+      line_items: [{ quantity: 1, price_data: {
+        currency: 'usd',
+        product_data: { name: course.title },
+        unit_amount: Math.round(course.price * 100),
+      }}],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.slug}/learn`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.slug}`,
       metadata: { courseId: course.id, userId: session.user.id },
     })
-
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error: any) {
     console.error('[CHECKOUT_ERROR]', error)
