@@ -385,7 +385,82 @@ button, input, select, textarea { font-family: inherit }
 ::-webkit-scrollbar-thumb:hover { background:var(--alpha-green) }
 :focus-visible { outline:2px solid var(--alpha-green);outline-offset:2px;border-radius:4px }
 
-/* ═══ Login Button (same uiverse style — dark adapted) ══════════════ */
+/* ═══ Telegram Support Float Button ═════════════════════════════════ */
+.tg-support {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: #229ED9;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(34,158,217,.5), 0 2px 8px rgba(0,0,0,.15);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .25s cubic-bezier(0.15,0.83,0.66,1);
+  border: none;
+}
+.tg-support:hover {
+  transform: scale(1.12) translateY(-3px);
+  box-shadow: 0 8px 28px rgba(34,158,217,.65);
+  background: #1a8fc0;
+}
+.tg-support svg { width: 28px; height: 28px; fill: #fff }
+.tg-support::after {
+  content: 'تواصل مع الدعم';
+  position: absolute;
+  left: 62px;
+  background: #1A1A2E;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Tajawal', sans-serif;
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.tg-support:hover::after { opacity: 1 }
+
+/* ═══ Login Button (uiverse ripple style — green) ════════════════════ */
+.btn-login {
+  background: transparent;
+  position: relative;
+  padding: 8px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid var(--alpha-green);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: var(--alpha-green);
+  transition: color 0.3s 0.1s ease-out;
+  white-space: nowrap;
+}
+.btn-login::before {
+  position: absolute;
+  top: 0; left: -5em; right: 0; bottom: 0;
+  margin: auto;
+  content: "";
+  border-radius: 50%;
+  display: block;
+  width: 20em; height: 20em;
+  transition: box-shadow 0.5s ease-out;
+  z-index: -1;
+}
+.btn-login:hover { color: #fff; border-color: var(--alpha-green) }
+.btn-login:hover::before { box-shadow: inset 0 0 0 10em var(--alpha-green) }
 .btn-login {
   min-width: 100px;
   position: relative;
