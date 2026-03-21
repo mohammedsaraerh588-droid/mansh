@@ -93,7 +93,7 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/auth/login" className="alpha-btn alpha-btn-primary" style={{textDecoration:'none',fontSize:13,padding:'8px 16px'}}>دخول</Link>
+                <Link href="/auth/login" className="btn-login" style={{fontSize:13,padding:'8px 16px'}}>دخول</Link>
                 <Link href="/auth/register" className="btn-register" style={{fontSize:13,padding:'8px 18px'}}>إنشاء حساب</Link>
               </>
             )}
@@ -121,8 +121,8 @@ export default function Navbar() {
                 <LogOut size={14}/>خروج
               </button>
             </>) : (<>
-              <Link href="/auth/login"    className="nav-link" onClick={()=>setOpen(false)}>دخول</Link>
-              <Link href="/auth/register" className="alpha-btn alpha-btn-primary btn-full" style={{textDecoration:'none',marginTop:6,justifyContent:'center'}} onClick={()=>setOpen(false)}>إنشاء حساب</Link>
+              <Link href="/auth/login" className="btn-login btn-full" style={{marginTop:4}} onClick={()=>setOpen(false)}>دخول</Link>
+              <Link href="/auth/register" className="btn-register btn-full" style={{marginTop:6,justifyContent:'center'}} onClick={()=>setOpen(false)}>إنشاء حساب</Link>
             </>)}
           </div>
         </div>

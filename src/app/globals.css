@@ -385,7 +385,42 @@ button, input, select, textarea { font-family: inherit }
 ::-webkit-scrollbar-thumb:hover { background:var(--alpha-green) }
 :focus-visible { outline:2px solid var(--alpha-green);outline-offset:2px;border-radius:4px }
 
-/* ═══ Register Button (uiverse.io zanina-yassine — adapted green) ══ */
+/* ═══ Login Button (same uiverse style — dark adapted) ══════════════ */
+.btn-login {
+  min-width: 100px;
+  position: relative;
+  cursor: pointer;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  background: radial-gradient(
+    ellipse at bottom,
+    rgba(56,142,60,.6) 0%,
+    rgba(27,94,32,.9) 50%
+  );
+  color: rgba(255,255,255,.75);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 1s cubic-bezier(0.15,0.83,0.66,1);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn-login::before {
+  content: "";
+  width: 70%; height: 1px;
+  position: absolute; bottom: 0; left: 15%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
+  opacity: .15;
+  transition: all 1s cubic-bezier(0.15,0.83,0.66,1);
+}
+.btn-login:hover { color: #fff; transform: scale(1.06) translateY(-2px) }
+.btn-login:hover::before { opacity: .8 }
 .btn-register {
   min-width: 120px;
   position: relative;
