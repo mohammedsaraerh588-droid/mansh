@@ -8,10 +8,10 @@ export default function StudentCertificatesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/certificate').then(r => r.json()).then(d => {
-      setCerts(d.certificates || [])
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    fetch('/api/certificate')
+      .then(r => r.json())
+      .then(d => { setCerts(d.certificates || []); setLoading(false) })
+      .catch(e => { console.error('[CERTS]', e); setLoading(false) })
   }, [])
 
   if (loading) return (

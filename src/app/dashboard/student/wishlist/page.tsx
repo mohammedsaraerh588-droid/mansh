@@ -9,10 +9,10 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/wishlist').then(r => r.json()).then(d => {
-      setWishlist(d.wishlist || [])
-      setLoading(false)
-    })
+    fetch('/api/wishlist')
+      .then(r => r.json())
+      .then(d => { setWishlist(d.wishlist || []); setLoading(false) })
+      .catch(e => { console.error('[WISHLIST]', e); setLoading(false) })
   }, [])
 
   if (loading) return (

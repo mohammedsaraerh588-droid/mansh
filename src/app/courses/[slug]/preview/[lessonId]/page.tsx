@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowRight, Lock } from 'lucide-react'
 import Link from 'next/link'
 import VideoPlayer from '@/components/ui/VideoPlayer'
+import DOMPurify from 'isomorphic-dompurify'
 
 export default async function LessonPreviewPage({ params }: { params: Promise<{ slug: string; lessonId: string }> }) {
   const { slug, lessonId } = await params
@@ -52,7 +53,7 @@ export default async function LessonPreviewPage({ params }: { params: Promise<{ 
         ) : (
           <div style={{ padding:24, background:'var(--surface)', border:'1px solid var(--brd)', borderRadius:12, minHeight:200, lineHeight:1.8, color:'var(--tx1)', fontSize:15 }}>
             {lesson.content
-              ? <div dangerouslySetInnerHTML={{__html: lesson.content}}/>
+              ? <div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(lesson.content)}}/>
               : <p style={{ color:'var(--tx3)' }}>لا يوجد محتوى.</p>}
           </div>
         )}

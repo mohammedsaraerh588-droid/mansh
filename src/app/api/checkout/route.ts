@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         progress_percentage: 0,
       }, { onConflict: 'student_id,course_id' })
       if (error) { console.error('[FREE_ENROLL]', error); return new NextResponse('Enrollment failed', { status: 500 }) }
-      try { await supabase.rpc('increment_course_students', { course_id: courseId }) } catch {}
+      try { await supabase.rpc('increment_course_students', { course_id: courseId }) } catch (e) { console.error('[RPC]', e) }
       return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.slug}/learn` })
     }
 
