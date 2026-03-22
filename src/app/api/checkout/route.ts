@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
+import { isValidUUID, sanitizeStr } from '@/lib/validate'
 
 export async function POST(req: Request) {
   // ⛔ Rate limit: 10 طلبات كل 60 ثانية
@@ -12,7 +13,11 @@ export async function POST(req: Request) {
     )
   }
   try {
-    const { courseId } = await req.json()
+    const body = await req.json()
+    const courseId    = sanitizeStr(body.courseId, 36)
+    const couponCode  = sanitizeStr(body.couponCode || '', 32)
+    if (!isValidUUID(courseId)) return new NextResponse('Invalid courseId', { status: 400 })
+
     const supabase = await createSupabaseServerClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return new NextResponse('Unauthorized', { status: 401 })

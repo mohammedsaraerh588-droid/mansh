@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
+import { sanitizeStr } from '@/lib/validate'
 
 export async function POST(req: Request) {
   // ⛔ Rate limit: 20 محاولة كل دقيقة لمنع تخمين الكودات

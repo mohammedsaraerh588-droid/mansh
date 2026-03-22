@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import VideoPlayer from '@/components/ui/VideoPlayer'
 import QuizComponent from '@/components/ui/QuizComponent'
+import DOMPurify from 'isomorphic-dompurify'
 import { PlayCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Loader2, Menu, X, ClipboardList, Award, StickyNote, Plus, Trash2 } from 'lucide-react'
 
 export default function CourseLearnPage() {
@@ -159,7 +160,7 @@ export default function CourseLearnPage() {
               ) : (
                 <div style={{padding:24,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,minHeight:280,lineHeight:1.8,color:'var(--txt1)',fontSize:15}}>
                   {activeLesson.content
-                    ? <div dangerouslySetInnerHTML={{__html:activeLesson.content}}/>
+                    ? <div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(activeLesson.content)}}/>
                     : <p style={{color:'var(--txt3)',textAlign:'center',paddingTop:40}}>لا يوجد محتوى نصي.</p>}
                 </div>
               )}
