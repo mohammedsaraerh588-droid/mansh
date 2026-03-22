@@ -18,21 +18,27 @@ export default function RegisterPage() {
     if (form.password.length < 6)            { setErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return }
     if (form.password !== form.confirm)      { setErr('كلمتا المرور غير متطابقتين'); return }
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email:   form.email,
+    const { data, error } = await supabase.auth.signUp({
+      email:    form.email,
       password: form.password,
       options:  { data: { full_name: form.name.trim() } },
     })
     setLoading(false)
+
     if (error) {
-      if (error.message.includes('already') || error.message.includes('registered')) {
-        setErr('هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو استخدم بريداً آخر.')
-      } else {
-        setErr('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      // إذا كان البريد مسجلاً لكن غير مؤكد — أعد إرسال رابط التأكيد
+      if (error.message.toLowerCase().includes('already') ||
+          error.message.toLowerCase().includes('registered')) {
+        await supabase.auth.resend({ type: 'signup', email: form.email })
+        await supabase.auth.signOut()
+        setSuccess(true)
+        return
       }
+      setErr('حدث خطأ. يرجى المحاولة مرة أخرى.')
       return
     }
-    // ⚠️ مهم: نُسجّل خروج فوراً لمنع الدخول قبل تأكيد البريد
+
+    // تسجيل خروج فوري لمنع الدخول قبل تأكيد البريد
     await supabase.auth.signOut()
     setSuccess(true)
   }
