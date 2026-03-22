@@ -6,6 +6,32 @@ import EnrollButton from '@/components/courses/EnrollButton'
 import CourseRating from '@/components/courses/CourseRating'
 import WishlistButton from '@/components/ui/WishlistButton'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = await createSupabaseServerClient()
+  const { data: course } = await supabase
+    .from('courses').select('title,description,thumbnail_url,teacher:profiles(full_name)')
+    .eq('slug', slug).single()
+  if (!course) return { title: 'دورة غير موجودة' }
+  return {
+    title: course.title,
+    description: course.description?.slice(0, 160) || `دورة ${course.title} مع ${(course.teacher as any)?.full_name || 'معلم متخصص'}`,
+    openGraph: {
+      title:       course.title,
+      description: course.description?.slice(0, 160),
+      images:      course.thumbnail_url ? [course.thumbnail_url] : [],
+      type:        'website',
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       course.title,
+      description: course.description?.slice(0, 160),
+      images:      course.thumbnail_url ? [course.thumbnail_url] : [],
+    },
+  }
+}
 
 export const revalidate = 60
 
@@ -200,11 +226,16 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
                   {mod.lessons?.map((lesson:any) => (
                     <div key={lesson.id} style={{padding:'11px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid var(--brd)',background:'var(--surface)'}}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <PlayCircle size={13} style={{color:'var(--tx3)',flexShrink:0}}/>
+                        <PlayCircle size={13} style={{color:lesson.is_preview?'var(--ok)':'var(--tx3)',flexShrink:0}}/>
                         <span style={{fontSize:13.5,color:'var(--tx2)'}}>{lesson.title}</span>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:10}}>
-                        {lesson.is_preview && <span className="badge badge-green" style={{fontSize:10}}>معاينة</span>}
+                        {lesson.is_preview && (
+                          <Link href={`/courses/${course.slug}/preview/${lesson.id}`}
+                            style={{textDecoration:'none'}}>
+                            <span className="badge badge-green" style={{fontSize:10,cursor:'pointer'}}>معاينة مجانية ▶</span>
+                          </Link>
+                        )}
                         {lesson.video_duration > 0 && <span style={{fontSize:12,color:'var(--tx3)'}}>{Math.round(lesson.video_duration/60)} د</span>}
                       </div>
                     </div>
