@@ -35,13 +35,13 @@ function walk(dir) {
     if (garbled > 3)
       issues.push({ type:'GARBLED_ARABIC', file:rel, detail: garbled + ' instances' });
 
-    // 6. Missing loading state in client data pages
-    if (hasUseClient && /from\('/.test(code) && !/loading|setLoading|Loader/.test(code) && rel.startsWith('app\\') && !rel.includes('api\\') && !rel.includes('callback') && !rel.includes('auth\\'))
-      issues.push({ type:'NO_LOADING_STATE', file:rel });
-
     // 7. router.push without error handling in API calls
-    if (hasUseClient && /fetch\(.*\/api\//.test(code) && !/try\s*\{/.test(code) && rel.startsWith('app\\') && !rel.includes('api\\'))
+    if (hasUseClient && /fetch\(.*\/api\//.test(code) && !/try\s*\{|\.catch\(/.test(code) && rel.startsWith('app\\') && !rel.includes('api\\'))
       issues.push({ type:'FETCH_NO_TRY_CATCH', file:rel });
+
+    // 6. Missing loading state in client data pages
+    if (hasUseClient && /from\('/.test(code) && !/loading|setLoading|Loader|coursesLoading/.test(code) && rel.startsWith('app\\') && !rel.includes('api\\') && !rel.includes('callback') && !rel.includes('auth\\'))
+      issues.push({ type:'NO_LOADING_STATE', file:rel });
 
     // 8. Using var instead of const/let
     if (/\bvar\s+/.test(code))
