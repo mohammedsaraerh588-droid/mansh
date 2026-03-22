@@ -10,7 +10,10 @@ export default function NotificationBell() {
   const unread = notifs.filter(n => !n.is_read).length
 
   useEffect(() => {
-    fetch('/api/notifications').then(r => r.json()).then(d => setNotifs(d.notifications || []))
+    fetch('/api/notifications')
+      .then(r => r.json())
+      .then(d => setNotifs(d.notifications || []))
+      .catch(e => console.error('[NOTIF_BELL]', e))
   }, [])
 
   useEffect(() => {
@@ -20,8 +23,10 @@ export default function NotificationBell() {
   }, [])
 
   const markAll = async () => {
-    await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
-    setNotifs(p => p.map(n => ({ ...n, is_read: true })))
+    try {
+      await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      setNotifs(p => p.map(n => ({ ...n, is_read: true })))
+    } catch (e) { console.error('[NOTIF_MARK]', e) }
   }
 
   const icon = (type: string) => {

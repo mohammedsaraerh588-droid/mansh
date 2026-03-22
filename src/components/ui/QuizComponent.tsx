@@ -32,6 +32,7 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
         setLoading(false)
         if (d.questions?.length > 0) setTimerOn(true)
       })
+      .catch(e => { console.error('[QUIZ_LOAD]', e); setLoading(false) })
   }, [lessonId])
 
   useEffect(() => {
@@ -53,16 +54,24 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
       return
     }
     setSubmitting(true); setTimerOn(false)
-    const res = await fetch('/api/quiz', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lessonId, answers }),
-    })
-    const data = await res.json()
-    setResult(data)
-    setCorrectMap(data.result || {})
-    setSubmitting(false)
-    fetch(`/api/quiz?lessonId=${lessonId}`).then(r=>r.json()).then(d=>setLeaderboard(d.leaderboard||[]))
+    try {
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId, answers }),
+      })
+      const data = await res.json()
+      setResult(data)
+      setCorrectMap(data.result || {})
+      fetch(`/api/quiz?lessonId=${lessonId}`)
+        .then(r => r.json())
+        .then(d => setLeaderboard(d.leaderboard || []))
+        .catch(e => console.error('[QUIZ_LEADERBOARD]', e))
+    } catch (e) {
+      console.error('[QUIZ_SUBMIT]', e)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleRetry = () => {

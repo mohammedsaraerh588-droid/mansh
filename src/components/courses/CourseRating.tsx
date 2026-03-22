@@ -22,18 +22,25 @@ export default function CourseRating({ courseId, isEnrolled }: Props) {
         if (d.myRating) { setMyRating(d.myRating); setSelected(d.myRating.rating); setReviewText(d.myRating.review || '') }
         setLoading(false)
       })
+      .catch(e => { console.error('[RATING_LOAD]', e); setLoading(false) })
   }, [courseId])
 
   const submit = async () => {
     if (!selected) return
     setSaving(true)
-    await fetch('/api/rating', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId, rating: selected, review: reviewText }),
-    })
-    setSaving(false); setDone(true)
-    setTimeout(() => setDone(false), 3000)
+    try {
+      await fetch('/api/rating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId, rating: selected, review: reviewText }),
+      })
+      setDone(true)
+      setTimeout(() => setDone(false), 3000)
+    } catch (e) {
+      console.error('[RATING_SUBMIT]', e)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const stars = (n: number, size = 16) => Array.from({ length: 5 }, (_, i) => (
