@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const certId = searchParams.get('certId')
-  if (!certId) return NextResponse.json({ error: 'certId required' }, { status: 400 })
+  try {
+    const { searchParams } = new URL(req.url)
+    const certId = searchParams.get('certId')
+    if (!certId) return NextResponse.json({ error: 'certId required' }, { status: 400 })
 
-  const supabase = await createSupabaseServerClient()
-  const { data: cert } = await supabase.from('certificates').select('*').eq('id', certId).single()
-  if (!cert) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const supabase = await createSupabaseServerClient()
+    const { data: cert, error } = await supabase.from('certificates').select('*').eq('id', certId).single()
+    if (error || !cert) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const issued = new Date(cert.issued_at).toLocaleDateString('ar-SA', {
     year: 'numeric', month: 'long', day: 'numeric'
@@ -72,4 +73,8 @@ body{font-family:'Tajawal',serif;background:#fff;display:flex;align-items:center
 </html>`
 
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  } catch (err: unknown) {
+    console.error('[CERT_PDF]', err)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
 }

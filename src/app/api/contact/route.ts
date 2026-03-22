@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
+  try {
   // ⛔ Rate limit: 5 محاولات كل 60 ثانية
   if (isRateLimited(getIP(req), { limit: 5, window: 60 })) {
     return NextResponse.json(
@@ -28,5 +29,8 @@ export async function POST(req: Request) {
     console.error('[CONTACT]', error)
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true })  } catch (err: unknown) {
+    console.error('[CONTACT_POST]', err)
+    return Response.json({ error: 'Internal error' }, { status: 500 })
+  }
 }

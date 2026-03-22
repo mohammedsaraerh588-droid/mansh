@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url)
   const lessonId = searchParams.get('lessonId')
   if (!lessonId) return NextResponse.json({ error: 'lessonId required' }, { status: 400 })
@@ -34,10 +35,14 @@ export async function GET(req: Request) {
     .order('score', { ascending: false })
     .limit(10)
 
-  return NextResponse.json({ questions: questions||[], previousAttempt: attempt||null, leaderboard: leaderboard||[] })
+  return NextResponse.json({ questions: questions||[], previousAttempt: attempt||null, leaderboard: leaderboard||[] })  } catch (err: unknown) {
+    console.error('[QUIZ_GET]', err)
+    return Response.json({ error: 'Internal error' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
+  try {
   if (isRateLimited(getIP(req), { limit: 15, window: 60 })) {
     return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً.' }, { status: 429 })
   }
@@ -71,5 +76,8 @@ export async function POST(req: Request) {
     completed_at: new Date().toISOString(),
   }).select().single()
 
-  return NextResponse.json({ score, totalPoints, passed, result, attemptId: attempt?.id })
+  return NextResponse.json({ score, totalPoints, passed, result, attemptId: attempt?.id })  } catch (err: unknown) {
+    console.error('[QUIZ_POST]', err)
+    return Response.json({ error: 'Internal error' }, { status: 500 })
+  }
 }

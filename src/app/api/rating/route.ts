@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
+  try {
   if (isRateLimited(getIP(req), { limit: 5, window: 60 })) {
     return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً.' }, { status: 429 })
   }
@@ -41,10 +42,14 @@ export async function POST(req: Request) {
     }).eq('id', courseId)
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true })  } catch (err: unknown) {
+    console.error('[RATING_POST]', err)
+    return Response.json({ error: 'Internal error' }, { status: 500 })
+  }
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url)
   const courseId = searchParams.get('courseId')
   if (!courseId) return NextResponse.json({ error: 'courseId required' }, { status: 400 })
@@ -66,5 +71,8 @@ export async function GET(req: Request) {
     myRating = data
   }
 
-  return NextResponse.json({ reviews: reviews || [], myRating })
+  return NextResponse.json({ reviews: reviews || [], myRating })  } catch (err: unknown) {
+    console.error('[RATING_GET]', err)
+    return Response.json({ error: 'Internal error' }, { status: 500 })
+  }
 }
