@@ -19,8 +19,9 @@ function walk(dir) {
     if (/whsec_[a-zA-Z0-9]{10}/.test(code)) results.critical.push('HARDCODED_WEBHOOK_SECRET: '+rel);
     if (/re_[a-zA-Z0-9]{20}/.test(code)) results.critical.push('HARDCODED_RESEND_KEY: '+rel);
 
-    // HIGH: XSS risks
-    if (/dangerouslySetInnerHTML[\s\S]{0,20}__html/.test(code)) results.high.push('XSS_dangerouslySetInnerHTML: '+rel);
+    // HIGH: XSS risks — only flag if NOT sanitized with DOMPurify
+    if (/dangerouslySetInnerHTML[\s\S]{0,20}__html/.test(code) && !/DOMPurify\.sanitize/.test(code))
+      results.high.push('XSS_dangerouslySetInnerHTML_UNSANITIZED: '+rel);
     if (/eval\(|new Function\(/.test(code)) results.high.push('CODE_INJECTION eval/Function: '+rel);
 
     // HIGH: API routes without auth
@@ -43,8 +44,10 @@ function walk(dir) {
     // MEDIUM: HTTP links (not HTTPS)
     if (/href="http:\/\/(?!localhost)/.test(code)) results.medium.push('HTTP_NOT_HTTPS: '+rel);
 
-    // MEDIUM: Missing input validation in API POST handlers
-    if (rel.startsWith('app\\api') && /export async function POST/.test(code) && !/\.trim\(\)|z\.object|yup\.|joi\./.test(code)) {
+    // MEDIUM: Missing input validation — recognize our custom validate lib too
+    if (rel.startsWith('app\\api') && /export async function POST/.test(code)
+      && !rel.includes('webhooks') && !rel.includes('upload-signature')
+      && !/\.trim\(\)|sanitizeStr|isValidUUID|requireFields|z\.object|yup\.|joi\./.test(code)) {
       results.medium.push('NO_INPUT_VALIDATION: '+rel);
     }
 

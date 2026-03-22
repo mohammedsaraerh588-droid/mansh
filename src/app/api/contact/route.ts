@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   }
 
   const { name, email, message, subject } = await req.json()
-  if (!name || !email || !message) {
+  if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'جميع الحقول مطلوبة' }, { status: 400 })
   }
 

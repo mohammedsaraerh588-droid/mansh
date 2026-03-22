@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validate'
 
 export async function POST(req: Request) {
   try {
@@ -8,6 +9,7 @@ export async function POST(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { courseId } = await req.json()
+    if (!isValidUUID(courseId)) return NextResponse.json({ error: 'Invalid courseId' }, { status: 400 })
     const { data: enrollment } = await supabase.from('enrollments')
       .select('progress_percentage').eq('student_id', session.user.id).eq('course_id', courseId).single()
 

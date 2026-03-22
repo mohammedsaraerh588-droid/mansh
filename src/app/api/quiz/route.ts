@@ -46,6 +46,9 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { lessonId, answers } = await req.json()
+  if (!lessonId?.trim() || !answers || typeof answers !== 'object') {
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
   const { data: questions } = await supabase
     .from('quiz_questions').select('id,correct_option,points').eq('lesson_id', lessonId)
 

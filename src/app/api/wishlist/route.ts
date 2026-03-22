@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validate'
 
 export async function GET() {
   const supabase = await createSupabaseServerClient()
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { courseId } = await req.json()
+  if (!isValidUUID(courseId)) return NextResponse.json({ error: 'Invalid courseId' }, { status: 400 })
 
   const { data: existing } = await supabase
     .from('wishlist').select('id').eq('user_id', session.user.id).eq('course_id', courseId).maybeSingle()

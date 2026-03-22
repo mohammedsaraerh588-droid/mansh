@@ -11,8 +11,8 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { courseId, rating, review } = await req.json()
-  if (!courseId || !rating || rating < 1 || rating > 5)
-    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+  if (!courseId?.trim() || !rating || rating < 1 || rating > 5)
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
 
   // تحقق أن الطالب مسجّل في الدورة
   const { data: enr } = await supabase.from('enrollments')
