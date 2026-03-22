@@ -163,7 +163,7 @@ export default function LessonEditorPage() {
                 <span style={{fontSize:12,color:'var(--txt3)',fontWeight:600}}>أو ارفع من جهازك</span>
                 <div style={{flex:1,height:1,background:'var(--border)'}}/>
               </div>
-              <VideoUploader currentVideoUrl={lesson.cloudinary_public_id?lesson.video_url:null} onSuccess={handleVideoSuccess}/>
+              <VideoUploader onUploaded={(publicId, url) => handleVideoSuccess(publicId, url)}/>
             </div>
           ) : (
             <div>

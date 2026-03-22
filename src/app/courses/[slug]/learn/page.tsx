@@ -86,6 +86,12 @@ export default function CourseLearnPage() {
   const completedCount = progress.filter(p=>p.is_completed).length
   const pct = totalLessons>0 ? Math.round((completedCount/totalLessons)*100) : 0
 
+  // ── حفظ تلقائي عند إنهاء الدرس ─────────────────────────
+  const autoSaveProgress = async (lessonId: string) => {
+    if (isDone(lessonId)) return // مكتمل بالفعل
+    await markDone(lessonId)
+  }
+
   const markDone = async (lessonId:string) => {
     const { data:{ session } } = await supabase.auth.getSession()
     if (!session||!course) return
@@ -164,7 +170,13 @@ export default function CourseLearnPage() {
               <h2 style={{fontSize:20,fontWeight:900,marginBottom:16,color:'var(--txt1)'}}>{activeLesson.title}</h2>
 
               {activeLesson.type==='video' ? (
-                <VideoPlayer publicId={activeLesson.cloudinary_public_id} url={activeLesson.video_url} title={activeLesson.title} onEnded={handleComplete}/>
+                <VideoPlayer
+                  publicId={activeLesson.cloudinary_public_id}
+                  url={activeLesson.video_url}
+                  title={activeLesson.title}
+                  onEnded={() => autoSaveProgress(activeLesson.id)}
+                  onProgress={(pct) => { if (pct >= 80) autoSaveProgress(activeLesson.id) }}
+                />
               ) : (
                 <div style={{padding:24,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,minHeight:280,lineHeight:1.8,color:'var(--txt1)',fontSize:15}}>
                   {activeLesson.content

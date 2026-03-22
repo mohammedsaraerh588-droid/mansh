@@ -6,9 +6,18 @@ interface Props {
   title?: string
   thumbnail?: string
   onEnded?: () => void
+  onProgress?: (percentage: number) => void
 }
 
-export default function VideoPlayer({ publicId, url, title, thumbnail, onEnded }: Props) {
+export default function VideoPlayer({ publicId, url, title, thumbnail, onEnded, onProgress }: Props) {
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (!onProgress) return
+    const video = e.currentTarget
+    if (video.duration > 0) {
+      const pct = (video.currentTime / video.duration) * 100
+      onProgress(Math.round(pct))
+    }
+  }
   // Cloudinary video
   if (publicId) {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
@@ -18,6 +27,10 @@ export default function VideoPlayer({ publicId, url, title, thumbnail, onEnded }
         controls
         poster={thumbnail}
         onEnded={onEnded}
+        onTimeUpdate={handleTimeUpdate}
+        onContextMenu={e => e.preventDefault()}
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
         style={{width:'100%',borderRadius:12,background:'#000',maxHeight:480}}
         preload="metadata"
       >
@@ -68,6 +81,10 @@ export default function VideoPlayer({ publicId, url, title, thumbnail, onEnded }
         controls
         poster={thumbnail}
         onEnded={onEnded}
+        onTimeUpdate={handleTimeUpdate}
+        onContextMenu={e => e.preventDefault()}
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
         style={{width:'100%',borderRadius:12,background:'#000',maxHeight:480}}
         preload="metadata"
       >
