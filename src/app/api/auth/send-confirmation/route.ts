@@ -101,7 +101,10 @@ export async function POST(req: Request) {
     type: 'signup',
     email: cleanEmail,
     password,
-    options: { data: { full_name: sanitizeStr(full_name, 100).trim() } },
+    options: {
+      data: { full_name: sanitizeStr(full_name, 100).trim() },
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
   })
   if (createErr) {
     console.error('[SIGNUP_ERROR]', createErr)
