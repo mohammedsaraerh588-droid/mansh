@@ -47,6 +47,10 @@ const { data: { user }, error } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
+    // منع الدخول بدون تأكيد البريد
+    if (!user.email_confirmed_at) {
+      return NextResponse.redirect(new URL('/auth/verify-email', request.url))
+    }
   }
 
   // Role-specific
@@ -58,8 +62,8 @@ const { data: { user }, error } = await supabase.auth.getUser()
     return NextResponse.redirect(new URL('/dashboard/student', request.url))
   }
 
-  // Auth pages redirect to dashboard
-  if (user && ['/auth/login', '/auth/register'].includes(pathname)) {
+  // Auth pages redirect to dashboard — فقط إذا كان البريد مؤكداً
+  if (user && user.email_confirmed_at && ['/auth/login', '/auth/register'].includes(pathname)) {
     const target = isAdmin ? '/dashboard/admin' : 
                   isTeacher ? '/dashboard/teacher' : '/dashboard/student'
     return NextResponse.redirect(new URL(target, request.url))
