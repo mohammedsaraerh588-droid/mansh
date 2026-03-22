@@ -24,11 +24,28 @@ export default function AdminUsersPage() {
   }
   useEffect(()=>{ fetchUsers() },[])
 
-  const changeRole = async (id:string, role:string) => {
+  const changeRole = async (id: string, role: string) => {
     if (!confirm(`تغيير الصلاحية إلى "${roleLabel(role)}"؟`)) return
-    setUsers(u=>u.map(x=>x.id===id?{...x,role}:x))
-    const { error } = await supabase.from('profiles').update({role}).eq('id',id)
-    if (error) { alert('حدث خطأ.'); fetchUsers() }
+
+    // تحديث مؤقت في الواجهة
+    setUsers(u => u.map(x => x.id === id ? { ...x, role } : x))
+
+    try {
+      const res = await fetch('/api/admin/change-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id, role }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert('فشل تغيير الصلاحية: ' + (data.error || 'خطأ غير معروف'))
+        fetchUsers() // أعد تحميل البيانات الحقيقية
+      }
+    } catch (e) {
+      console.error('[CHANGE_ROLE]', e)
+      alert('حدث خطأ في الشبكة')
+      fetchUsers()
+    }
   }
 
   const deleteUser = async (id:string, name:string) => {
