@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validate'
 
 export async function DELETE(req: Request) {
   try {
@@ -13,25 +14,43 @@ export async function DELETE(req: Request) {
     if (adminProfile?.role !== 'admin')
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    // جلب الـ userId من الطلب
     const { userId } = await req.json()
-    if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+    if (!userId || !isValidUUID(userId))
+      return NextResponse.json({ error: 'userId غير صالح' }, { status: 400 })
 
     // منع حذف نفسه
     if (userId === session.user.id)
       return NextResponse.json({ error: 'لا يمكنك حذف حسابك الخاص' }, { status: 400 })
 
-    // استخدام Admin Client (Service Role) لحذف المستخدم من Auth
     const adminClient = createSupabaseAdminClient()
-    const { error } = await adminClient.auth.admin.deleteUser(userId)
 
-    if (error) {
-      console.error('[DELETE_USER]', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    // خطوة 1: احذف من جداول البيانات يدوياً أولاً (في حال CASCADE لم يعمل)
+    await adminClient.from('enrollments').delete().eq('student_id', userId)
+    await adminClient.from('lesson_progress').delete().eq('student_id', userId)
+    await adminClient.from('notifications').delete().eq('user_id', userId)
+    await adminClient.from('wishlist').delete().eq('user_id', userId)
+    await adminClient.from('lesson_notes').delete().eq('student_id', userId)
+    await adminClient.from('certificates').delete().eq('student_id', userId)
+    await adminClient.from('course_reviews').delete().eq('student_id', userId)
+    await adminClient.from('quiz_attempts').delete().eq('student_id', userId)
+    await adminClient.from('profiles').delete().eq('id', userId)
+
+    // خطوة 2: احذف من Supabase Auth نهائياً (hard delete)
+    const { error: authError } = await adminClient.auth.admin.deleteUser(
+      userId,
+      false  // shouldSoftDelete = false → حذف نهائي كامل
+    )
+
+    if (authError) {
+      console.error('[DELETE_USER_AUTH]', authError)
+      return NextResponse.json(
+        { error: `فشل حذف الحساب: ${authError.message}` },
+        { status: 500 }
+      )
     }
 
-    // profiles تُحذف تلقائياً بسبب ON DELETE CASCADE
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, message: 'تم حذف المستخدم نهائياً' })
+
   } catch (err: any) {
     console.error('[DELETE_USER]', err)
     return NextResponse.json({ error: err.message }, { status: 500 })

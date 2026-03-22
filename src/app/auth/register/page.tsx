@@ -25,9 +25,11 @@ export default function RegisterPage() {
     })
     setLoading(false)
     if (error) {
-      setErr(error.message.includes('already')
-        ? 'هذا البريد الإلكتروني مسجّل بالفعل.'
-        : 'حدث خطأ. يرجى المحاولة مرة أخرى.')
+      if (error.message.includes('already') || error.message.includes('registered')) {
+        setErr('هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو استخدم بريداً آخر.')
+      } else {
+        setErr('حدث خطأ. يرجى المحاولة مرة أخرى.')
+      }
       return
     }
     // ⚠️ مهم: نُسجّل خروج فوراً لمنع الدخول قبل تأكيد البريد
