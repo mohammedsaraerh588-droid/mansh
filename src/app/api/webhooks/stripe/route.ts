@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return new NextResponse('Webhook Error: Missing metadata', { status: 400 })
     }
 
-const supabase = createSupabaseAdminClient()
+const supabase = await createSupabaseServerClient()
 
     // Create the enrollment
     await supabase.from('enrollments').insert({
@@ -45,3 +45,4 @@ const supabase = createSupabaseAdminClient()
 
   return new NextResponse('Webhook Received', { status: 200 })
 }
+

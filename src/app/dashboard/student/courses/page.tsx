@@ -43,7 +43,7 @@ export default function StudentCourses() {
       ) : (
         <div className="courses-grid">
           {enrollments.map(e=>(
-            <CourseCard key={e.courses?.id} course={{...e.courses,category:e.courses?.categories} as any} showProgress progress={e.progress_percentage||0}/>
+            <CourseCard key={e.courses?.id} course={{...e.courses, category:e.courses?.categories} as any}/>
           ))}
         </div>
       )}
