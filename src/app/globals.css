@@ -572,3 +572,165 @@ footer { background:var(--tx1);color:#fff;padding:48px 0 0 }
 .footer-content ul li a:hover { color:#fff }
 .footer-of-footer { text-align:center;padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.4) }
 .footer-of-footer a { color:var(--alpha-green-3) }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE STYLES — Mobile, Tablet, Desktop
+   Breakpoints:
+   - Mobile:  < 640px
+   - Tablet:  640px – 1024px
+   - Desktop: > 1024px
+═══════════════════════════════════════════════════════ */
+
+/* ─── Tablet (iPad) ──────────────────────────────────── */
+@media (max-width: 1024px) {
+  .wrap, .alpha-container { padding: 0 20px }
+  .nav-bar { padding: 0 20px }
+
+  /* Hero sections */
+  .hero { padding: 44px 0 40px !important }
+
+  /* Courses grid */
+  .courses-grid { grid-template-columns: repeat(2, 1fr) !important }
+
+  /* Stats grid */
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important }
+
+  /* Dashboard sidebar narrower */
+  .dashboard-sidebar { width: 220px !important }
+
+  /* Course detail layout */
+  .course-detail-layout {
+    flex-direction: column !important;
+  }
+  .course-purchase-card {
+    width: 100% !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  /* Tables scrollable */
+  .tbl-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch }
+  .tbl { min-width: 600px }
+}
+
+/* ─── Mobile (Phone) ────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Base spacing */
+  .wrap, .wrap-sm, .wrap-md, .alpha-container { padding: 0 16px }
+  .nav-bar { padding: 0 16px; height: 56px }
+
+  /* Typography scale down */
+  .alpha-text-title-xl { font-size: clamp(22px, 7vw, 28px) !important }
+  .alpha-text-title-lg { font-size: clamp(18px, 5vw, 22px) !important }
+
+  /* Hero */
+  .hero { padding: 36px 0 32px !important }
+
+  /* Courses grid → 1 column */
+  .courses-grid { grid-template-columns: 1fr !important }
+
+  /* Stats grid → 2 columns */
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important }
+  .stat-card  { padding: 14px !important }
+
+  /* Cards */
+  .card { border-radius: 12px !important }
+
+  /* Buttons */
+  .btn-register, .btn-login { padding: 10px 16px !important; font-size: 13px !important }
+
+  /* Tables */
+  .tbl-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch }
+  .tbl { min-width: 540px }
+
+  /* Dashboard layout → stack */
+  .dashboard-layout { flex-direction: column !important }
+  .dashboard-sidebar { width: 100% !important; min-height: auto !important; border-left: none !important; border-bottom: 1px solid var(--brd) !important }
+  .dashboard-sidebar-inner { flex-direction: row !important; overflow-x: auto; padding: 8px 12px !important; gap: 6px !important }
+  .dashboard-sidebar-inner a { white-space: nowrap; padding: 8px 12px !important; border-radius: 20px !important }
+  .dashboard-sidebar-inner .sidebar-label { display: none !important }
+  .dashboard-main { padding: 16px !important }
+
+  /* Course detail → stack */
+  .course-detail-layout {
+    flex-direction: column !important;
+  }
+  .course-purchase-card {
+    width: 100% !important;
+    position: static !important;
+    order: -1;
+  }
+
+  /* Auth cards */
+  .auth-card { padding: 20px 16px !important }
+
+  /* Telegram button */
+  .tg-support { bottom: 16px !important; left: 16px !important; width: 48px !important; height: 48px !important }
+  .tg-support::after { display: none !important }
+
+  /* Footer */
+  .footer-content { grid-template-columns: 1fr 1fr !important; gap: 20px !important }
+
+  /* Grid 2-col → 1 on small */
+  .grid-2 { grid-template-columns: 1fr !important }
+  .grid-3 { grid-template-columns: 1fr !important }
+  .grid-4 { grid-template-columns: repeat(2, 1fr) !important }
+
+  /* Modals full screen */
+  .modal-card { width: 100% !important; max-width: 100% !important; margin: 0 !important; border-radius: 16px 16px 0 0 !important; position: fixed !important; bottom: 0 !important }
+
+  /* Forms */
+  .form-row { flex-direction: column !important }
+  .form-col  { width: 100% !important }
+
+  /* Learn page sidebar hidden by default on mobile */
+  .learn-sidebar { display: none }
+  .learn-sidebar.open { display: flex !important }
+
+  /* Profile tabs */
+  .profile-tabs button { font-size: 12px !important; padding: 7px 12px !important }
+
+  /* Admin/Teacher quick actions */
+  .quick-actions { grid-template-columns: 1fr 1fr !important }
+
+  /* Badges wrap */
+  .badge-row { flex-wrap: wrap !important; gap: 6px !important }
+
+  /* Eyebrow text */
+  .eyebrow { font-size: 10px !important }
+
+  /* Section padding */
+  section { padding: 36px 0 !important }
+}
+
+/* ─── Small Mobile (< 390px) ────────────────────────── */
+@media (max-width: 390px) {
+  .wrap, .wrap-sm, .wrap-md { padding: 0 12px }
+  .stats-grid { grid-template-columns: 1fr 1fr !important }
+  .action-buttons .btn-login  { display: none }
+  .footer-content { grid-template-columns: 1fr !important }
+}
+
+/* ─── Touch device improvements ─────────────────────── */
+@media (hover: none) {
+  /* Disable hover transforms on touch */
+  .btn-register:hover,
+  .btn-login:hover { transform: none !important }
+  .card:hover { transform: none !important }
+
+  /* Bigger touch targets */
+  .nav-links li a { padding: 10px 14px !important }
+  button, [role="button"] { min-height: 44px }
+}
+
+/* ─── Landscape phone ────────────────────────────────── */
+@media (max-width: 812px) and (orientation: landscape) {
+  .hero { padding: 28px 0 24px !important }
+  .hero h1 { font-size: clamp(20px, 5vw, 30px) !important }
+}
+
+/* ─── Print ──────────────────────────────────────────── */
+@media print {
+  .main-header, .tg-support, .nav-bar { display: none !important }
+  .wrap { max-width: 100% !important; padding: 0 !important }
+}
