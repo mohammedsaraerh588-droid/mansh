@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Mail, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mail, ArrowRight, CheckCircle, AlertCircle, Stethoscope } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const [email,   setEmail]   = useState('')
@@ -17,61 +17,63 @@ export default function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })
     setLoading(false)
-    if (error) { setErr('تعذّر الإرسال. تأكد من البريد الإلكتروني.'); return }
+    if (error) { setErr('تعذّر الإرسال. تأكد من البريد الإلكتروني وحاول مجدداً.'); return }
     setSent(true)
   }
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',padding:'40px 24px'}}>
-      <div style={{width:'100%',maxWidth:400}}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',padding:'24px'}}>
+      <div style={{width:'100%',maxWidth:420}}>
         <div style={{textAlign:'center',marginBottom:28}}>
-          <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
-            <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#b8912a,#d4a843)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,color:'#fff',fontSize:16}}>م</div>
-            <span style={{fontWeight:900,fontSize:17,color:'var(--txt1)'}}>منصة <span className="g-text">تعلّم</span></span>
-          </Link>
+          <div style={{width:52,height:52,borderRadius:13,background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 4px 16px rgba(76,175,80,.4)'}}>
+            <Stethoscope size={24} style={{color:'#fff'}}/>
+          </div>
+          <h1 style={{fontSize:24,fontWeight:900,color:'var(--tx1)',marginBottom:6}}>نسيت كلمة المرور؟</h1>
+          <p style={{fontSize:14,color:'var(--tx3)'}}>أدخل بريدك وسنرسل لك رابط الاسترداد فوراً</p>
         </div>
 
-        <div className="card" style={{padding:32}}>
+        <div className="card" style={{padding:28}}>
           {sent ? (
             <div style={{textAlign:'center',padding:'8px 0'}}>
-              <div style={{width:60,height:60,borderRadius:'50%',background:'#f0fdf4',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
-                <CheckCircle size={28} style={{color:'#16a34a'}}/>
+              <div style={{width:60,height:60,borderRadius:'50%',background:'var(--ok-bg)',border:'2px solid var(--ok-brd)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+                <CheckCircle size={28} style={{color:'var(--ok)'}}/>
               </div>
-              <h2 style={{fontSize:21,fontWeight:900,marginBottom:8,color:'var(--txt1)'}}>تم الإرسال!</h2>
-              <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24,lineHeight:1.7}}>
-                أرسلنا رابط الاسترداد إلى <strong style={{color:'var(--txt1)'}}>{email}</strong>
+              <h2 style={{fontSize:20,fontWeight:900,marginBottom:8,color:'var(--tx1)'}}>تم الإرسال!</h2>
+              <p style={{fontSize:13.5,color:'var(--tx2)',marginBottom:6,lineHeight:1.7}}>
+                أرسلنا رابط الاسترداد إلى
               </p>
-              <Link href="/auth/login" className="btn btn-gold btn-md" style={{textDecoration:'none',width:'100%',display:'flex',justifyContent:'center'}}>
+              <p style={{fontSize:14,fontWeight:700,color:'var(--tx1)',marginBottom:20}}>{email}</p>
+              <p style={{fontSize:12,color:'var(--tx4)',marginBottom:20}}>
+                لم تصل الرسالة؟ تحقق من مجلد Spam
+              </p>
+              <Link href="/auth/login" className="btn-register btn-full" style={{textDecoration:'none',justifyContent:'center',padding:'10px 0',display:'flex'}}>
                 العودة لتسجيل الدخول
               </Link>
             </div>
           ) : (
             <>
-              <h1 style={{fontSize:22,fontWeight:900,marginBottom:6,color:'var(--txt1)'}}>نسيت كلمة المرور؟</h1>
-              <p style={{fontSize:13.5,color:'var(--txt2)',marginBottom:24}}>أدخل بريدك وسنرسل لك رابط الاسترداد.</p>
-
               {err && (
-                <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'#fef2f2',border:'1px solid #fecaca',marginBottom:18}}>
-                  <AlertCircle size={14} style={{color:'var(--red)'}}/><span style={{fontSize:13,color:'var(--red)'}}>{err}</span>
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:9,background:'var(--err-bg)',border:'1px solid var(--err-brd)',marginBottom:18}}>
+                  <AlertCircle size={14} style={{color:'var(--err)',flexShrink:0}}/>
+                  <span style={{fontSize:13,color:'var(--err)',fontWeight:600}}>{err}</span>
                 </div>
               )}
-
               <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:16}}>
                 <div>
-                  <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--txt2)'}}>البريد الإلكتروني</label>
-                  <div className="inp-wrap">
-                    <span className="inp-icon left"><Mail size={15}/></span>
+                  <label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:6,color:'var(--tx3)'}}>البريد الإلكتروني</label>
+                  <div style={{position:'relative'}}>
+                    <Mail size={15} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--tx3)',pointerEvents:'none'}}/>
                     <input type="email" required value={email} onChange={e=>setEmail(e.target.value)}
-                      placeholder="name@example.com" className="inp inp-icon-l" dir="ltr"/>
+                      placeholder="name@example.com" dir="ltr"
+                      style={{width:'100%',padding:'10px 40px 10px 14px',borderRadius:10,border:'1.5px solid var(--brd)',background:'var(--surface)',color:'var(--tx1)',fontSize:14,outline:'none',fontFamily:'inherit'}}/>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="btn btn-gold btn-lg" style={{width:'100%'}}>
+                <button type="submit" disabled={loading} className="btn-register btn-full" style={{justifyContent:'center',padding:'11px 0',fontSize:15}}>
                   {loading ? 'جاري الإرسال...' : 'إرسال رابط الاسترداد'}
                 </button>
               </form>
-
               <div style={{textAlign:'center',marginTop:18}}>
-                <Link href="/auth/login" style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:13,fontWeight:700,color:'var(--gold)',textDecoration:'none'}}>
+                <Link href="/auth/login" style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:13,fontWeight:700,color:'var(--alpha-green)',textDecoration:'none'}}>
                   <ArrowRight size={14}/>العودة لتسجيل الدخول
                 </Link>
               </div>
