@@ -34,8 +34,18 @@ export default function AdminUsersPage() {
   const deleteUser = async (id:string, name:string) => {
     if (!confirm(`هل أنت متأكد من حذف المستخدم "${name}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return
     setDeleting(id)
-    await supabase.from('profiles').delete().eq('id',id)
-    setUsers(u=>u.filter(x=>x.id!==id))
+    const res = await fetch('/api/admin/delete-user', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert('فشل الحذف: ' + (data.error || 'خطأ غير معروف'))
+      setDeleting(null)
+      return
+    }
+    setUsers(u => u.filter(x => x.id !== id))
     setDeleting(null)
   }
 
