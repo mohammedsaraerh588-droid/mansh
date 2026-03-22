@@ -41,14 +41,21 @@ export default function Home() {
   ]
 
   useEffect(() => {
-    const sb = createSupabaseBrowserClient()
-    sb.from('courses')
-      .select('id,title,slug,thumbnail_url,price,currency,level,total_lessons,avg_rating,total_students,profiles(full_name)')
-      .eq('status','published')
-      .order('total_students',{ascending:false})
-      .limit(6)
-      .then(({ data }) => { if (data) setCourses(data); setCoursesLoading(false) })
-      .catch(() => setCoursesLoading(false))
+    const sb = createSupabaseBrowserClient();
+    (async () => {
+      try {
+        const { data } = await sb.from('courses')
+          .select('id,title,slug,thumbnail_url,price,currency,level,total_lessons,avg_rating,total_students,profiles(full_name)')
+          .eq('status','published')
+          .order('total_students',{ascending:false})
+          .limit(6)
+        if (data) setCourses(data)
+      } catch (e) {
+        console.error('[HOME_COURSES]', e)
+      } finally {
+        setCoursesLoading(false)
+      }
+    })()
   },[])
 
   useEffect(() => {
@@ -192,6 +199,7 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+            <div style={{textAlign:'center',marginTop:28}}>
               <Link href="/courses" className="alpha-btn alpha-btn-primary alpha-text-body-bold" style={{textDecoration:'none'}}>
                 عرض جميع الدورات
               </Link>
