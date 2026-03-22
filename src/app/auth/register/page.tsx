@@ -30,6 +30,8 @@ export default function RegisterPage() {
         : 'حدث خطأ. يرجى المحاولة مرة أخرى.')
       return
     }
+    // ⚠️ مهم: نُسجّل خروج فوراً لمنع الدخول قبل تأكيد البريد
+    await supabase.auth.signOut()
     setSuccess(true)
   }
 

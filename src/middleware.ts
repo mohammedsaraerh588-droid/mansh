@@ -21,16 +21,22 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-const { data: { user }, error } = await supabase.auth.getUser()
-  if (error) return NextResponse.next({ request })
+  const { data: { user }, error } = await supabase.auth.getUser()
+  // لا نسمح بالمرور عند الخطأ — نعامله كمستخدم غير مسجّل
+  if (error || !user) {
+    const pathname = request.nextUrl.pathname
+    if (pathname.startsWith('/dashboard') || pathname === '/profile') {
+      return NextResponse.redirect(new URL('/auth/login', request.url))
+    }
+    return supabaseResponse
+  }
 
-  // Get user role from profile
+  // جلب دور المستخدم
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user?.id ?? '')
+    .eq('id', user.id)
     .single()
-    .then(({ data, error }) => ({ data, error }))
   
   const role = profile?.role as 'student' | 'teacher' | 'admin' | null
 
