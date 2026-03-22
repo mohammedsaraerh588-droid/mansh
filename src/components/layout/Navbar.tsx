@@ -14,7 +14,7 @@ export default function Navbar() {
   const supabase  = createSupabaseBrowserClient()
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 900)
+    const check = () => setIsMobile(window.innerWidth < 1024)
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)

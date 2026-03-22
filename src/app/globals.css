@@ -581,8 +581,8 @@ footer { background:var(--tx1);color:#fff;padding:48px 0 0 }
    - Desktop: > 1024px
 ═══════════════════════════════════════════════════════ */
 
-/* ─── Tablet (iPad) ──────────────────────────────────── */
-@media (max-width: 1024px) {
+/* ─── Tablet (iPad — جميع الأحجام حتى Pro 13") ──── */
+@media (max-width: 1200px) {
   .wrap, .alpha-container { padding: 0 20px }
   .nav-bar { padding: 0 20px }
 
@@ -723,7 +723,33 @@ footer { background:var(--tx1);color:#fff;padding:48px 0 0 }
   button, [role="button"] { min-height: 44px }
 }
 
-/* ─── Landscape phone ────────────────────────────────── */
+/* ─── iPad mini (744px) ─────────────────────────────── */
+@media (min-width: 641px) and (max-width: 768px) {
+  .courses-grid { grid-template-columns: repeat(2, 1fr) !important }
+  .stats-grid   { grid-template-columns: repeat(2, 1fr) !important }
+  .dashboard-sidebar { width: 200px !important }
+}
+
+/* ─── iPad Air / Pro 11" (820–834px) ────────────────── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .courses-grid { grid-template-columns: repeat(2, 1fr) !important }
+  .stats-grid   { grid-template-columns: repeat(3, 1fr) !important }
+  .dashboard-sidebar { width: 220px !important }
+}
+
+/* ─── iPad Air 13" / Pro 13" (1024–1200px) ──────────── */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .courses-grid { grid-template-columns: repeat(3, 1fr) !important }
+  .stats-grid   { grid-template-columns: repeat(3, 1fr) !important }
+  .dashboard-sidebar { width: 240px !important }
+  .wrap { padding: 0 28px }
+}
+
+/* ─── iPad landscape fix ────────────────────────────── */
+@media (min-width: 641px) and (max-width: 1200px) and (orientation: landscape) {
+  .hero { padding: 32px 0 28px !important }
+  .dashboard-sidebar { width: 200px !important }
+}
 @media (max-width: 812px) and (orientation: landscape) {
   .hero { padding: 28px 0 24px !important }
   .hero h1 { font-size: clamp(20px, 5vw, 30px) !important }
