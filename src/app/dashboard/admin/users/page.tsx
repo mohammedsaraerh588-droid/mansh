@@ -40,6 +40,7 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ userId: id }),
     })
     const data = await res.json()
+    console.log('[DELETE]', res.status, data)
     if (!res.ok) {
       alert('فشل الحذف: ' + (data.error || 'خطأ غير معروف'))
       setDeleting(null)

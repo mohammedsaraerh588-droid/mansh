@@ -4,55 +4,69 @@ import { isValidUUID } from '@/lib/validate'
 
 export async function DELETE(req: Request) {
   try {
-    // تحقق أن المستخدم الحالي أدمن
     const supabase = await createSupabaseServerClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // استخدم getUser() بدلاً من getSession() — أكثر موثوقية server-side
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'يجب تسجيل الدخول أولاً' }, { status: 401 })
+    }
+
+    // تحقق أن المستخدم أدمن
     const { data: adminProfile } = await supabase
-      .from('profiles').select('role').eq('id', session.user.id).single()
-    if (adminProfile?.role !== 'admin')
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      .from('profiles').select('role').eq('id', user.id).single()
+    if (adminProfile?.role !== 'admin') {
+      return NextResponse.json({ error: 'غير مصرح لك بهذا الإجراء' }, { status: 403 })
+    }
 
-    const { userId } = await req.json()
-    if (!userId || !isValidUUID(userId))
+    const body = await req.json()
+    const { userId } = body
+
+    if (!userId || !isValidUUID(userId)) {
       return NextResponse.json({ error: 'userId غير صالح' }, { status: 400 })
-
-    // منع حذف نفسه
-    if (userId === session.user.id)
+    }
+    if (userId === user.id) {
       return NextResponse.json({ error: 'لا يمكنك حذف حسابك الخاص' }, { status: 400 })
+    }
 
     const adminClient = createSupabaseAdminClient()
 
-    // خطوة 1: احذف من جداول البيانات يدوياً أولاً (في حال CASCADE لم يعمل)
-    await adminClient.from('enrollments').delete().eq('student_id', userId)
-    await adminClient.from('lesson_progress').delete().eq('student_id', userId)
-    await adminClient.from('notifications').delete().eq('user_id', userId)
-    await adminClient.from('wishlist').delete().eq('user_id', userId)
-    await adminClient.from('lesson_notes').delete().eq('student_id', userId)
-    await adminClient.from('certificates').delete().eq('student_id', userId)
-    await adminClient.from('course_reviews').delete().eq('student_id', userId)
-    await adminClient.from('quiz_attempts').delete().eq('student_id', userId)
+    // تحقق أن المستخدم موجود أصلاً
+    const { data: targetUser, error: findErr } = await adminClient.auth.admin.getUserById(userId)
+    if (findErr || !targetUser?.user) {
+      return NextResponse.json({ error: 'المستخدم غير موجود' }, { status: 404 })
+    }
+
+    // احذف البيانات يدوياً أولاً
+    const tables = [
+      { table: 'enrollments',    col: 'student_id' },
+      { table: 'lesson_progress',col: 'student_id' },
+      { table: 'notifications',  col: 'user_id'    },
+      { table: 'wishlist',       col: 'user_id'    },
+      { table: 'lesson_notes',   col: 'student_id' },
+      { table: 'certificates',   col: 'student_id' },
+      { table: 'course_reviews', col: 'student_id' },
+      { table: 'quiz_attempts',  col: 'student_id' },
+    ]
+    for (const { table, col } of tables) {
+      await adminClient.from(table).delete().eq(col, userId)
+    }
     await adminClient.from('profiles').delete().eq('id', userId)
 
-    // خطوة 2: احذف من Supabase Auth نهائياً (hard delete)
-    const { error: authError } = await adminClient.auth.admin.deleteUser(
-      userId,
-      false  // shouldSoftDelete = false → حذف نهائي كامل
-    )
-
-    if (authError) {
-      console.error('[DELETE_USER_AUTH]', authError)
+    // احذف من Supabase Auth — hard delete (shouldSoftDelete = false)
+    const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId, false)
+    if (deleteError) {
+      console.error('[DELETE_USER_AUTH_ERROR]', deleteError)
       return NextResponse.json(
-        { error: `فشل حذف الحساب: ${authError.message}` },
+        { error: `فشل الحذف من Auth: ${deleteError.message}` },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ ok: true, message: 'تم حذف المستخدم نهائياً' })
+    return NextResponse.json({ ok: true })
 
   } catch (err: any) {
-    console.error('[DELETE_USER]', err)
+    console.error('[DELETE_USER_CATCH]', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
