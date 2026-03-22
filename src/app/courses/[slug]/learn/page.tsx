@@ -52,20 +52,28 @@ export default function CourseLearnPage() {
   useEffect(() => {
     if (!activeLesson) return
     fetch(`/api/notes?lessonId=${activeLesson.id}`)
-      .then(r => r.json()).then(d => setNotes(d.notes || []))
+      .then(r => r.json())
+      .then(d => setNotes(d.notes || []))
+      .catch(e => console.error('[NOTES]', e))
   }, [activeLesson?.id])
 
   const saveNote = async () => {
     if (!noteText.trim() || !activeLesson) return
     setSavingNote(true)
-    const r = await fetch('/api/notes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lessonId: activeLesson.id, content: noteText }),
-    })
-    const d = await r.json()
-    if (d.note) setNotes(p => [d.note, ...p])
-    setNoteText(''); setSavingNote(false)
+    try {
+      const r = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId: activeLesson.id, content: noteText }),
+      })
+      const d = await r.json()
+      if (d.note) setNotes(p => [d.note, ...p])
+      setNoteText('')
+    } catch (e) {
+      console.error('[SAVE_NOTE]', e)
+    } finally {
+      setSavingNote(false)
+    }
   }
 
   const deleteNote = async (id: string) => {

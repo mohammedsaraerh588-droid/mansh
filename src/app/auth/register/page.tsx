@@ -17,24 +17,24 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) { setErr('كلمتا المرور غير متطابقتين'); return }
 
     setLoading(true)
-    const res = await fetch('/api/auth/send-confirmation', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email: form.email, password: form.password, full_name: form.name.trim() }),
-    })
-    const data = await res.json()
-    setLoading(false)
-
-    if (!res.ok) {
-      if (data.code === 'confirmed') {
-        setErr('هذا البريد مسجّل بالفعل.')
-      } else {
-        setErr(data.error || 'حدث خطأ، حاول مرة أخرى.')
+    try {
+      const res = await fetch('/api/auth/send-confirmation', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: form.email, password: form.password, full_name: form.name.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErr(data.code === 'confirmed' ? 'هذا البريد مسجّل بالفعل.' : data.error || 'حدث خطأ، حاول مرة أخرى.')
+        return
       }
-      return
+      setSuccess(true)
+    } catch (e) {
+      console.error('[REGISTER]', e)
+      setErr('حدث خطأ في الشبكة، تحقق من اتصالك وحاول مرة أخرى.')
+    } finally {
+      setLoading(false)
     }
-    setSuccess(true)
-  }
 
   if (success) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',padding:'24px'}}>

@@ -29,6 +29,7 @@ const FAQS = [
 
 export default function Home() {
   const [courses, setCourses]       = useState<any[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const [openFaq, setOpenFaq]       = useState<number|null>(0)
   const [carouselIdx, setCarouselIdx] = useState(0)
 
@@ -46,7 +47,8 @@ export default function Home() {
       .eq('status','published')
       .order('total_students',{ascending:false})
       .limit(6)
-      .then(({ data }) => { if (data) setCourses(data) })
+      .then(({ data }) => { if (data) setCourses(data); setCoursesLoading(false) })
+      .catch(() => setCoursesLoading(false))
   },[])
 
   useEffect(() => {
@@ -154,7 +156,18 @@ export default function Home() {
               <div className="alpha-text-title-xl alpha-primary-2">استكشف الدورات الطبية المنشورة</div>
             </div>
             <div className="courses-grid">
-              {courses.map((c:any)=>(
+              {coursesLoading
+                ? Array.from({length:6}).map((_,i)=>(
+                    <div key={i} style={{borderRadius:14,overflow:'hidden',background:'var(--surface)',border:'1px solid var(--brd)'}}>
+                      <div style={{height:165,background:'var(--surface3)',animation:'pulse 1.5s ease-in-out infinite'}}/>
+                      <div style={{padding:'14px 16px',display:'flex',flexDirection:'column',gap:10}}>
+                        <div style={{height:14,borderRadius:6,background:'var(--surface3)',animation:'pulse 1.5s ease-in-out infinite',width:'80%'}}/>
+                        <div style={{height:12,borderRadius:6,background:'var(--surface3)',animation:'pulse 1.5s ease-in-out infinite',width:'50%'}}/>
+                        <div style={{height:12,borderRadius:6,background:'var(--surface3)',animation:'pulse 1.5s ease-in-out infinite',width:'65%'}}/>
+                      </div>
+                    </div>
+                  ))
+                : courses.map((c:any)=>(
                 <Link key={c.id} href={`/courses/${c.slug}`} style={{textDecoration:'none'}}>
                   <div className="main-card">
                     <div className="image-container" style={{height:165,background:c.thumbnail_url?undefined:'linear-gradient(135deg,#1B5E20,#388E3C)'}}>
@@ -179,7 +192,6 @@ export default function Home() {
                 </Link>
               ))}
             </div>
-            <div style={{textAlign:'center',marginTop:28}}>
               <Link href="/courses" className="alpha-btn alpha-btn-primary alpha-text-body-bold" style={{textDecoration:'none'}}>
                 عرض جميع الدورات
               </Link>

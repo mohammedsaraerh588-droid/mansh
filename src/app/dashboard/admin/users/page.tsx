@@ -34,20 +34,24 @@ export default function AdminUsersPage() {
   const deleteUser = async (id:string, name:string) => {
     if (!confirm(`هل أنت متأكد من حذف المستخدم "${name}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return
     setDeleting(id)
-    const res = await fetch('/api/admin/delete-user', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: id }),
-    })
-    const data = await res.json()
-    console.log('[DELETE]', res.status, data)
-    if (!res.ok) {
-      alert('فشل الحذف: ' + (data.error || 'خطأ غير معروف'))
+    try {
+      const res = await fetch('/api/admin/delete-user', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert('فشل الحذف: ' + (data.error || 'خطأ غير معروف'))
+        return
+      }
+      setUsers(u => u.filter(x => x.id !== id))
+    } catch (e) {
+      console.error('[DELETE_USER]', e)
+      alert('حدث خطأ في الشبكة')
+    } finally {
       setDeleting(null)
-      return
     }
-    setUsers(u => u.filter(x => x.id !== id))
-    setDeleting(null)
   }
 
   const roleLabel = (r:string) => r==='admin'?'مدير':r==='teacher'?'معلم':'طالب'
