@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
+  // ⛔ Rate limit: 20 محاولة كل دقيقة لمنع تخمين الكودات
+  if (isRateLimited(getIP(req), { limit: 20, window: 60 })) {
+    return NextResponse.json(
+      { error: 'محاولات كثيرة جداً، يرجى الانتظار ثم المحاولة.', valid: false },
+      { status: 429 }
+    )
+  }
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
+import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function POST(req: Request) {
+  // ⛔ Rate limit: 10 طلبات كل 60 ثانية
+  if (isRateLimited(getIP(req), { limit: 10, window: 60 })) {
+    return NextResponse.json(
+      { error: 'طلبات كثيرة جداً، يرجى الانتظار ثم المحاولة مجدداً.' },
+      { status: 429 }
+    )
+  }
   try {
     const { courseId } = await req.json()
     const supabase = await createSupabaseServerClient()

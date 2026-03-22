@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { isRateLimited, getIP } from '@/lib/rateLimit'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -21,10 +22,12 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (isRateLimited(getIP(req), { limit: 30, window: 60 })) {
+    return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً.' }, { status: 429 })
+  }
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { lessonId, content, timestampSec } = await req.json()
   if (!lessonId || !content?.trim())
     return NextResponse.json({ error: 'Missing data' }, { status: 400 })
