@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Stethoscope, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
+import Image from 'next/image'
 
 export default function Navbar() {
   const [open,    setOpen]    = useState(false)
@@ -85,9 +86,9 @@ export default function Navbar() {
                       <LayoutDashboard size={14}/>لوحتي
                     </Link>
                     <Link href="/profile">
-                      <div style={{width:34,height:34,borderRadius:'50%',overflow:'hidden',border:'2px solid var(--alpha-green)',cursor:'pointer',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff'}}>
+                      <div style={{width:34,height:34,borderRadius:'50%',overflow:'hidden',border:'2px solid var(--alpha-green)',cursor:'pointer',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff',position:'relative'}}>
                         {profile?.avatar_url
-                          ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                          ? <Image src={profile.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
                           : (profile?.full_name?.[0]||'ط')}
                       </div>
                     </Link>

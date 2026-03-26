@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Stethoscope, BookOpen } from 'lucide-react'
+import { ChevronDown, ChevronUp, Stethoscope } from 'lucide-react'
 import Link from 'next/link'
 
 const FAQS = [

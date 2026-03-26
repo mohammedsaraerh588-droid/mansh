@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { DollarSign, Users, TrendingUp, BarChart2, Loader2 } from 'lucide-react'
+import { DollarSign, TrendingUp, BarChart2, Loader2 } from 'lucide-react'
 
 export default function AdminRevenuePage() {
   const [loading,    setLoading]    = useState(true)

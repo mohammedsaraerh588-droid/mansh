@@ -1,13 +1,10 @@
 'use client'
 import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle, BookOpen, LayoutDashboard, Loader2 } from 'lucide-react'
 
 function SuccessContent() {
-  const params    = useSearchParams()
-  const sessionId = params.get('session_id')
   const [done, setDone] = useState(false)
 
   useEffect(() => {

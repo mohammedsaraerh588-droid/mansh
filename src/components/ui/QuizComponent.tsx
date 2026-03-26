@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, Trophy, RotateCcw, Loader2, Clock, Award } from 'lucide-react'
+import { XCircle, Trophy, RotateCcw, Loader2, Clock, Award } from 'lucide-react'
 
 interface Question {
   id: string; question: string;
@@ -9,15 +9,13 @@ interface Question {
 }
 interface Props { lessonId: string; lessonTitle: string; onClose: () => void }
 
-export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props) {
+export default function QuizComponent({ lessonId, onClose }: Props) {
   const [questions,   setQuestions]   = useState<Question[]>([])
   const [leaderboard, setLeaderboard] = useState<any[]>([])
-  const [prevAttempt, setPrevAttempt] = useState<any>(null)
   const [loading,     setLoading]     = useState(true)
   const [answers,     setAnswers]     = useState<Record<string,string>>({})
   const [submitting,  setSubmitting]  = useState(false)
   const [result,      setResult]      = useState<any>(null)
-  const [correctMap,  setCorrectMap]  = useState<Record<string,boolean>>({})
   const [current,     setCurrent]     = useState(0)
   const [seconds,     setSeconds]     = useState(0)
   const [timerOn,     setTimerOn]     = useState(false)
@@ -28,7 +26,6 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
       .then(d => {
         setQuestions(d.questions || [])
         setLeaderboard(d.leaderboard || [])
-        setPrevAttempt(d.previousAttempt)
         setLoading(false)
         if (d.questions?.length > 0) setTimerOn(true)
       })
@@ -62,7 +59,6 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
       })
       const data = await res.json()
       setResult(data)
-      setCorrectMap(data.result || {})
       fetch(`/api/quiz?lessonId=${lessonId}`)
         .then(r => r.json())
         .then(d => setLeaderboard(d.leaderboard || []))
@@ -75,7 +71,7 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
   }
 
   const handleRetry = () => {
-    setAnswers({}); setResult(null); setCorrectMap({}); setCurrent(0); setSeconds(0); setTimerOn(true)
+    setAnswers({}); setResult(null); setCurrent(0); setSeconds(0); setTimerOn(true)
   }
 
   const pct = result ? Math.round((result.score / result.totalPoints) * 100) : 0
@@ -153,7 +149,6 @@ export default function QuizComponent({ lessonId, lessonTitle, onClose }: Props)
         {OPTIONS.map(({key,label}) => {
           const val = q[`option_${key}` as keyof Question] as string
           const sel = answers[q.id] === key
-          const correct = result && correctMap[q.id]
           return (
             <button key={key} onClick={() => handleSelect(q.id, key)}
               style={{width:'100%',textAlign:'right',padding:'12px 16px',borderRadius:10,cursor:result?'default':'pointer',fontFamily:'inherit',fontSize:14,transition:'all .15s',display:'flex',alignItems:'center',gap:10,

@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Eye, Loader2, BookOpen } from 'lucide-react'
-import Link from 'next/link'
+import { CheckCircle, XCircle, Loader2, BookOpen } from 'lucide-react'
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<any[]>([])

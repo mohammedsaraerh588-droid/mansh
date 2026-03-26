@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Users, Search, Loader2, Trash2, ShieldCheck, UserCheck } from 'lucide-react'
+import { Users, Search, Loader2, Trash2, UserCheck } from 'lucide-react'
 
 export default function AdminUsersPage() {
   const [users,    setUsers]    = useState<any[]>([])

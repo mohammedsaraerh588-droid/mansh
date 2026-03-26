@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Users, BookOpen, Star, Loader2, Stethoscope } from 'lucide-react'
+import { Users, BookOpen, Loader2, Stethoscope } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function InstructorsPage() {
   const [teachers, setTeachers] = useState<any[]>([])
@@ -74,9 +75,9 @@ export default function InstructorsPage() {
                       <div style={{height:70,background:'linear-gradient(135deg,#1B5E20,#2E7D32)',position:'relative'}}/>
                       {/* Avatar */}
                       <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'0 16px 20px',marginTop:-32}}>
-                        <div style={{width:64,height:64,borderRadius:'50%',overflow:'hidden',border:'3px solid #fff',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:'#fff',boxShadow:'0 2px 10px rgba(0,0,0,.15)',flexShrink:0}}>
+                        <div style={{width:64,height:64,borderRadius:'50%',overflow:'hidden',border:'3px solid #fff',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:'#fff',boxShadow:'0 2px 10px rgba(0,0,0,.15)',flexShrink:0,position:'relative'}}>
                           {t.avatar_url
-                            ? <img src={t.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                            ? <Image src={t.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
                             : t.full_name?.[0]||'م'}
                         </div>
                         <h3 style={{fontSize:16,fontWeight:800,color:'var(--tx1)',marginTop:10,marginBottom:2,textAlign:'center'}}>{t.full_name}</h3>

@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { BookOpen, Award, Flame, Clock, PlayCircle, Loader2, TrendingUp } from 'lucide-react'
+import { BookOpen, Award, Flame, PlayCircle, Loader2, TrendingUp } from 'lucide-react'
+import Image from 'next/image'
 
 export default function StudentDashboard() {
   const [profile,     setProfile]     = useState<any>(null)
@@ -95,8 +96,8 @@ export default function StudentDashboard() {
               const pct = e.progress_percentage || 0
               return (
                 <div key={i} className="card" style={{padding:'14px 16px',display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:48,height:48,borderRadius:10,overflow:'hidden',flexShrink:0,background:'linear-gradient(135deg,#1B5E20,#388E3C)'}}>
-                    {c.thumbnail_url?<img src={c.thumbnail_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📚</div>}
+                  <div style={{width:48,height:48,borderRadius:10,overflow:'hidden',flexShrink:0,background:'linear-gradient(135deg,#1B5E20,#388E3C)',position:'relative'}}>
+                    {c.thumbnail_url?<Image src={c.thumbnail_url} alt="" fill style={{objectFit:'cover'}}/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📚</div>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:'var(--tx1)',marginBottom:6,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.title}</div>

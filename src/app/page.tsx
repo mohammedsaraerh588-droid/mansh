@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Stethoscope, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 
 const SUBJECTS = [
   { icon:'🫀', name:'أمراض القلب',         color:'#FFEBEE', tc:'#C62828' },
@@ -123,7 +124,7 @@ export default function Home() {
           <div className="alpha-text-title-xl" style={{marginBottom:8}}>مستقبل طالب الطب يبدأ مع <span className="alpha-txt">منصة تعلّم الطبية</span></div>
           <div className="search-section-description">
             <div className="alpha-text-title-md">نحن روّاد التعليم الطبي الإلكتروني الذكي،</div>
-            <div className="alpha-text-title-md">نقدم لك الطريق الموثوق نحو التميز والنجاح وشعارنا دائماً "الفهم أولاً"</div>
+            <div className="alpha-text-title-md">نقدم لك الطريق الموثوق نحو التميز والنجاح وشعارنا دائماً &ldquo;الفهم أولاً&rdquo;</div>
           </div>
           <div className="search-bar">
             <form method="get" action="/search">
@@ -177,9 +178,9 @@ export default function Home() {
                 : courses.map((c:any)=>(
                 <Link key={c.id} href={`/courses/${c.slug}`} style={{textDecoration:'none'}}>
                   <div className="main-card">
-                    <div className="image-container" style={{height:165,background:c.thumbnail_url?undefined:'linear-gradient(135deg,#1B5E20,#388E3C)'}}>
+                    <div className="image-container" style={{height:165,background:c.thumbnail_url?undefined:'linear-gradient(135deg,#1B5E20,#388E3C)',position:'relative'}}>
                       {c.thumbnail_url
-                        ? <img src={c.thumbnail_url} alt={c.title}/>
+                        ? <Image src={c.thumbnail_url} alt={c.title} fill style={{objectFit:'cover'}}/>
                         : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40}}>📚</div>}
                       {c.price===0 && <span style={{position:'absolute',top:10,right:10,background:'var(--alpha-green)',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:6}}>مجاني</span>}
                     </div>

@@ -15,7 +15,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     const courseId    = sanitizeStr(body.courseId, 36)
-    const couponCode  = sanitizeStr(body.couponCode || '', 32)
     if (!isValidUUID(courseId)) return new NextResponse('Invalid courseId', { status: 400 })
 
     const supabase = await createSupabaseServerClient()

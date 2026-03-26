@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
 import { User, Globe, Twitter, Linkedin, Loader2, Save, Briefcase,
-         CheckCircle, AlertCircle, Stethoscope, Lock, Eye, EyeOff, Camera } from 'lucide-react'
+         CheckCircle, AlertCircle, Stethoscope, Lock } from 'lucide-react'
+import Image from 'next/image'
 
 export default function ProfilePage() {
   const [profile,  setProfile]  = useState<any>(null)
@@ -77,9 +78,9 @@ export default function ProfilePage() {
         </div>
         <div style={{padding:'0 24px 20px',display:'flex',alignItems:'flex-end',gap:14,marginTop:-36}}>
           <div style={{position:'relative',flexShrink:0}}>
-            <div style={{width:70,height:70,borderRadius:'50%',overflow:'hidden',border:'4px solid var(--surface)',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:'#fff',boxShadow:'0 4px 14px rgba(0,0,0,.15)'}}>
+            <div style={{width:70,height:70,borderRadius:'50%',overflow:'hidden',border:'4px solid var(--surface)',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:'#fff',boxShadow:'0 4px 14px rgba(0,0,0,.15)',position:'relative'}}>
               {profile?.avatar_url
-                ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                ? <Image src={profile.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
                 : (profile?.full_name?.[0] || <Stethoscope size={26}/>)}
             </div>
           </div>

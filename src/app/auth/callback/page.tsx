@@ -18,7 +18,6 @@ export default function AuthCallbackPage() {
         const params = new URLSearchParams(hash)
         const access_token  = params.get('access_token')
         const refresh_token = params.get('refresh_token')
-        const type          = params.get('type')
         const errorDesc     = params.get('error_description')
 
         // حالة خطأ في الرابط
@@ -62,7 +61,7 @@ export default function AuthCallbackPage() {
           else                         router.replace('/dashboard/student')
         }, 1500)
 
-      } catch (e: any) {
+      } catch {
         setStatus('error')
         setMsg('حدث خطأ غير متوقع.')
       }

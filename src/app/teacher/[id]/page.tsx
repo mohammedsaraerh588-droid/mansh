@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import CourseCard from '@/components/courses/CourseCard'
-import { Loader2, Users, BookOpen, Star, Globe, Twitter, Linkedin, Stethoscope } from 'lucide-react'
+import { Loader2, BookOpen, Globe, Twitter, Linkedin, Stethoscope } from 'lucide-react'
+import Image from 'next/image'
 
 export default function TeacherProfilePage() {
   const { id }    = useParams<{ id: string }>()
@@ -51,9 +52,9 @@ export default function TeacherProfilePage() {
       <div className="hero" style={{padding:'52px 0 48px'}}>
         <div className="wrap" style={{position:'relative',zIndex:1}}>
           <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16,textAlign:'center'}}>
-            <div style={{width:88,height:88,borderRadius:'50%',overflow:'hidden',border:'3px solid rgba(14,165,233,.4)',flexShrink:0,background:'var(--brand)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:30,fontWeight:900,color:'#fff',boxShadow:'var(--shb)'}}>
+            <div style={{width:88,height:88,borderRadius:'50%',overflow:'hidden',border:'3px solid rgba(14,165,233,.4)',flexShrink:0,background:'var(--brand)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:30,fontWeight:900,color:'#fff',boxShadow:'var(--shb)',position:'relative'}}>
               {profile.avatar_url
-                ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                ? <Image src={profile.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
                 : profile.full_name?.[0] || <Stethoscope size={32}/>}
             </div>
             <div>

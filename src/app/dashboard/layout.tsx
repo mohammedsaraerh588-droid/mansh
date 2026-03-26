@@ -7,6 +7,7 @@ import { LayoutDashboard, BookOpen, Award, Video, BarChart, FileText,
          Settings, Users, LogOut, Loader2, Heart, Tag, ShieldCheck,
          Menu, X, ChevronLeft } from 'lucide-react'
 import NotificationBell from '@/components/ui/NotificationBell'
+import Image from 'next/image'
 
 const NAV = {
   student: [
@@ -64,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen,setSidebarOpen]= useState(false)
   const pathname  = usePathname()
   const supabase  = createSupabaseBrowserClient()
-  const { device, isLandscape } = useDevice()
+  const { device } = useDevice()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -88,7 +89,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isMobile  = device === 'mobile'
   const isTablet  = device === 'tablet'
-  const isDesktop = device === 'desktop'
 
   // ── Sidebar content (مشترك بين كل الأجهزة) ──────────────────────
   const SidebarContent = () => (
@@ -96,9 +96,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Profile */}
       <div style={{padding:'14px 14px 12px',borderBottom:'1px solid var(--brd)'}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:38,height:38,borderRadius:'50%',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:900,color:'#fff',overflow:'hidden',flexShrink:0}}>
+          <div style={{width:38,height:38,borderRadius:'50%',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:900,color:'#fff',overflow:'hidden',flexShrink:0,position:'relative'}}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+              ? <Image src={profile.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
               : (profile?.full_name?.[0]||'ط')}
           </div>
           <div style={{minWidth:0,flex:1}}>
@@ -155,9 +155,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)'}}>
             {role==='admin'?'مدير':role==='teacher'?'معلم':'طالب'}
           </div>
-          <div style={{width:32,height:32,borderRadius:'50%',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff',overflow:'hidden'}}>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'var(--alpha-green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff',overflow:'hidden',position:'relative'}}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+              ? <Image src={profile.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
               : (profile?.full_name?.[0]||'ط')}
           </div>
           <NotificationBell/>

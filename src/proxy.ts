@@ -41,7 +41,6 @@ export async function proxy(request: NextRequest) {
   const role = profile?.role as 'student' | 'teacher' | 'admin' | null
 
   // Protected routes by role
-  const isStudent = role === 'student'
   const isTeacher = role === 'teacher' 
   const isAdmin = role === 'admin'
 

@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { BookOpen, Clock, Users, Star } from 'lucide-react'
+import { BookOpen, Clock, Users } from 'lucide-react'
 import { formatPrice, formatDuration, getLevelLabel } from '@/lib/utils'
+import Image from 'next/image'
 
 interface Props { course: any }
 
@@ -30,7 +31,7 @@ export default function CourseCard({ course }: Props) {
         <div style={{height:165,position:'relative',overflow:'hidden',flexShrink:0,
           background:course.thumbnail_url?undefined:'linear-gradient(135deg,#1B5E20,#388E3C)'}}>
           {course.thumbnail_url
-            ? <img src={course.thumbnail_url} alt={course.title} style={{width:'100%',height:'100%',objectFit:'cover',transition:'transform .3s'}}/>
+            ? <Image src={course.thumbnail_url} alt={course.title} fill style={{objectFit:'cover',transition:'transform .3s'}}/>
             : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:44,opacity:.4}}>📚</div>}
 
           {/* Badges overlay */}

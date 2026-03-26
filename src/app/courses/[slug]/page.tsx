@@ -6,6 +6,7 @@ import EnrollButton from '@/components/courses/EnrollButton'
 import CourseRating from '@/components/courses/CourseRating'
 import WishlistButton from '@/components/ui/WishlistButton'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -62,10 +63,8 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
   course.modules = modules || []
 
   let isEnrolled = false
-  let userId = ''
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    userId = session.user.id
     const { data: enr } = await supabase.from('enrollments').select('payment_status')
       .eq('student_id', session.user.id).eq('course_id', course.id).single()
     if (enr && ['completed','free'].includes(enr.payment_status)) isEnrolled = true
@@ -113,9 +112,9 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
               </div>
               {course.teacher?.full_name && (
                 <Link href={`/teacher/${course.teacher.id}`} style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:10,background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}>
-                  <div style={{width:36,height:36,borderRadius:'50%',overflow:'hidden',background:'var(--brand)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:14,color:'#fff',flexShrink:0}}>
+                  <div style={{width:36,height:36,borderRadius:'50%',overflow:'hidden',background:'var(--brand)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:14,color:'#fff',flexShrink:0,position:'relative'}}>
                     {course.teacher.avatar_url
-                      ? <img src={course.teacher.avatar_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                      ? <Image src={course.teacher.avatar_url} alt="" fill style={{objectFit:'cover'}}/>
                       : course.teacher.full_name[0]}
                   </div>
                   <div>
@@ -134,7 +133,7 @@ export default async function CourseDetailsPage({ params }: { params: Promise<{ 
               <div className="card" style={{overflow:'hidden', boxShadow:'var(--sh3)'}}>
                 <div style={{position:'relative', aspectRatio:'16/9', background:'var(--bg3)', overflow:'hidden'}}>
                   {course.thumbnail_url
-                    ? <img src={course.thumbnail_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                    ? <Image src={course.thumbnail_url} alt="" fill style={{objectFit:'cover'}}/>
                     : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(135deg,#1A1F3A,#0E2954)'}}>
                         <Video size={40} style={{color:'rgba(255,255,255,.15)'}}/>
                       </div>}
