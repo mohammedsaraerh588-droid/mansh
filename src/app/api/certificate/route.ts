@@ -52,12 +52,12 @@ export async function GET(req: Request) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const query = supabase.from('certificates')
+  let query = supabase.from('certificates')
     .select('*,courses(title,slug,thumbnail_url)')
     .eq('student_id', session.user.id)
     .order('issued_at', { ascending: false })
 
-  if (courseId) query.eq('course_id', courseId)
+  if (courseId) query = query.eq('course_id', courseId)
   const { data } = await query
   return NextResponse.json({ certificates: data || [] })
 }

@@ -2,151 +2,151 @@ import { NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { isRateLimited, getIP } from '@/lib/rateLimit'
 import { sanitizeStr } from '@/lib/validate'
-import nodemailer from 'nodemailer'
 
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  })
-}
-
-async function sendEmail(to: string, name: string, link: string): Promise<boolean> {
+async function sendEmailResend(to: string, name: string, link: string): Promise<boolean> {
   try {
-    const transporter = getTransporter()
-    await transporter.sendMail({
-      from: `"منصة تعلّم الطبية" <${process.env.GMAIL_USER}>`,
-      to,
-      subject: 'أكّد بريدك الإلكتروني — منصة تعلّم',
-      // نص عادي للعملاء التي لا تدعم HTML
-      text: `أهلاً ${name}!\n\nاضغط على الرابط التالي لتأكيد بريدك الإلكتروني:\n\n${link}\n\nالرابط صالح 24 ساعة.`,
-      html: `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background:#F5F6FA;font-family:Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr><td align="center" style="padding:32px 16px">
-<table width="500" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
-  <tr>
-    <td style="background:linear-gradient(135deg,#1B5E20,#4CAF50);padding:32px;text-align:center">
-      <p style="color:#fff;margin:0;font-size:24px;font-weight:bold">🏥 منصة تعلّم الطبية</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding:36px 32px;direction:rtl">
-      <p style="color:#1A1A2E;font-size:20px;font-weight:bold;margin:0 0 12px">أهلاً ${name}! 👋</p>
-      <p style="color:#6B7280;line-height:1.8;margin:0 0 28px">
-        شكراً لتسجيلك في منصة تعلّم الطبية.<br>
-        اضغط على الزر أدناه لتأكيد بريدك الإلكتروني.
-      </p>
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td align="center" style="padding:8px 0 28px">
-            <a href="${link}"
-               style="display:inline-block;background:#4CAF50;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:17px;font-weight:bold;border:none">
-              ✅ تأكيد البريد الإلكتروني
-            </a>
-          </td>
-        </tr>
-      </table>
-      <p style="color:#6B7280;font-size:14px;margin:0 0 12px">إذا لم يعمل الزر، انسخ هذا الرابط في متصفحك:</p>
-      <p style="background:#F3F4F6;padding:12px;border-radius:8px;word-break:break-all;font-size:12px;color:#374151;margin:0 0 20px">
-        <a href="${link}" style="color:#4CAF50">${link}</a>
-      </p>
-      <p style="color:#9CA3AF;font-size:13px;text-align:center;margin:0">
-        الرابط صالح لمدة 24 ساعة.<br>
-        إذا لم تطلب هذا التسجيل، تجاهل هذا البريد.
-      </p>
-    </td>
-  </tr>
-  <tr>
-    <td style="background:#F9FAFB;padding:16px;text-align:center;border-top:1px solid #E5E7EB">
-      <p style="color:#9CA3AF;font-size:12px;margin:0">© 2025 منصة تعلّم الطبية</p>
-    </td>
-  </tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`,
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mansh-eta.vercel.app'
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from:    'منصة تعلّم الطبية <onboarding@resend.dev>',
+        to,
+        subject: 'أكّد بريدك الإلكتروني — منصة تعلّم',
+        text: `أهلاً ${name}!\n\nاضغط على الرابط التالي لتأكيد بريدك الإلكتروني:\n\n${link}\n\nالرابط صالح 24 ساعة.`,
+        html: buildConfirmEmail(name, link, appUrl),
+      }),
     })
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('[RESEND_ERROR]', err)
+      return false
+    }
     return true
-  } catch (err: any) {
-    console.error('[EMAIL_ERROR]', err.message)
+  } catch (err) {
+    console.error('[EMAIL_ERROR]', (err as Error).message)
     return false
   }
 }
 
 export async function POST(req: Request) {
-  if (isRateLimited(getIP(req), { limit: 5, window: 60 }))
-    return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً.' }, { status: 429 })
+  if (isRateLimited(getIP(req), { limit: 5, window: 60 })) {
+    return NextResponse.json({ error: 'محاولات كثيرة، انتظر دقيقة ثم أعد المحاولة.' }, { status: 429 })
+  }
 
-  const { email, password, full_name } = await req.json()
-  if (!email?.trim() || !password || !full_name?.trim())
-    return NextResponse.json({ error: 'جميع الحقول مطلوبة' }, { status: 400 })
-  if (password.length < 6)
-    return NextResponse.json({ error: 'كلمة المرور 6 أحرف على الأقل' }, { status: 400 })
+  try {
+    const body = await req.json()
+    const email    = sanitizeStr(body.email, 254).toLowerCase()
+    const password = sanitizeStr(body.password, 128)
+    const fullName = sanitizeStr(body.full_name, 100)
 
-  const admin   = createSupabaseAdminClient()
-  const cleanEmail = sanitizeStr(email, 255).toLowerCase().trim()
-  const cleanName  = sanitizeStr(full_name, 100).trim()
-  const appUrl  = process.env.NEXT_PUBLIC_APP_URL || 'https://mansh-eta.vercel.app'
+    if (!email || !password || !fullName) {
+      return NextResponse.json({ error: 'جميع الحقول مطلوبة' }, { status: 400 })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'البريد الإلكتروني غير صالح' }, { status: 400 })
+    }
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 })
+    }
 
-  // تحقق إذا البريد موجود
-  const { data: existing } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  const existingUser = existing?.users?.find(u => u.email === cleanEmail)
+    const adminClient = createSupabaseAdminClient()
 
-  if (existingUser) {
-    if (existingUser.email_confirmed_at)
+    // تحقق إذا كان البريد موجوداً مسبقاً
+    const { data: existing } = await adminClient
+      .from('profiles').select('id').eq('email', email).maybeSingle()
+    if (existing) {
       return NextResponse.json({ error: 'هذا البريد مسجّل بالفعل.', code: 'confirmed' }, { status: 409 })
+    }
 
-    // غير مؤكد — أعد توليد الرابط
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    // إنشاء المستخدم
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mansh-eta.vercel.app'
+    const { error } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { full_name: fullName },
+      email_confirm: false,
+    })
+
+    if (error) {
+      if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
+        return NextResponse.json({ error: 'هذا البريد مسجّل بالفعل.', code: 'confirmed' }, { status: 409 })
+      }
+      console.error('[CREATE_USER_ERROR]', error)
+      return NextResponse.json({ error: error.message || 'فشل إنشاء الحساب' }, { status: 500 })
+    }
+
+    // توليد رابط التأكيد
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
       type: 'signup',
-      email: cleanEmail,
+      email,
       password,
       options: { redirectTo: `${appUrl}/auth/callback` },
     })
-    if (linkErr || !linkData?.properties?.action_link)
-      return NextResponse.json({ error: 'فشل توليد رابط التأكيد.' }, { status: 500 })
 
-    const name = existingUser.user_metadata?.full_name || cleanName
-    const sent = await sendEmail(cleanEmail, name, linkData.properties.action_link)
-    if (!sent) return NextResponse.json({ error: 'فشل إرسال البريد.' }, { status: 500 })
-    return NextResponse.json({ ok: true, resent: true })
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error('[LINK_ERROR]', linkError)
+      return NextResponse.json({ ok: true, emailSent: false })
+    }
+
+    const confirmLink = linkData.properties.action_link
+
+    // إرسال البريد عبر Resend
+    const sent = await sendEmailResend(email, fullName, confirmLink)
+    if (!sent) {
+      console.warn('[EMAIL_NOT_SENT] user created but email failed:', email)
+    }
+
+    return NextResponse.json({ ok: true, emailSent: sent })
+
+  } catch (err) {
+    console.error('[SEND_CONFIRMATION]', err)
+    return NextResponse.json({ error: 'حدث خطأ، يرجى المحاولة مرة أخرى.' }, { status: 500 })
   }
+}
 
-  // مستخدم جديد — توليد رابط تأكيد مباشرة
-  const { data: newUser, error: createErr } = await admin.auth.admin.generateLink({
-    type: 'signup',
-    email: cleanEmail,
-    password,
-    options: {
-      data:       { full_name: cleanName },
-      redirectTo: `${appUrl}/auth/callback`,
-    },
-  })
-  if (createErr) {
-    console.error('[SIGNUP_ERROR]', createErr)
-    return NextResponse.json({ error: 'حدث خطأ، حاول مرة أخرى.' }, { status: 500 })
-  }
-
-  const confirmLink = newUser?.properties?.action_link
-  if (!confirmLink)
-    return NextResponse.json({ error: 'فشل إنشاء رابط التأكيد.' }, { status: 500 })
-
-  console.log('[CONFIRM_LINK]', confirmLink.slice(0, 80))
-
-  const sent = await sendEmail(cleanEmail, cleanName, confirmLink)
-  if (!sent) {
-    if (newUser?.user?.id) await admin.auth.admin.deleteUser(newUser.user.id, false)
-    return NextResponse.json({ error: 'فشل إرسال البريد.' }, { status: 500 })
-  }
-
-  return NextResponse.json({ ok: true })
+function buildConfirmEmail(name: string, link: string, appUrl: string): string {
+  return `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td align="center" style="padding:40px 20px">
+    <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb">
+      <!-- Header -->
+      <tr><td style="background:linear-gradient(135deg,#1B5E20,#2E7D32);padding:36px 32px;text-align:center">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.15);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <span style="font-size:24px">⚕️</span>
+        </div>
+        <h1 style="margin:0;color:#fff;font-size:22px;font-weight:900">منصة تعلّم الطبية</h1>
+        <p style="margin:8px 0 0;color:rgba(255,255,255,.6);font-size:13px">أكّد بريدك الإلكتروني</p>
+      </td></tr>
+      <!-- Body -->
+      <tr><td style="padding:32px">
+        <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 12px">أهلاً <strong>${name}</strong>،</p>
+        <p style="color:#6b7280;font-size:14px;line-height:1.75;margin:0 0 24px">
+          شكراً لتسجيلك في منصة تعلّم الطبية! اضغط على الزر أدناه لتأكيد بريدك والبدء برحلتك التعليمية.
+        </p>
+        <div style="text-align:center;margin:28px 0">
+          <a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">
+            تأكيد البريد الإلكتروني ✓
+          </a>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;text-align:center;margin:0">
+          الرابط صالح لمدة 24 ساعة. إذا لم تطلب هذا التسجيل يمكنك تجاهل الرسالة.
+        </p>
+      </td></tr>
+      <!-- Footer -->
+      <tr><td style="padding:16px 32px;border-top:1px solid #f3f4f6;text-align:center">
+        <p style="margin:0;font-size:11px;color:#9ca3af">منصة تعلّم الطبية — <a href="${appUrl}" style="color:#4CAF50;text-decoration:none">${appUrl}</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`
 }

@@ -320,7 +320,7 @@ export default function CourseLearnPage() {
             </div>
             {/* Quiz content */}
             <div style={{overflow:'auto',padding:'20px',flex:1}}>
-              <QuizComponent lessonId={activeLesson.id} lessonTitle={activeLesson.title} onClose={()=>setShowQuiz(false)}/>
+              <QuizComponent lessonId={activeLesson.id} onClose={()=>setShowQuiz(false)}/>
             </div>
           </div>
         </div>

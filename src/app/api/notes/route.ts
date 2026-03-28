@@ -9,11 +9,11 @@ export async function GET(req: Request) {
     const supabase = await createSupabaseServerClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const query = supabase.from('lesson_notes')
+    let query = supabase.from('lesson_notes')
       .select('id,content,timestamp_sec,created_at,lesson_id')
       .eq('student_id', session.user.id)
       .order('created_at', { ascending: false })
-    if (lessonId) query.eq('lesson_id', lessonId)
+    if (lessonId) query = query.eq('lesson_id', lessonId)
     const { data } = await query
     return NextResponse.json({ notes: data || [] })
   } catch (err: unknown) {

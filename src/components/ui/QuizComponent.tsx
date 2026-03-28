@@ -7,7 +7,7 @@ interface Question {
   option_a: string; option_b: string; option_c: string; option_d: string;
   points: number;
 }
-interface Props { lessonId: string; lessonTitle: string; onClose: () => void }
+interface Props { lessonId: string; onClose: () => void }
 
 export default function QuizComponent({ lessonId, onClose }: Props) {
   const [questions,   setQuestions]   = useState<Question[]>([])
